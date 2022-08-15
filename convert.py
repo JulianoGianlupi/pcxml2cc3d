@@ -200,6 +200,9 @@ def make_cell_type_plugin(tags,root):
     
 
 if __name__=="__main__":
+    
+    cc3dml = "<CompuCell3D>\n"
+    
     print("Running test")
     example_path = r"./example_pcxml/"+"annotated_cancer_immune3D_flat.xml"
     
@@ -215,7 +218,12 @@ if __name__=="__main__":
     
     ct_str, wall, cell_types = make_cell_type_plugin(tags, xml_root)
     
-    print(metadata_str+potts_str+ct_str)
+    # print(metadata_str+potts_str+ct_str)
+    
+    
+    
+    cc3dml += metadata_str+potts_str+ct_str + "\n</CompuCell3D>\n"
+    print(cc3dml)
     
     for child in xml_root.iter():
         break
