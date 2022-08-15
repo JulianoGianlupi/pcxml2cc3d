@@ -40,8 +40,11 @@ def get_dims(tags, root):
     cc3dy = 1 if ymin is None or ymax is None else str(round(ymax-ymin))
     cc3dz = 1 if zmin is None or zmax is None else str(round(ymax-zmin))
     
+    units = "micron" if "space_units" not in tags else \
+        next(xml_root.iter("space_units")).text
+    
     return ((xmin, xmax), (ymin,ymax), (zmin,zmax)),\
-            (cc3dx, cc3dy, cc3dz)
+            (cc3dx, cc3dy, cc3dz), units
 
 def get_time(tags, root):
     xml_root = root # todo: clean
@@ -115,17 +118,22 @@ def make_potts(tags, root):
 # 		<dz>20</dz>
 # 		<use_2D>true</use_2D>
 # 	</domain>
-    pcdims, ccdims = get_dims(tags, root)
+    pcdims, ccdims, space_units = get_dims(tags, root)
+    
+    space_units_str = f"1 pixel = 1 {space_units}"
     
     pctime, cctime = get_time(tags, root)
+    
     
     # still need to implement space units
     potts_str = f""" 
 <Potts>
    <!-- Basic properties of CPM (GGH) algorithm -->
+   <Space_Units>{space_units_str}</Space_Units>
+   <Pixel_to_Space units="{space_units}/pixel">1</Pixel_to_Space>
    <Dimensions x="{ccdims[0]}" y="{ccdims[1]}" z="{ccdims[2]}"/>
    <Time_Units>"{cctime[1]}"</Time_Units>
-   <MCS_to_time units="{pctime[1]}/MCS">{cctime[2]}</MCS_to_time>
+   <MCS_to_Time units="{pctime[1]}/MCS">{cctime[2]}</MCS_to_time>
    <Steps>{cctime[0]}</Steps>
    <!-- As the frameworks of CC3D and PhysiCell are very different -->
    <!-- PC doesn't have some concepts that CC3D does. Temperature is one of -->
@@ -260,7 +268,7 @@ if __name__=="__main__":
     print("Generating <Plugin CellType/>")
     ct_str, wall, cell_types = make_cell_type_plugin(tags, xml_root)
     
-    # print(metadata_str+potts_str+ct_str)
+    print(metadata_str+potts_str+ct_str)
     
     print("Merging")
     cc3dml = "<CompuCell3D>\n"
