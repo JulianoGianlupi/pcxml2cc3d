@@ -71,6 +71,9 @@ def get_time(tags, root):
     
     return (mt, time_unit, mechdt), (steps, cc3dtimeunitstr, cc3ddt)
 
+
+
+
 if __name__=="__main__":
     print("Running test")
     example_path = r"./example_pcxml/"+"cancer_immune3D_flat.xml"
@@ -83,34 +86,6 @@ if __name__=="__main__":
     
     pcdims, ccdims = get_dims(tags, xml_root)
     
-    # mt = float(next(xml_root.iter("max_time")).text) if "max_time" in tags \
-    #     else 100000
-    # mtunit = next(xml_root.iter("max_time")).attrib["units"] if "max_time" in tags \
-    #     else None
-        
-    # time_unit =  next(xml_root.iter("time_units")).text if "time_units" in tags \
-    #     else None
-        
-    # if mtunit != time_unit:
-    #     message = f"Warning: Psysicell time units in "\
-    #             "\n`<overall>\n\t<max_time units=...`\ndiffers from\n"\
-    #                 f"`<time_units>unit</time_units>`.\nUsing: {time_unit}"
-    #     warnings.warn(message)
-    # mechdt = float(next(xml_root.iter("dt_mechanics")).text) if "dt_mechanics"\
-    #     in tags else 1
-    
-    # steps = round(mt/mechdt)
-    
-    # cc3ddt = mt/steps # unit/step
-    
-    # cc3dtimeunitstr = f"1 MCS = {cc3ddt} {time_unit}"
-    # # cc3dtimeunitnumber = time_unit/cc3ddt
-    # # print(cc3dtimeunitstr)
-    
-    # timeconvfact = 1/cc3ddt
-    
-    
-    # (mt, time_unit, mechdt), (steps, cc3dtimeunitstr, cc3ddt) = get_time
     pctime, cctime = get_time(tags, xml_root)
     
     
