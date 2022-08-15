@@ -71,50 +71,53 @@ def get_time(tags, root):
     
     return (mt, time_unit, mechdt), (steps, cc3dtimeunitstr, cc3ddt)
 
-if __name__=="__main__":
-    print("Running test")
-    example_path = r"./example_pcxml/"+"cancer_immune3D_flat.xml"
+
+def make_potts(tags, root):
+    '''
     
-    tree = ET.parse(example_path)
-    xml_root = tree.getroot()
+
+    Parameters
+    ----------
+    tags : List
+        A list of all xml tags in the PhysiCell xml file.
+    root : xml.etree.ElementTree.Element
+        the xml that has g.
+
+    Returns
+    -------
+    potts_str: string
+        the generated CC3D XML Potts block.
+    pcdim: tupple
+        the extracted spatial dimensions from PhysiCell XML
     
-    tags = get_tags(xml_root)
+    ccdims: tupple
     
+    pctime: tupple
     
-    pcdims, ccdims = get_dims(tags, xml_root)
-    
-    # mt = float(next(xml_root.iter("max_time")).text) if "max_time" in tags \
-    #     else 100000
-    # mtunit = next(xml_root.iter("max_time")).attrib["units"] if "max_time" in tags \
-    #     else None
-        
-    # time_unit =  next(xml_root.iter("time_units")).text if "time_units" in tags \
-    #     else None
-        
-    # if mtunit != time_unit:
-    #     message = f"Warning: Psysicell time units in "\
-    #             "\n`<overall>\n\t<max_time units=...`\ndiffers from\n"\
-    #                 f"`<time_units>unit</time_units>`.\nUsing: {time_unit}"
-    #     warnings.warn(message)
-    # mechdt = float(next(xml_root.iter("dt_mechanics")).text) if "dt_mechanics"\
-    #     in tags else 1
-    
-    # steps = round(mt/mechdt)
-    
-    # cc3ddt = mt/steps # unit/step
-    
-    # cc3dtimeunitstr = f"1 MCS = {cc3ddt} {time_unit}"
-    # # cc3dtimeunitnumber = time_unit/cc3ddt
-    # # print(cc3dtimeunitstr)
-    
-    # timeconvfact = 1/cc3ddt
+    cctime: tupple
+
+    '''
     
     
-    # (mt, time_unit, mechdt), (steps, cc3dtimeunitstr, cc3ddt) = get_time
-    pctime, cctime = get_time(tags, xml_root)
+    # todo: figure out the spatial dimensions. What dx/dy/dz mean in 
+#     <domain>
+# 		<x_min>-400</x_min>
+# 		<x_max>400</x_max>
+# 		<y_min>-400</y_min>
+# 		<y_max>400</y_max>
+# 		<z_min>-10</z_min>
+# 		<z_max>10</z_max>
+# 		<dx>20</dx>
+# 		<dy>20</dy>
+# 		<dz>20</dz>
+# 		<use_2D>true</use_2D>
+# 	</domain>
+    pcdims, ccdims = get_dims(tags, root)
     
+    pctime, cctime = get_time(tags, root)
     
-    potts_str = f""" # still need to implement space units
+    # still need to implement space units
+    potts_str = f""" 
     <Potts>
       <!-- Basic properties of CPM (GGH) algorithm -->
       <Dimensions x="{ccdims[0]}" y="{ccdims[1]}" z="{ccdims[2]}"/>
@@ -132,6 +135,21 @@ if __name__=="__main__":
       <!-- <Boundary_y>Periodic</Boundary_y> -->
    </Potts>
     """
+    
+    return potts_str, pcdims, ccdims, pctime, cctime
+
+
+if __name__=="__main__":
+    print("Running test")
+    example_path = r"./example_pcxml/"+"cancer_immune3D_flat.xml"
+    
+    tree = ET.parse(example_path)
+    xml_root = tree.getroot()
+    
+    tags = get_tags(xml_root)
+    
+    
+    potts_str, pcdims, ccdims, pctime, cctime = make_potts(tags, xml_root)
     print(potts_str)
     
     for child in xml_root.iter():
