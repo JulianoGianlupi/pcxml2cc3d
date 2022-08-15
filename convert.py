@@ -71,6 +71,9 @@ def get_time(tags, root):
     
     return (mt, time_unit, mechdt), (steps, cc3dtimeunitstr, cc3ddt)
 
+def get_parallel(tags, root):
+    return int(next(root.iter("omp_num_threads")).text) if "dt_mechanics"\
+        in tags else 1
 
 def make_potts(tags, root):
     '''
@@ -138,6 +141,21 @@ def make_potts(tags, root):
     
     return potts_str, pcdims, ccdims, pctime, cctime
 
+def make_metadata(tags, root, out=100):
+    
+    threads = get_parallel(tags, root)
+    
+    metadata = f'''
+    <Metadata>
+      <!-- Basic properties simulation -->
+      <NumberOfProcessors>{threads}</NumberOfProcessors>
+      <DebugOutputFrequency>{out}</DebugOutputFrequency>
+      <!-- <NonParallelModule Name="Potts"/> -->
+    </Metadata>
+    '''
+    
+    return metadata, threads
+
 
 if __name__=="__main__":
     print("Running test")
@@ -148,9 +166,14 @@ if __name__=="__main__":
     
     tags = get_tags(xml_root)
     
+    metadata_str, n_threads = make_metadata(tags, xml_root)
+    print(metadata_str)
     
     potts_str, pcdims, ccdims, pctime, cctime = make_potts(tags, xml_root)
-    print(potts_str)
+    # print(potts_str)
+    
+    
+    
     
     for child in xml_root.iter():
         break
