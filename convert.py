@@ -197,33 +197,81 @@ def make_cell_type_plugin(tags,root):
     ct_str += '</Plugin>'
     
     return ct_str, wall, cell_types
+
+def make_cc3d_file(name=None):
     
+    if name is None:
+        cc3d = '''
+<Simulation version="4.3.0">
+   <XMLScript Type="XMLScript">Simulation/test.xml</XMLScript>
+   <PythonScript Type="PythonScript">Simulation/test.py</PythonScript>
+   <Resource Type="Python">Simulation/testSteppables.py</Resource>
+</Simulation>\n'''
+        return cc3d
+    else:
+        cc3d = '''
+<Simulation version="4.3.0">
+   <XMLScript Type="XMLScript">Simulation/{name}.xml</XMLScript>
+   <PythonScript Type="PythonScript">Simulation/{name}.py</PythonScript>
+   <Resource Type="Python">Simulation/{name}Steppables.py</Resource>
+</Simulation>\n'''
+        return cc3d
 
 if __name__=="__main__":
     
-    cc3dml = "<CompuCell3D>\n"
+    
     
     print("Running test")
+    
+    print("Creating ./test")
+    out_folder = r"./test"
+    if not os.path.isdir(out_folder):
+        os.mkdir(out_folder)
+    
+    print("Creating ./test/Simulation")
+    
+    out_sim_f = os.path.join(out_folder, "Simulation")
+    if not os.path.isdir(out_sim_f):
+        os.mkdir(out_sim_f)
+    
+    print("Creating test/test.cc3d")
+    
+    with open("test/test.cc3d", "w+") as f:
+        f.write(make_cc3d_file())
+    
     example_path = r"./example_pcxml/"+"annotated_cancer_immune3D_flat.xml"
     
+    print(f"Loading {example_path}")
     tree = ET.parse(example_path)
     xml_root = tree.getroot()
     
+    
+    
+    print("Getting PhysiCell XML tags")
     tags = get_tags(xml_root)
     
+    print("Generating <Metadata/>")
     metadata_str, n_threads = make_metadata(tags, xml_root)
     
+    print("Generating <Potts/>")
     potts_str, pcdims, ccdims, pctime, cctime = make_potts(tags, xml_root)
     
     
+    print("Generating <Plugin CellType/>")
     ct_str, wall, cell_types = make_cell_type_plugin(tags, xml_root)
     
     # print(metadata_str+potts_str+ct_str)
     
-    
-    
+    print("Merging")
+    cc3dml = "<CompuCell3D>\n"
     cc3dml += metadata_str+potts_str+ct_str + "\n</CompuCell3D>\n"
-    print(cc3dml)
+    
+    print(f"Creating {out_sim_f}/test.xml")
+    with open(os.path.join(out_sim_f, "test.xml"), "w+") as f:
+        f.write(cc3dml)
+    
+    print("______________\nDONE!!")
+    # print(cc3dml)
     
     for child in xml_root.iter():
         break
