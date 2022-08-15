@@ -121,23 +121,22 @@ def make_potts(tags, root):
     
     # still need to implement space units
     potts_str = f""" 
-    <Potts>
-      <!-- Basic properties of CPM (GGH) algorithm -->
-      <Dimensions x="{ccdims[0]}" y="{ccdims[1]}" z="{ccdims[2]}"/>
-      <Time_Units>"{cctime[1]}"</Time_Units>
-      <MCS_to_time units="{pctime[1]}/MCS">{cctime[2]}</MCS_to_time>
-      <Steps>{cctime[0]}</Steps>
-      <!-- As the frameworks of CC3D and PhysiCell are very different -->
-      <!-- PC doesn't have some concepts that CC3D does. Temperature is one of -->
-      <!-- them, so the translation script leaves its tunning as an exercise-->
-      <!-- for the reader -->
-      <Temperature>10.0</Temperature>
-      <!-- same deal for neighbor order -->
-      <NeighborOrder>1</NeighborOrder>
-      <!-- <Boundary_x>Periodic</Boundary_x> -->
-      <!-- <Boundary_y>Periodic</Boundary_y> -->
-   </Potts>
-    """
+<Potts>
+   <!-- Basic properties of CPM (GGH) algorithm -->
+   <Dimensions x="{ccdims[0]}" y="{ccdims[1]}" z="{ccdims[2]}"/>
+   <Time_Units>"{cctime[1]}"</Time_Units>
+   <MCS_to_time units="{pctime[1]}/MCS">{cctime[2]}</MCS_to_time>
+   <Steps>{cctime[0]}</Steps>
+   <!-- As the frameworks of CC3D and PhysiCell are very different -->
+   <!-- PC doesn't have some concepts that CC3D does. Temperature is one of -->
+   <!-- them, so the translation script leaves its tunning as an exercise-->
+   <!-- for the reader -->
+   <Temperature>10.0</Temperature>
+   <!-- same deal for neighbor order -->
+   <NeighborOrder>1</NeighborOrder>
+   <!-- <Boundary_x>Periodic</Boundary_x> -->
+   <!-- <Boundary_y>Periodic</Boundary_y> -->
+</Potts>\n"""
     
     return potts_str, pcdims, ccdims, pctime, cctime
 
@@ -146,20 +145,63 @@ def make_metadata(tags, root, out=100):
     threads = get_parallel(tags, root)
     
     metadata = f'''
-    <Metadata>
-      <!-- Basic properties simulation -->
-      <NumberOfProcessors>{threads}</NumberOfProcessors>
-      <DebugOutputFrequency>{out}</DebugOutputFrequency>
-      <!-- <NonParallelModule Name="Potts"/> -->
-    </Metadata>
-    '''
+<Metadata>
+  <!-- Basic properties simulation -->
+  <NumberOfProcessors>{threads}</NumberOfProcessors>
+  <DebugOutputFrequency>{out}</DebugOutputFrequency>
+  <!-- <NonParallelModule Name="Potts"/> -->
+</Metadata>\n'''
     
     return metadata, threads
 
+def get_boundary_wall(tags, root):
+    
+    if "virtual_wall_at_domain_edge" in tags:
+        wall = next(root.iter("virtual_wall_at_domain_edge")).text.upper()
+        if wall == "TRUE":
+            return True 
+        else:
+            return False
+    else:
+        return False
+    return False
+
+def make_cell_type_tags(tags,root):
+    
+    s = ''
+    cell_types = []
+    idx = 1
+    for child in root.iter("cell_definition"):
+        # print(child.tag, child.attrib, child.text)
+        name = child.attrib['name'].replace(" ", "_")
+        cell_types.append(name)
+        ctt = f'\t<CellType TypeId="{idx}" TypeName="{name}"/>\n'
+        s += ctt
+        idx+=1
+        
+    create_wall = get_boundary_wall(tags, root)
+    
+    if create_wall:
+        s += f'\t<CellType Freeze="" TypeId="{idx}" TypeName="WALL"/>\n'
+        cell_types.append("WALL")
+    
+    return s, create_wall, cell_types
+
+def make_cell_type_plugin(tags,root):
+    
+    ct_str = '\n<Plugin Name="CellType">\n\t'\
+        '<CellType TypeId="0" TypeName="Medium"/>\n'
+    typesstr, wall, cell_types = make_cell_type_tags(tags, root)
+    
+    ct_str += typesstr
+    ct_str += '</Plugin>'
+    
+    return ct_str, wall, cell_types
+    
 
 if __name__=="__main__":
     print("Running test")
-    example_path = r"./example_pcxml/"+"cancer_immune3D_flat.xml"
+    example_path = r"./example_pcxml/"+"annotated_cancer_immune3D_flat.xml"
     
     tree = ET.parse(example_path)
     xml_root = tree.getroot()
@@ -167,13 +209,13 @@ if __name__=="__main__":
     tags = get_tags(xml_root)
     
     metadata_str, n_threads = make_metadata(tags, xml_root)
-    print(metadata_str)
     
     potts_str, pcdims, ccdims, pctime, cctime = make_potts(tags, xml_root)
-    # print(potts_str)
     
     
+    ct_str, wall, cell_types = make_cell_type_plugin(tags, xml_root)
     
+    print(metadata_str+potts_str+ct_str)
     
     for child in xml_root.iter():
         break
