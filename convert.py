@@ -72,24 +72,52 @@ def get_time(tags, root):
     return (mt, time_unit, mechdt), (steps, cc3dtimeunitstr, cc3ddt)
 
 
+def make_potts(tags, root):
+    '''
+    
 
+    Parameters
+    ----------
+    tags : List
+        A list of all xml tags in the PhysiCell xml file.
+    root : xml.etree.ElementTree.Element
+        the xml that has g.
 
-if __name__=="__main__":
-    print("Running test")
-    example_path = r"./example_pcxml/"+"cancer_immune3D_flat.xml"
+    Returns
+    -------
+    potts_str: string
+        the generated CC3D XML Potts block.
+    pcdim: tupple
+        the extracted spatial dimensions from PhysiCell XML
     
-    tree = ET.parse(example_path)
-    xml_root = tree.getroot()
+    ccdims: tupple
     
-    tags = get_tags(xml_root)
+    pctime: tupple
     
-    
-    pcdims, ccdims = get_dims(tags, xml_root)
-    
-    pctime, cctime = get_time(tags, xml_root)
+    cctime: tupple
+
+    '''
     
     
-    potts_str = f""" # still need to implement space units
+    # todo: figure out the spatial dimensions. What dx/dy/dz mean in 
+#     <domain>
+# 		<x_min>-400</x_min>
+# 		<x_max>400</x_max>
+# 		<y_min>-400</y_min>
+# 		<y_max>400</y_max>
+# 		<z_min>-10</z_min>
+# 		<z_max>10</z_max>
+# 		<dx>20</dx>
+# 		<dy>20</dy>
+# 		<dz>20</dz>
+# 		<use_2D>true</use_2D>
+# 	</domain>
+    pcdims, ccdims = get_dims(tags, root)
+    
+    pctime, cctime = get_time(tags, root)
+    
+    # still need to implement space units
+    potts_str = f""" 
     <Potts>
       <!-- Basic properties of CPM (GGH) algorithm -->
       <Dimensions x="{ccdims[0]}" y="{ccdims[1]}" z="{ccdims[2]}"/>
@@ -107,6 +135,21 @@ if __name__=="__main__":
       <!-- <Boundary_y>Periodic</Boundary_y> -->
    </Potts>
     """
+    
+    return potts_str, pcdims, ccdims, pctime, cctime
+
+
+if __name__=="__main__":
+    print("Running test")
+    example_path = r"./example_pcxml/"+"cancer_immune3D_flat.xml"
+    
+    tree = ET.parse(example_path)
+    xml_root = tree.getroot()
+    
+    tags = get_tags(xml_root)
+    
+    
+    potts_str, pcdims, ccdims, pctime, cctime = make_potts(tags, xml_root)
     print(potts_str)
     
     for child in xml_root.iter():
