@@ -252,6 +252,10 @@ def make_cc3d_file(name=None):
 </Simulation>\n'''
         return cc3d
 
+def extra_for_testing(tags, root, celltypes):
+    return
+    
+
 if __name__=="__main__":
     
     
