@@ -304,6 +304,8 @@ def extra_for_testing(celltypes, xmax, ymax, zmax):
 
     types = ''
     for t in celltypes: # todo: don't use wall
+        if t.upper()=="WALL":
+            continue
         types += f"{t},"
     
     types = types[:-1]
