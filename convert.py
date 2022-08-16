@@ -140,7 +140,7 @@ def make_potts(tags, root):
    <!-- them, so the translation script leaves its tunning as an exercise-->
    <!-- for the reader -->
    <Temperature>10.0</Temperature>
-   <!-- same deal for neighbor order -->
+   <!-- Same deal for neighbor order as for temperature-->
    <NeighborOrder>1</NeighborOrder>
    <!-- <Boundary_x>Periodic</Boundary_x> -->
    <!-- <Boundary_y>Periodic</Boundary_y> -->
