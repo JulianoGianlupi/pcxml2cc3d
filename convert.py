@@ -258,6 +258,20 @@ def make_cell_type_plugin(tags,root):
     
     return ct_str, wall, cell_types
 
+def get_cell_mechanics(element):
+    se = element.find("phenotype/mechanics")
+    
+    if se is None:
+        return
+    d = {}
+    for sse in se.getchildren():
+        
+        if sse.tag != "options":
+            d[sse.tag] = {'units': sse.attrib["units"], 
+                          'value': float(sse.text)}
+    return d
+    
+
 
 def get_cell_constraints(tags, root, space_unit, time_unit):
     constraints = {}
@@ -269,6 +283,7 @@ def get_cell_constraints(tags, root, space_unit, time_unit):
         volumepx = volume*(space_unit**dim) 
         constraints[ctype]["volume"] = {f"volume ({unit})": volume,
                                         "volume (pixels)": volumepx}
+        constraints[ctype]["mechanics"] = get_cell_mechanics(child)
     return constraints
 
 def make_cc3d_file(name=None):
@@ -402,7 +417,6 @@ if __name__=="__main__":
     with open(os.path.join(out_sim_f, "extra_definitions.py"), 'w+') as f:
         f.write("cell_constraints="+str(constraints)+"\n")
     
-   
     
     print("Generating <Plugin Contact/>")
     contact_plug = make_contact_plugin(cell_types)
