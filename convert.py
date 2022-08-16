@@ -13,6 +13,8 @@ import copy
 import os
 import warnings
 
+from itertools import combinations
+
 time_convs = {}
 
 def get_tags(root):
@@ -239,8 +241,8 @@ def make_cc3d_file(name=None):
         cc3d = '''
 <Simulation version="4.3.0">
    <XMLScript Type="XMLScript">Simulation/test.xml</XMLScript>
-   <PythonScript Type="PythonScript">Simulation/test.py</PythonScript>
-   <Resource Type="Python">Simulation/testSteppables.py</Resource>
+    <PythonScript Type="PythonScript">Simulation/test.py</PythonScript> 
+    <Resource Type="Python">Simulation/testSteppables.py</Resource> 
 </Simulation>\n'''
         return cc3d
     else:
@@ -251,6 +253,67 @@ def make_cc3d_file(name=None):
    <Resource Type="Python">Simulation/{name}Steppables.py</Resource>
 </Simulation>\n'''
         return cc3d
+
+def make_contact_plugin(celltypes):
+    # replace ASAP with contact flex
+    
+    
+    
+    combs = list(combinations(celltypes, 2))
+    
+    for t in celltypes:
+        combs.append((t,t))
+    
+    combs.reverse()
+    
+    contact_plug = """
+<Plugin Name="Contact">
+\t<!-- PhysiCell doesn't have an equivalent to this plugin. Its  -->
+\t<!-- tunning and deciding on the neighbor order is left as an -->
+\t<!-- exerise to the reader. -->
+\t<!-- A better option (to be implemented) is to use the adhesion flex -->
+\t<!-- Specification of adhesion energies -->
+\t<Energy Type1="Medium" Type2="Medium">10.0</Energy>\n"""
+    
+    # 1 make the medium contact energies
+    me = ""
+    for t in celltypes:
+        me += f'\t<Energy Type1="Medium" Type2="{t}">10.0</Energy>\n'
+    
+    # 2 make the combination energies
+    
+    ce = ""
+    for t1, t2 in combs:
+        ce += f'\t<Energy Type1="{t1}" Type2="{t2}">10.0</Energy>\n'
+    
+    contact_plug += me + ce + "\t<NeighborOrder>3</NeighborOrder>\n</Plugin>"
+    return contact_plug
+
+
+def extra_for_testing(celltypes, xmax, ymax, zmax):
+    
+    beg='''<Steppable Type="UniformInitializer">
+\t<!-- Initial layout of cells in the form of rectangular slab -->
+\t<Region>\n'''
+    
+    box_min = f'\t\t<BoxMin x="{max(1, xmax-50)}" y="{max(1, ymax-50)}" z="{max(1, xmax-50)}"/>\n'
+    box_max = f'\t\t<BoxMax x="{xmax-10}" y="{ymax-10}" z="{zmax-10}"/>\n'
+    
+    gap = "\t\t<Gap>0</Gap>\n\t\t<Width>7</Width>\n"
+
+    types = ''
+    for t in celltypes:
+        types += f"{t},"
+    
+    types = types[:-1]
+    
+    types = "\t\t<Types>"+types+"</types>\n"
+    
+    end='''\t</Region>
+</Steppable>'''
+    
+    return beg+box_min+box_max+gap+types+end
+    
 
 if __name__=="__main__":
     
@@ -295,11 +358,15 @@ if __name__=="__main__":
     print("Generating <Plugin CellType/>")
     ct_str, wall, cell_types = make_cell_type_plugin(tags, xml_root)
     
-    print(metadata_str+potts_str+ct_str)
+    print("Generating <Plugin Contact/>")
+    contact_plug = make_contact_plugin(cell_types)
+    
+    extra = extra_for_testing(cell_types, ccdims[0], ccdims[1], ccdims[2])
     
     print("Merging")
     cc3dml = "<CompuCell3D>\n"
-    cc3dml += metadata_str+potts_str+ct_str + "\n</CompuCell3D>\n"
+    cc3dml += metadata_str+potts_str+ct_str+contact_plug +'\n'+extra+\
+        "\n</CompuCell3D>\n"
     
     print(f"Creating {out_sim_f}/test.xml")
     with open(os.path.join(out_sim_f, "test.xml"), "w+") as f:
