@@ -12,6 +12,7 @@ import string
 import copy
 import os
 import warnings
+import shutil as sh
 
 from itertools import combinations
 
@@ -161,8 +162,8 @@ def make_potts(tags, root):
    <Space_Units>{ccdims[3]}</Space_Units>
    <Pixel_to_Space units="pixel/{pcdims[3]}">{ccdims[4]}</Pixel_to_Space>
    <Dimensions x="{ccdims[0]}" y="{ccdims[1]}" z="{ccdims[2]}"/>
-   <Time_Units>"{cctime[1]}"</Time_Units>
-   <MCS_to_Time units="MCS/{pctime[1]}">{cctime[2]}</MCS_to_time>
+   <Time_Units>{cctime[1]}</Time_Units>
+   <MCS_to_Time units="MCS/{pctime[1]}">{cctime[2]}</MCS_to_Time>
    <Steps>{cctime[0]}</Steps>
    <!-- As the frameworks of CC3D and PhysiCell are very different -->
    <!-- PC doesn't have some concepts that CC3D does. Temperature is one of -->
@@ -302,12 +303,12 @@ def extra_for_testing(celltypes, xmax, ymax, zmax):
     gap = "\t\t<Gap>0</Gap>\n\t\t<Width>7</Width>\n"
 
     types = ''
-    for t in celltypes:
+    for t in celltypes: # todo: don't use wall
         types += f"{t},"
     
     types = types[:-1]
     
-    types = "\t\t<Types>"+types+"</types>\n"
+    types = "\t\t<Types>"+types+"</Types>\n"
     
     end='''\t</Region>
 </Steppable>'''
@@ -371,6 +372,11 @@ if __name__=="__main__":
     print(f"Creating {out_sim_f}/test.xml")
     with open(os.path.join(out_sim_f, "test.xml"), "w+") as f:
         f.write(cc3dml)
+        
+    print("Copying python files")
+    
+    sh.copy(r'./base_cc3d_python_scripts/test.py', out_sim_f)
+    sh.copy(r'./base_cc3d_python_scripts/testSteppables.py', out_sim_f)
     
     print("______________\nDONE!!")
     # print(cc3dml)
