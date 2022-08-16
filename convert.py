@@ -303,7 +303,7 @@ def extra_for_testing(celltypes, xmax, ymax, zmax):
     gap = "\t\t<Gap>0</Gap>\n\t\t<Width>7</Width>\n"
 
     types = ''
-    for t in celltypes: # todo: don't use wall
+    for t in celltypes: 
         if t.upper()=="WALL":
             continue
         types += f"{t},"
