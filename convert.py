@@ -120,7 +120,7 @@ def make_potts(tags, root):
 # 	</domain>
     pcdims, ccdims, space_units = get_dims(tags, root)
     
-    space_units_str = f"1 pixel = 1 {space_units}"
+    space_units_str = f'"1 pixel = 1 {space_units}"'
     
     pctime, cctime = get_time(tags, root)
     
