@@ -96,39 +96,9 @@ def get_time(pcdict):
     return (mt, time_unit, mechdt), (steps, cc3dtimeunitstr, cc3ddt)
 
 
-def old_get_time(tags, root):
-    xml_root = root  # todo: clean
-    mt = float(next(xml_root.iter("max_time")).text) if "max_time" in tags \
-        else 100000
-    mtunit = next(xml_root.iter("max_time")).attrib["units"] if "max_time" in tags \
-        else None
-
-    time_unit = next(xml_root.iter("time_units")).text if "time_units" in tags \
-        else None
-
-    if mtunit != time_unit:
-        message = f"Warning: Psysicell time units in " \
-                  "\n`<overall>\n\t<max_time units=...`\ndiffers from\n" \
-                  f"`<time_units>unit</time_units>`.\nUsing: {time_unit}"
-        warnings.warn(message)
-    mechdt = float(next(xml_root.iter("dt_mechanics")).text) if "dt_mechanics" \
-                                                                in tags else 1
-
-    steps = round(mt / mechdt)
-
-    cc3ddt = 1 / (mt / steps)  # MCS/unit
-
-    cc3dtimeunitstr = f"1 MCS = {cc3ddt} {time_unit}"
-
-    # timeconvfact = 1/cc3ddt
-
-    return (mt, time_unit, mechdt), (steps, cc3dtimeunitstr, cc3ddt)
-
-
-def get_parallel(tags, root):
-    return int(next(root.iter("omp_num_threads")).text) if "dt_mechanics" \
-                                                           in tags else 1
-
+def get_parallel(pcdict):
+    return int(pcdict['parallel']['omp_num_threads']) if 'parallel' in pcdict.keys() and \
+                                                         'omp_num_threads' in pcdict['parallel'].keys() else 1
 
 def make_potts(pcdict):
     # todo: figure out the spatial dimensions. What dx/dy/dz mean in
@@ -244,8 +214,8 @@ def old_make_potts(tags, root):
     return potts_str, pcdims, ccdims, pctime, cctime
 
 
-def make_metadata(tags, root, out=100):
-    threads = get_parallel(tags, root)
+def make_metadata(pcdict, out=100):
+    threads = get_parallel(pcdict)
 
     metadata = f'''
 <Metadata>
@@ -470,7 +440,7 @@ if __name__ == "__main__":
     tags = get_tags(xml_root)
 
     print("Generating <Metadata/>")
-    metadata_str, n_threads = make_metadata(tags, xml_root)
+    metadata_str, n_threads = make_metadata(pcdict)
 
     print("Generating <Potts/>")
     potts_str, pcdims, ccdims, pctime, cctime = make_potts(pcdict)
