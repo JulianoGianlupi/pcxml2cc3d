@@ -180,17 +180,6 @@ def get_cell_volume(subdict):
     return None, None
 
 
-def old_get_cell_volume(element):
-    se = element.find("phenotype/volume/total")
-
-    if se is None:
-        return None, None
-
-    volume = float(se.text)
-    unit = se.attrib["units"]
-
-    return volume, unit
-
 
 def make_cell_type_tags(tags, root):
     s = ''
@@ -248,19 +237,6 @@ def get_cell_mechanics(subdict):
 
     return d
 
-def old_get_cell_mechanics(element):
-    se = element.find("phenotype/mechanics")
-
-    if se is None:
-        return
-    d = {}
-    for sse in se.getchildren():
-
-        if sse.tag != "options":
-            d[sse.tag] = {'units': sse.attrib["units"],
-                          'value': float(sse.text)}
-    return d
-
 def get_cell_constraints(pcdict, space_unit, time_unit):
     constraints = {}
 
@@ -274,19 +250,6 @@ def get_cell_constraints(pcdict, space_unit, time_unit):
                                         "volume (pixels)": volumepx}
         constraints[ctype]["mechanics"] = get_cell_mechanics(child)
 
-    return constraints
-
-def old_get_cell_constraints(tags, root, space_unit, time_unit):
-    constraints = {}
-    for child in root.iter("cell_definition"):
-        ctype = child.attrib['name'].replace(" ", "_")
-        constraints[ctype] = {}
-        volume, unit = get_cell_volume(child)
-        dim = int(unit.split("^")[-1])
-        volumepx = volume * (space_unit ** dim)
-        constraints[ctype]["volume"] = {f"volume ({unit})": volume,
-                                        "volume (pixels)": volumepx}
-        constraints[ctype]["mechanics"] = get_cell_mechanics(child)
     return constraints
 
 
