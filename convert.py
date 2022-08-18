@@ -157,9 +157,9 @@ def make_metadata(pcdict, out=100):
     return metadata, threads
 
 
-def get_boundary_wall(tags, root):
-    if "virtual_wall_at_domain_edge" in tags:
-        wall = next(root.iter("virtual_wall_at_domain_edge")).text.upper()
+def get_boundary_wall(pcdict):
+    if "options" in pcdict.keys() and "virtual_wall_at_domain_edge" in pcdict['options'].keys():
+        wall = pcdict["options"]["virtual_wall_at_domain_edge"].upper()
         if wall == "TRUE":
             return True
         else:
@@ -204,7 +204,7 @@ def make_cell_type_tags(tags, root):
 
         idx += 1
 
-    create_wall = get_boundary_wall(tags, root)
+    create_wall = get_boundary_wall(pcdict)
 
     if create_wall:
         s += f'\t<CellType Freeze="" TypeId="{idx}" TypeName="WALL"/>\n'
