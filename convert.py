@@ -204,37 +204,6 @@ def make_cell_type_tags(pcdict):
 
     return s, create_wall, cell_types
 
-def old_make_cell_type_tags(tags, root):
-    s = ''
-    cell_types = []
-    idx = 1
-
-    # volumes = {}
-
-    for child in root.iter("cell_definition"):
-        # print(child.tag, child.attrib, child.text)
-        name = child.attrib['name'].replace(" ", "_")
-        cell_types.append(name)
-        ctt = f'\t<CellType TypeId="{idx}" TypeName="{name}"/>\n'
-        s += ctt
-
-        # volume, unit = get_cell_volume(child)
-
-        # volumes[name] = {}
-        # # volumes[name]["volume"]
-        # volumes[name]["target"] = volume
-        # volumes[name]["unit"] = unit
-
-        idx += 1
-
-    create_wall = get_boundary_wall(pcdict)
-
-    if create_wall:
-        s += f'\t<CellType Freeze="" TypeId="{idx}" TypeName="WALL"/>\n'
-        cell_types.append("WALL")
-
-    return s, create_wall, cell_types
-
 
 def make_cell_type_plugin(pcdict):
     ct_str = '\n<Plugin Name="CellType">\n\t' \
