@@ -180,8 +180,31 @@ def get_cell_volume(subdict):
     return None, None
 
 
+def make_cell_type_tags(pcdict):
+    s = ''
+    cell_types = []
+    idx = 1
 
-def make_cell_type_tags(tags, root):
+    # volumes = {}
+
+    for child in pcdict['cell_definitions']['cell_definition']:
+        # print(child.tag, child.attrib, child.text)
+        name = child['@name'].replace(" ", "_")
+        cell_types.append(name)
+        ctt = f'\t<CellType TypeId="{idx}" TypeName="{name}"/>\n'
+        s += ctt
+
+        idx += 1
+
+    create_wall = get_boundary_wall(pcdict)
+
+    if create_wall:
+        s += f'\t<CellType Freeze="" TypeId="{idx}" TypeName="WALL"/>\n'
+        cell_types.append("WALL")
+
+    return s, create_wall, cell_types
+
+def old_make_cell_type_tags(tags, root):
     s = ''
     cell_types = []
     idx = 1
@@ -213,10 +236,10 @@ def make_cell_type_tags(tags, root):
     return s, create_wall, cell_types
 
 
-def make_cell_type_plugin(tags, root):
+def make_cell_type_plugin(pcdict):
     ct_str = '\n<Plugin Name="CellType">\n\t' \
              '<CellType TypeId="0" TypeName="Medium"/>\n'
-    typesstr, wall, cell_types = make_cell_type_tags(tags, root)
+    typesstr, wall, cell_types = make_cell_type_tags(pcdict)
 
     ct_str += typesstr
     ct_str += '</Plugin>'
@@ -376,7 +399,7 @@ if __name__ == "__main__":
 
 
     print("Generating <Plugin CellType/>")
-    ct_str, wall, cell_types, = make_cell_type_plugin(tags, xml_root)
+    ct_str, wall, cell_types, = make_cell_type_plugin(pcdict)
 
     constraints = get_cell_constraints(pcdict, ccdims[4], cctime[2])
 
