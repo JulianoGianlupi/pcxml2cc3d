@@ -5,10 +5,10 @@ Created on Mon Aug 15 09:45:52 2022
 @author: Juliano Ferrari Gianlupi
 """
 
-import xml.etree.ElementTree as ET
-import sys
-import string
-import copy
+
+# import sys
+# import string
+# import copy
 import os
 import warnings
 import shutil as sh
@@ -344,9 +344,6 @@ if __name__ == "__main__":
     example_path = r"./example_pcxml/" + "annotated_cancer_immune3D_flat.xml"
 
     print(f"Loading {example_path}")
-    tree = ET.parse(example_path)
-    xml_root = tree.getroot()
-
     with open(example_path, 'r') as f:
         xml_raw = f.read()
     pcdict = x2d.parse(xml_raw)['PhysiCell_settings']
@@ -391,8 +388,3 @@ if __name__ == "__main__":
     print("______________\nDONE!!")
     # print(cc3dml)
 
-    for child in xml_root.iter():
-        break
-        print(child.tag, child.attrib, child.text)
-        if child.tag == "max_time":
-            break
