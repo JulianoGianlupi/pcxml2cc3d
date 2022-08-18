@@ -23,36 +23,28 @@ def get_tags(root):
     return [c.tag for c in root.iter()]
 
 
-def get_dims(tags, root):
-    xml_root = root  # todo: clean
+def get_dims(pcdict):
 
-    # 
+    xmin = float(pcdict['domain']['x_min']) if "x_min" in pcdict['domain'].keys() else None
+    xmax = float(pcdict['domain']['x_max']) if "x_max" in pcdict['domain'].keys() else None
 
-    xmin = float(next(xml_root.iter("x_min")).text) if "x_min" in tags \
-        else None
-    xmax = float(next(xml_root.iter("x_max")).text) if "x_max" in tags \
-        else None
+    ymin = float(pcdict['domain']['y_min']) if "y_min" in pcdict['domain'].keys() else None
+    ymax = float(pcdict['domain']['y_max']) if "y_max" in pcdict['domain'].keys() else None
 
-    ymin = float(next(xml_root.iter("y_min")).text) if "y_min" in tags \
-        else None
-    ymax = float(next(xml_root.iter("y_max")).text) if "y_max" in tags \
-        else None
+    zmin = float(pcdict['domain']['z_min']) if "z_min" in pcdict['domain'].keys() else None
+    zmax = float(pcdict['domain']['z_max']) if "z_max" in pcdict['domain'].keys() else None
 
-    zmin = float(next(xml_root.iter("z_min")).text) if "x_min" in tags \
-        else None
-    zmax = float(next(xml_root.iter("z_max")).text) if "z_max" in tags \
-        else None
-
-    units = "micron" if "space_units" not in tags else \
-        next(xml_root.iter("space_units")).text
+    units = pcdict['overall']['space_units'] if 'overall' in pcdict.keys() and \
+                                                'space_units' in pcdict['overall'].keys() else 'micron'
 
     # the dx/dy/dz tags mean that for every voxel there are dx space-units.
     # therefore [dx] = [space-unit/voxel]. Source: John Metzcar
 
-    dx = float(next(xml_root.iter("dx")).text) if "dx" in tags else 1
-    dy = float(next(xml_root.iter("dx")).text) if "dy" in tags else 1
-    dz = float(next(xml_root.iter("dx")).text) if "dz" in tags else 1
-    print(dx, dy, dz, type(dx), type(dy), type(dz), )
+    dx = float(pcdict['domain']['dx']) if "dx" in pcdict['domain'].keys() else 1
+    dy = float(pcdict['domain']['dy']) if "dy" in pcdict['domain'].keys() else 1
+    dz = float(pcdict['domain']['dz']) if "dz" in pcdict['domain'].keys() else 1
+
+    # print(dx, dy, dz, type(dx), type(dy), type(dz), )
     if not dx == dy == dz:
         message = "WARNING! Physicell's dx/dy/dz are not all the same: " \
                   f"dx={dx}, dy={dy}, dz={dz}\n" \
@@ -76,8 +68,36 @@ def get_dims(tags, root):
     return ((xmin, xmax), (ymin, ymax), (zmin, zmax), units), \
            (cc3dx, cc3dy, cc3dz, cc3dspaceunitstr, cc3dds)
 
+def get_time(pcdict):
+    
+    mt = float(next(xml_root.iter("max_time")).text) if "max_time" in tags \
+        else 100000
+    mtunit = next(xml_root.iter("max_time")).attrib["units"] if "max_time" in tags \
+        else None
 
-def get_time(tags, root):
+    time_unit = next(xml_root.iter("time_units")).text if "time_units" in tags \
+        else None
+
+    if mtunit != time_unit:
+        message = f"Warning: Psysicell time units in " \
+                  "\n`<overall>\n\t<max_time units=...`\ndiffers from\n" \
+                  f"`<time_units>unit</time_units>`.\nUsing: {time_unit}"
+        warnings.warn(message)
+    mechdt = float(next(xml_root.iter("dt_mechanics")).text) if "dt_mechanics" \
+                                                                in tags else 1
+
+    steps = round(mt / mechdt)
+
+    cc3ddt = 1 / (mt / steps)  # MCS/unit
+
+    cc3dtimeunitstr = f"1 MCS = {cc3ddt} {time_unit}"
+
+    # timeconvfact = 1/cc3ddt
+
+    return (mt, time_unit, mechdt), (steps, cc3dtimeunitstr, cc3ddt)
+
+
+def old_get_time(tags, root):
     xml_root = root  # todo: clean
     mt = float(next(xml_root.iter("max_time")).text) if "max_time" in tags \
         else 100000
@@ -111,7 +131,52 @@ def get_parallel(tags, root):
                                                            in tags else 1
 
 
-def make_potts(tags, root):
+def make_potts(pcdict):
+
+
+    # todo: figure out the spatial dimensions. What dx/dy/dz mean in
+    #     <domain>
+    # 		<x_min>-400</x_min>
+    # 		<x_max>400</x_max>
+    # 		<y_min>-400</y_min>
+    # 		<y_max>400</y_max>
+    # 		<z_min>-10</z_min>
+    # 		<z_max>10</z_max>
+    # 		<dx>20</dx>
+    # 		<dy>20</dy>
+    # 		<dz>20</dz>
+    # 		<use_2D>true</use_2D>
+    # 	</domain>
+    pcdims, ccdims = get_dims(pcdict)
+
+    # space_units_str = f'"1 pixel = 1 {space_units}"'
+
+    pctime, cctime = get_time(pcdict)
+
+    # still need to implement space units
+    potts_str = f""" 
+<Potts>
+   <!-- Basic properties of CPM (GGH) algorithm -->
+   <Space_Units>{ccdims[3]}</Space_Units>
+   <Pixel_to_Space units="pixel/{pcdims[3]}">{ccdims[4]}</Pixel_to_Space>
+   <Dimensions x="{ccdims[0]}" y="{ccdims[1]}" z="{ccdims[2]}"/>
+   <Time_Units>{cctime[1]}</Time_Units>
+   <MCS_to_Time units="MCS/{pctime[1]}">{cctime[2]}</MCS_to_Time>
+   <Steps>{cctime[0]}</Steps>
+   <!-- As the frameworks of CC3D and PhysiCell are very different -->
+   <!-- PC doesn't have some concepts that CC3D does. Temperature is one of -->
+   <!-- them, so the translation script leaves its tunning as an exercise-->
+   <!-- for the reader -->
+   <Temperature>10.0</Temperature>
+   <!-- Same deal for neighbor order as for temperature-->
+   <NeighborOrder>1</NeighborOrder>
+   <!-- <Boundary_x>Periodic</Boundary_x> -->
+   <!-- <Boundary_y>Periodic</Boundary_y> -->
+</Potts>\n"""
+
+    return potts_str, pcdims, ccdims, pctime, cctime
+
+def old_make_potts(tags, root):
     '''
     
 
@@ -150,8 +215,8 @@ def make_potts(tags, root):
     # 		<dz>20</dz>
     # 		<use_2D>true</use_2D>
     # 	</domain>
-    pcdims, ccdims = get_dims(tags,
-                              root)  # ((xmin, xmax), (ymin,ymax), (zmin,zmax), units), (cc3dx, cc3dy, cc3dz, cc3dspaceunitstr, cc3dds)
+    pcdims, ccdims = old_get_dims(tags,
+                                  root)  # ((xmin, xmax), (ymin,ymax), (zmin,zmax), units), (cc3dx, cc3dy, cc3dz, cc3dspaceunitstr, cc3dds)
 
     # space_units_str = f'"1 pixel = 1 {space_units}"'
 
