@@ -204,17 +204,39 @@ def get_boundary_wall(tags, root):
         return False
     return False
 
+def get_cell_volume(element):
+    se = element.find("phenotype/volume/total")
+    
+    if se is None:
+        return None, None
+    
+    volume = float(se.text)
+    unit = se.attrib["units"]
+    
+    return volume, unit
+
 def make_cell_type_tags(tags,root):
     
     s = ''
     cell_types = []
     idx = 1
+    
+    # volumes = {}
+    
     for child in root.iter("cell_definition"):
         # print(child.tag, child.attrib, child.text)
         name = child.attrib['name'].replace(" ", "_")
         cell_types.append(name)
         ctt = f'\t<CellType TypeId="{idx}" TypeName="{name}"/>\n'
         s += ctt
+        
+        # volume, unit = get_cell_volume(child)
+        
+        # volumes[name] = {}
+        # # volumes[name]["volume"]
+        # volumes[name]["target"] = volume
+        # volumes[name]["unit"] = unit
+        
         idx+=1
         
     create_wall = get_boundary_wall(tags, root)
@@ -236,6 +258,34 @@ def make_cell_type_plugin(tags,root):
     
     return ct_str, wall, cell_types
 
+def get_cell_mechanics(element):
+    se = element.find("phenotype/mechanics")
+    
+    if se is None:
+        return
+    d = {}
+    for sse in se.getchildren():
+        
+        if sse.tag != "options":
+            d[sse.tag] = {'units': sse.attrib["units"], 
+                          'value': float(sse.text)}
+    return d
+    
+
+
+def get_cell_constraints(tags, root, space_unit, time_unit):
+    constraints = {}
+    for child in root.iter("cell_definition"):
+        ctype = child.attrib['name'].replace(" ", "_")
+        constraints[ctype] = {}
+        volume, unit = get_cell_volume(child)
+        dim = int(unit.split("^")[-1])
+        volumepx = volume*(space_unit**dim) 
+        constraints[ctype]["volume"] = {f"volume ({unit})": volume,
+                                        "volume (pixels)": volumepx}
+        constraints[ctype]["mechanics"] = get_cell_mechanics(child)
+    return constraints
+
 def make_cc3d_file(name=None):
     
     if name is None:
@@ -244,6 +294,7 @@ def make_cc3d_file(name=None):
    <XMLScript Type="XMLScript">Simulation/test.xml</XMLScript>
     <PythonScript Type="PythonScript">Simulation/test.py</PythonScript> 
     <Resource Type="Python">Simulation/testSteppables.py</Resource> 
+    <Resource Type="Python">Simulation/extra_definitions.py</Resource> 
 </Simulation>\n'''
         return cc3d
     else:
@@ -252,6 +303,7 @@ def make_cc3d_file(name=None):
    <XMLScript Type="XMLScript">Simulation/{name}.xml</XMLScript>
    <PythonScript Type="PythonScript">Simulation/{name}.py</PythonScript>
    <Resource Type="Python">Simulation/{name}Steppables.py</Resource>
+   <Resource Type="Python">Simulation/extra_definitions.py</Resource> 
 </Simulation>\n'''
         return cc3d
 
@@ -345,8 +397,7 @@ if __name__=="__main__":
     print(f"Loading {example_path}")
     tree = ET.parse(example_path)
     xml_root = tree.getroot()
-    
-    
+
     
     print("Getting PhysiCell XML tags")
     tags = get_tags(xml_root)
@@ -359,7 +410,13 @@ if __name__=="__main__":
     
     
     print("Generating <Plugin CellType/>")
-    ct_str, wall, cell_types = make_cell_type_plugin(tags, xml_root)
+    ct_str, wall, cell_types,  = make_cell_type_plugin(tags, xml_root)
+    
+    constraints = get_cell_constraints(tags, xml_root, ccdims[4], cctime[2])
+    
+    with open(os.path.join(out_sim_f, "extra_definitions.py"), 'w+') as f:
+        f.write("cell_constraints="+str(constraints)+"\n")
+    
     
     print("Generating <Plugin Contact/>")
     contact_plug = make_contact_plugin(cell_types)
