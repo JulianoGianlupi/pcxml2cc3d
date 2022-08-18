@@ -78,8 +78,8 @@ def get_time(pcdict):
                   "\n`<overall>\n\t<max_time units=...`\ndiffers from\n" \
                   f"`<time_units>unit</time_units>`.\nUsing: {time_unit}"
         warnings.warn(message)
-    mechdt = float(next(xml_root.iter("dt_mechanics")).text) if "dt_mechanics" \
-                                                                in tags else 1
+
+    mechdt = float(pcdict['overall']['dt_mechanics']['#text']) if "dt_mechanics" in pcdict['overall'].keys() else None
 
     steps = round(mt / mechdt)
 
