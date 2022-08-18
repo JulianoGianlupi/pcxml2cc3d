@@ -24,7 +24,6 @@ def get_tags(root):
 
 
 def get_dims(pcdict):
-
     xmin = float(pcdict['domain']['x_min']) if "x_min" in pcdict['domain'].keys() else None
     xmax = float(pcdict['domain']['x_max']) if "x_max" in pcdict['domain'].keys() else None
 
@@ -68,15 +67,15 @@ def get_dims(pcdict):
     return ((xmin, xmax), (ymin, ymax), (zmin, zmax), units), \
            (cc3dx, cc3dy, cc3dz, cc3dspaceunitstr, cc3dds)
 
-def get_time(pcdict):
-    
-    mt = float(next(xml_root.iter("max_time")).text) if "max_time" in tags \
-        else 100000
-    mtunit = next(xml_root.iter("max_time")).attrib["units"] if "max_time" in tags \
-        else None
 
-    time_unit = next(xml_root.iter("time_units")).text if "time_units" in tags \
-        else None
+def get_time(pcdict):
+    mt = float(pcdict['overall']['max_time']['#text']) if "max_time" in pcdict['overall'].keys() and \
+                                                          '#text' in pcdict['overall']['max_time'].keys() else 100000
+
+    mtunit = pcdict['overall']['max_time']['@units'] if "max_time" in pcdict['overall'].keys() and '@units' in \
+                                                               pcdict['overall']['max_time'].keys() else None
+
+    time_unit = pcdict['overall']['time_units'] if "time_units" in pcdict['overall'].keys() else None
 
     if mtunit != time_unit:
         message = f"Warning: Psysicell time units in " \
@@ -132,8 +131,6 @@ def get_parallel(tags, root):
 
 
 def make_potts(pcdict):
-
-
     # todo: figure out the spatial dimensions. What dx/dy/dz mean in
     #     <domain>
     # 		<x_min>-400</x_min>
@@ -175,6 +172,7 @@ def make_potts(pcdict):
 </Potts>\n"""
 
     return potts_str, pcdims, ccdims, pctime, cctime
+
 
 def old_make_potts(tags, root):
     '''
@@ -466,7 +464,7 @@ if __name__ == "__main__":
         xml_raw = f.read()
     pcdict = x2d.parse(xml_raw)['PhysiCell_settings']
 
-    sys.exit()
+    
 
     print("Getting PhysiCell XML tags")
     tags = get_tags(xml_root)
@@ -475,7 +473,9 @@ if __name__ == "__main__":
     metadata_str, n_threads = make_metadata(tags, xml_root)
 
     print("Generating <Potts/>")
-    potts_str, pcdims, ccdims, pctime, cctime = make_potts(tags, xml_root)
+    potts_str, pcdims, ccdims, pctime, cctime = make_potts(pcdict)
+    
+    sys.exit()
 
     print("Generating <Plugin CellType/>")
     ct_str, wall, cell_types, = make_cell_type_plugin(tags, xml_root)
