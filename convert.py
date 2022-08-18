@@ -13,6 +13,7 @@ import copy
 import os
 import warnings
 import shutil as sh
+import xmltodict as x2d
 
 from itertools import combinations
 
@@ -23,30 +24,30 @@ def get_tags(root):
 
 def get_dims(tags, root):
     xml_root = root #todo: clean
-    
+
     # 
-    
+
     xmin = float(next(xml_root.iter("x_min")).text) if "x_min" in tags \
         else None
     xmax = float(next(xml_root.iter("x_max")).text) if "x_max" in tags \
         else None
-    
+
     ymin = float(next(xml_root.iter("y_min")).text) if "y_min" in tags \
         else None
     ymax = float(next(xml_root.iter("y_max")).text) if "y_max" in tags \
         else None
-    
+
     zmin = float(next(xml_root.iter("z_min")).text) if "x_min" in tags \
         else None
     zmax = float(next(xml_root.iter("z_max")).text) if "z_max" in tags \
         else None
-    
+
     units = "micron" if "space_units" not in tags else \
         next(xml_root.iter("space_units")).text
-        
+
     # the dx/dy/dz tags mean that for every voxel there are dx space-units.
     # therefore [dx] = [space-unit/voxel]. Source: John Metzcar
-    
+
     dx = float(next(xml_root.iter("dx")).text) if "dx" in tags else 1
     dy = float(next(xml_root.iter("dx")).text) if "dy" in tags else 1
     dz = float(next(xml_root.iter("dx")).text) if "dz" in tags else 1
@@ -56,21 +57,21 @@ def get_dims(tags, root):
             f"dx={dx}, dy={dy}, dz={dz}\n"\
                 f"Using {max(min(dx,dy,dz), 1)}"
         warnings.warn(message)
-    
+
     ds = max(min(dx,dy,dz), 1)
-    
+
     diffx = 1 if xmin is None or xmax is None else round(xmax-xmin)
     diffy = 1 if ymin is None or ymax is None else round(ymax-ymin)
     diffz = 1 if zmin is None or zmax is None else round(ymax-zmin)
-    
-    cc3dx = round(diffx/ds) 
+
+    cc3dx = round(diffx/ds)
     cc3dy = round(diffy/ds)
     cc3dz = round(diffz/ds)
-    
+
     cc3dds = cc3dx/diffx # pixel/unit
-    
+
     cc3dspaceunitstr = f"1 pixel = {cc3dds} {units}"
-    
+
     return ((xmin, xmax), (ymin,ymax), (zmin,zmax), units),\
             (cc3dx, cc3dy, cc3dz, cc3dspaceunitstr, cc3dds)
 
@@ -80,10 +81,10 @@ def get_time(tags, root):
         else 100000
     mtunit = next(xml_root.iter("max_time")).attrib["units"] if "max_time" in tags \
         else None
-        
+
     time_unit =  next(xml_root.iter("time_units")).text if "time_units" in tags \
         else None
-        
+
     if mtunit != time_unit:
         message = f"Warning: Psysicell time units in "\
                 "\n`<overall>\n\t<max_time units=...`\ndiffers from\n"\
@@ -91,15 +92,15 @@ def get_time(tags, root):
         warnings.warn(message)
     mechdt = float(next(xml_root.iter("dt_mechanics")).text) if "dt_mechanics"\
         in tags else 1
-    
+
     steps = round(mt/mechdt)
-    
+
     cc3ddt = 1/(mt/steps) # MCS/unit
-    
+
     cc3dtimeunitstr = f"1 MCS = {cc3ddt} {time_unit}"
-    
+
     # timeconvfact = 1/cc3ddt
-    
+
     return (mt, time_unit, mechdt), (steps, cc3dtimeunitstr, cc3ddt)
 
 def get_parallel(tags, root):
@@ -131,8 +132,8 @@ def make_potts(tags, root):
     cctime: tupple
 
     '''
-    
-    
+
+
     # todo: figure out the spatial dimensions. What dx/dy/dz mean in 
 #     <domain>
 # 		<x_min>-400</x_min>
@@ -147,14 +148,14 @@ def make_potts(tags, root):
 # 		<use_2D>true</use_2D>
 # 	</domain>
     pcdims, ccdims = get_dims(tags, root) # ((xmin, xmax), (ymin,ymax), (zmin,zmax), units), (cc3dx, cc3dy, cc3dz, cc3dspaceunitstr, cc3dds)
-    
-    
-    
+
+
+
     # space_units_str = f'"1 pixel = 1 {space_units}"'
-    
+
     pctime, cctime = get_time(tags, root)
-    
-    
+
+
     # still need to implement space units
     potts_str = f""" 
 <Potts>
@@ -175,13 +176,13 @@ def make_potts(tags, root):
    <!-- <Boundary_x>Periodic</Boundary_x> -->
    <!-- <Boundary_y>Periodic</Boundary_y> -->
 </Potts>\n"""
-    
+
     return potts_str, pcdims, ccdims, pctime, cctime
 
 def make_metadata(tags, root, out=100):
-    
+
     threads = get_parallel(tags, root)
-    
+
     metadata = f'''
 <Metadata>
   <!-- Basic properties simulation -->
@@ -189,15 +190,15 @@ def make_metadata(tags, root, out=100):
   <DebugOutputFrequency>{out}</DebugOutputFrequency>
   <!-- <NonParallelModule Name="Potts"/> -->
 </Metadata>\n'''
-    
+
     return metadata, threads
 
 def get_boundary_wall(tags, root):
-    
+
     if "virtual_wall_at_domain_edge" in tags:
         wall = next(root.iter("virtual_wall_at_domain_edge")).text.upper()
         if wall == "TRUE":
-            return True 
+            return True
         else:
             return False
     else:
@@ -206,71 +207,71 @@ def get_boundary_wall(tags, root):
 
 def get_cell_volume(element):
     se = element.find("phenotype/volume/total")
-    
+
     if se is None:
         return None, None
-    
+
     volume = float(se.text)
     unit = se.attrib["units"]
-    
+
     return volume, unit
 
 def make_cell_type_tags(tags,root):
-    
+
     s = ''
     cell_types = []
     idx = 1
-    
+
     # volumes = {}
-    
+
     for child in root.iter("cell_definition"):
         # print(child.tag, child.attrib, child.text)
         name = child.attrib['name'].replace(" ", "_")
         cell_types.append(name)
         ctt = f'\t<CellType TypeId="{idx}" TypeName="{name}"/>\n'
         s += ctt
-        
+
         # volume, unit = get_cell_volume(child)
-        
+
         # volumes[name] = {}
         # # volumes[name]["volume"]
         # volumes[name]["target"] = volume
         # volumes[name]["unit"] = unit
-        
+
         idx+=1
-        
+
     create_wall = get_boundary_wall(tags, root)
-    
+
     if create_wall:
         s += f'\t<CellType Freeze="" TypeId="{idx}" TypeName="WALL"/>\n'
         cell_types.append("WALL")
-    
+
     return s, create_wall, cell_types
 
 def make_cell_type_plugin(tags,root):
-    
+
     ct_str = '\n<Plugin Name="CellType">\n\t'\
         '<CellType TypeId="0" TypeName="Medium"/>\n'
     typesstr, wall, cell_types = make_cell_type_tags(tags, root)
-    
+
     ct_str += typesstr
     ct_str += '</Plugin>'
-    
+
     return ct_str, wall, cell_types
 
 def get_cell_mechanics(element):
     se = element.find("phenotype/mechanics")
-    
+
     if se is None:
         return
     d = {}
     for sse in se.getchildren():
-        
+
         if sse.tag != "options":
-            d[sse.tag] = {'units': sse.attrib["units"], 
+            d[sse.tag] = {'units': sse.attrib["units"],
                           'value': float(sse.text)}
     return d
-    
+
 
 
 def get_cell_constraints(tags, root, space_unit, time_unit):
@@ -280,14 +281,14 @@ def get_cell_constraints(tags, root, space_unit, time_unit):
         constraints[ctype] = {}
         volume, unit = get_cell_volume(child)
         dim = int(unit.split("^")[-1])
-        volumepx = volume*(space_unit**dim) 
+        volumepx = volume*(space_unit**dim)
         constraints[ctype]["volume"] = {f"volume ({unit})": volume,
                                         "volume (pixels)": volumepx}
         constraints[ctype]["mechanics"] = get_cell_mechanics(child)
     return constraints
 
 def make_cc3d_file(name=None):
-    
+
     if name is None:
         cc3d = '''
 <Simulation version="4.3.0">
@@ -309,16 +310,16 @@ def make_cc3d_file(name=None):
 
 def make_contact_plugin(celltypes):
     # replace ASAP with contact flex
-    
-    
-    
+
+
+
     combs = list(combinations(celltypes, 2))
-    
+
     for t in celltypes:
         combs.append((t,t))
-    
+
     combs.reverse()
-    
+
     contact_plug = """
 <Plugin Name="Contact">
 \t<!-- PhysiCell doesn't have an equivalent to this plugin. Its  -->
@@ -327,123 +328,127 @@ def make_contact_plugin(celltypes):
 \t<!-- A better option (to be implemented) is to use the adhesion flex -->
 \t<!-- Specification of adhesion energies -->
 \t<Energy Type1="Medium" Type2="Medium">10.0</Energy>\n"""
-    
+
     # 1 make the medium contact energies
     me = ""
     for t in celltypes:
         me += f'\t<Energy Type1="Medium" Type2="{t}">10.0</Energy>\n'
-    
+
     # 2 make the combination energies
-    
+
     ce = ""
     for t1, t2 in combs:
         ce += f'\t<Energy Type1="{t1}" Type2="{t2}">10.0</Energy>\n'
-    
+
     contact_plug += me + ce + "\t<NeighborOrder>3</NeighborOrder>\n</Plugin>"
     return contact_plug
 
 
 def extra_for_testing(celltypes, xmax, ymax, zmax):
-    
+
     beg='''<Steppable Type="UniformInitializer">
 \t<!-- Initial layout of cells in the form of rectangular slab -->
 \t<Region>\n'''
-    
+
     box_min = f'\t\t<BoxMin x="{max(1, xmax-50)}" y="{max(1, ymax-50)}" z="{max(1, xmax-50)}"/>\n'
     box_max = f'\t\t<BoxMax x="{xmax-10}" y="{ymax-10}" z="{zmax-10}"/>\n'
-    
+
     gap = "\t\t<Gap>0</Gap>\n\t\t<Width>7</Width>\n"
 
     types = ''
-    for t in celltypes: 
+    for t in celltypes:
         if t.upper()=="WALL":
             continue
         types += f"{t},"
-    
+
     types = types[:-1]
-    
+
     types = "\t\t<Types>"+types+"</Types>\n"
-    
+
     end='''\t</Region>
 </Steppable>'''
-    
+
     return beg+box_min+box_max+gap+types+end
-    
+
 
 if __name__=="__main__":
-    
-    
-    
+
+
+
     print("Running test")
-    
+
     print("Creating ./test")
     out_folder = r"./test"
     if not os.path.isdir(out_folder):
         os.mkdir(out_folder)
-    
+
     print("Creating ./test/Simulation")
-    
+
     out_sim_f = os.path.join(out_folder, "Simulation")
     if not os.path.isdir(out_sim_f):
         os.mkdir(out_sim_f)
-    
+
     print("Creating test/test.cc3d")
-    
+
     with open("test/test.cc3d", "w+") as f:
         f.write(make_cc3d_file())
-    
+
     example_path = r"./example_pcxml/"+"annotated_cancer_immune3D_flat.xml"
-    
+
     print(f"Loading {example_path}")
     tree = ET.parse(example_path)
     xml_root = tree.getroot()
 
-    
+    with open(example_path, 'r') as f:
+        xml_raw = f.read()
+    pcdict = x2d.parse(xml_raw)['PhysiCell_settings']
+
+    sys.exit()
+
     print("Getting PhysiCell XML tags")
     tags = get_tags(xml_root)
-    
+
     print("Generating <Metadata/>")
     metadata_str, n_threads = make_metadata(tags, xml_root)
-    
+
     print("Generating <Potts/>")
     potts_str, pcdims, ccdims, pctime, cctime = make_potts(tags, xml_root)
-    
-    
+
+
     print("Generating <Plugin CellType/>")
     ct_str, wall, cell_types,  = make_cell_type_plugin(tags, xml_root)
-    
+
     constraints = get_cell_constraints(tags, xml_root, ccdims[4], cctime[2])
-    
+
     with open(os.path.join(out_sim_f, "extra_definitions.py"), 'w+') as f:
         f.write("cell_constraints="+str(constraints)+"\n")
-    
-    
+
+
     print("Generating <Plugin Contact/>")
     contact_plug = make_contact_plugin(cell_types)
-    
+
     extra = extra_for_testing(cell_types, ccdims[0], ccdims[1], ccdims[2])
-    
+
     print("Merging")
     cc3dml = "<CompuCell3D>\n"
     cc3dml += metadata_str+potts_str+ct_str+contact_plug +'\n'+extra+\
         "\n</CompuCell3D>\n"
-    
+
     print(f"Creating {out_sim_f}/test.xml")
     with open(os.path.join(out_sim_f, "test.xml"), "w+") as f:
         f.write(cc3dml)
-        
+
     print("Copying python files")
-    
+
     sh.copy(r'./base_cc3d_python_scripts/test.py', out_sim_f)
     sh.copy(r'./base_cc3d_python_scripts/testSteppables.py', out_sim_f)
-    
+
     print("______________\nDONE!!")
     # print(cc3dml)
-    
+
     for child in xml_root.iter():
         break
         print(child.tag, child.attrib, child.text)
         if child.tag == "max_time":
-            
+
             break
-    
