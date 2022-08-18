@@ -19,10 +19,6 @@ from itertools import combinations
 time_convs = {}
 
 
-def get_tags(root):
-    return [c.tag for c in root.iter()]
-
-
 def get_dims(pcdict):
     xmin = float(pcdict['domain']['x_min']) if "x_min" in pcdict['domain'].keys() else None
     xmax = float(pcdict['domain']['x_max']) if "x_max" in pcdict['domain'].keys() else None
@@ -223,7 +219,6 @@ def get_cell_mechanics(subdict):
             if key != "options":
                 d[key] = {'units': item['@units'],
                           'value': float(item['#text'])}
-        # return d
     else:
         return None
 
@@ -356,9 +351,6 @@ if __name__ == "__main__":
         xml_raw = f.read()
     pcdict = x2d.parse(xml_raw)['PhysiCell_settings']
 
-    print("Getting PhysiCell XML tags")
-    tags = get_tags(xml_root)
-
     print("Generating <Metadata/>")
     metadata_str, n_threads = make_metadata(pcdict)
 
@@ -372,7 +364,7 @@ if __name__ == "__main__":
 
     constraints = get_cell_constraints(pcdict, ccdims[4], cctime[2])
 
-    sys.exit()
+    # sys.exit()
 
     with open(os.path.join(out_sim_f, "extra_definitions.py"), 'w+') as f:
         f.write("cell_constraints=" + str(constraints) + "\n")
