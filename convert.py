@@ -73,7 +73,7 @@ def get_time(pcdict):
                                                           '#text' in pcdict['overall']['max_time'].keys() else 100000
 
     mtunit = pcdict['overall']['max_time']['@units'] if "max_time" in pcdict['overall'].keys() and '@units' in \
-                                                               pcdict['overall']['max_time'].keys() else None
+                                                        pcdict['overall']['max_time'].keys() else None
 
     time_unit = pcdict['overall']['time_units'] if "time_units" in pcdict['overall'].keys() else None
 
@@ -99,6 +99,7 @@ def get_time(pcdict):
 def get_parallel(pcdict):
     return int(pcdict['parallel']['omp_num_threads']) if 'parallel' in pcdict.keys() and \
                                                          'omp_num_threads' in pcdict['parallel'].keys() else 1
+
 
 def make_potts(pcdict):
     # todo: figure out the spatial dimensions. What dx/dy/dz mean in
@@ -143,6 +144,7 @@ def make_potts(pcdict):
 
     return potts_str, pcdims, ccdims, pctime, cctime
 
+
 def make_metadata(pcdict, out=100):
     threads = get_parallel(pcdict)
 
@@ -169,7 +171,16 @@ def get_boundary_wall(pcdict):
     return False
 
 
-def get_cell_volume(element):
+def get_cell_volume(subdict):
+    if 'phenotype' in subdict.keys() and 'volume' in subdict['phenotype'].keys() and \
+            'total' in subdict['phenotype']['volume'].keys():
+        volume = float(subdict['phenotype']['volume']['total']['#text'])
+        units = subdict['phenotype']['volume']['total']['@units']
+        return volume, units
+    return None, None
+
+
+def old_get_cell_volume(element):
     se = element.find("phenotype/volume/total")
 
     if se is None:
@@ -223,8 +234,21 @@ def make_cell_type_plugin(tags, root):
 
     return ct_str, wall, cell_types
 
+def get_cell_mechanics(subdict):
 
-def get_cell_mechanics(element):
+    if 'phenotype' in subdict.keys() and 'mechanics' in subdict['phenotype'].keys():
+        d = {}
+        for key, item in subdict['phenotype']['mechanics'].items():
+            if key != "options":
+                d[key] = {'units': item['@units'],
+                          'value': float(item['#text'])}
+        # return d
+    else:
+        return None
+
+    return d
+
+def old_get_cell_mechanics(element):
     se = element.find("phenotype/mechanics")
 
     if se is None:
@@ -237,8 +261,22 @@ def get_cell_mechanics(element):
                           'value': float(sse.text)}
     return d
 
+def get_cell_constraints(pcdict, space_unit, time_unit):
+    constraints = {}
 
-def get_cell_constraints(tags, root, space_unit, time_unit):
+    for child in pcdict['cell_definitions']['cell_definition']:
+        ctype = child['@name'].replace(" ", "_")
+        constraints[ctype] = {}
+        volume, unit = get_cell_volume(child)
+        dim = int(unit.split("^")[-1])
+        volumepx = volume * (space_unit ** dim)
+        constraints[ctype]["volume"] = {f"volume ({unit})": volume,
+                                        "volume (pixels)": volumepx}
+        constraints[ctype]["mechanics"] = get_cell_mechanics(child)
+
+    return constraints
+
+def old_get_cell_constraints(tags, root, space_unit, time_unit):
     constraints = {}
     for child in root.iter("cell_definition"):
         ctype = child.attrib['name'].replace(" ", "_")
@@ -363,8 +401,6 @@ if __name__ == "__main__":
         xml_raw = f.read()
     pcdict = x2d.parse(xml_raw)['PhysiCell_settings']
 
-    
-
     print("Getting PhysiCell XML tags")
     tags = get_tags(xml_root)
 
@@ -373,13 +409,15 @@ if __name__ == "__main__":
 
     print("Generating <Potts/>")
     potts_str, pcdims, ccdims, pctime, cctime = make_potts(pcdict)
-    
-    sys.exit()
+
+
 
     print("Generating <Plugin CellType/>")
     ct_str, wall, cell_types, = make_cell_type_plugin(tags, xml_root)
 
-    constraints = get_cell_constraints(tags, xml_root, ccdims[4], cctime[2])
+    constraints = get_cell_constraints(pcdict, ccdims[4], cctime[2])
+
+    sys.exit()
 
     with open(os.path.join(out_sim_f, "extra_definitions.py"), 'w+') as f:
         f.write("cell_constraints=" + str(constraints) + "\n")
