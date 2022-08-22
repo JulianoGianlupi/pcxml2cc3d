@@ -364,14 +364,29 @@ def get_field_parameters(subdict):
     return
 
 
-def get_microenvironment(pcdict, space_conv, time_conv, space_unit, time_unit):
+def get_space_time_from_diffusion(unit):
+    parts = unit.split("/")
+    timeunit = parts[-1]
+    spaceunit = parts[1].split("^")[0]
+    return spaceunit, timeunit
+
+def get_microenvironment(pcdict, space_unit, time_unit, autoconvert_space, autoconvert_time,
+                         space_convs=space_convs, time_convs=time_convs):
     diffusing_elements = {}
     fields = pcdict['microenvironment_setup']['variable']
     for subel in field:
+
+        auto_s_this = autoconvert_space
+        auto_t_this = autoconvert_time
+
         diffusing_elements[subel['@name']] = {}
         diffusing_elements[subel['@name']]["concentration_units"] = subel["@units"]
         diffusing_elements[subel['@name']]["D_w_units"] = \
             subel['physical_parameter_set']['diffusion_coefficient']['#text']
+
+        spaceunit, timeunit = get_space_time_from_diffusion(diffusing_elements[subel['@name']]["D_w_units"])
+
+        # if auto_s_this and auto_t_this:
 
 
 if __name__ == "__main__":
