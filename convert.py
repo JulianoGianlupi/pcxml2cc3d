@@ -5,7 +5,6 @@ Created on Mon Aug 15 09:45:52 2022
 @author: Juliano Ferrari Gianlupi
 """
 
-
 # import sys
 # import string
 # import copy
@@ -211,8 +210,8 @@ def make_cell_type_plugin(pcdict):
 
     return ct_str, wall, cell_types
 
-def get_cell_mechanics(subdict):
 
+def get_cell_mechanics(subdict):
     if 'phenotype' in subdict.keys() and 'mechanics' in subdict['phenotype'].keys():
         d = {}
         for key, item in subdict['phenotype']['mechanics'].items():
@@ -223,6 +222,7 @@ def get_cell_mechanics(subdict):
         return None
 
     return d
+
 
 def get_cell_constraints(pcdict, space_unit, time_unit):
     constraints = {}
@@ -321,6 +321,20 @@ def extra_for_testing(celltypes, xmax, ymax, zmax):
     return beg + box_min + box_max + gap + types + end
 
 
+def get_field_parameters(subdict):
+    return
+
+
+def get_microenvironment(pcdict, space_conv, time_conv, space_unit, time_unit):
+    diffusing_elements = {}
+    fields = pcdict['microenvironment_setup']['variable']
+    for subel in field:
+        diffusing_elements[subel['@name']] = {}
+        diffusing_elements[subel['@name']]["concentration_units"] = subel["@units"]
+        diffusing_elements[subel['@name']]["D_w_units"] = \
+            subel['physical_parameter_set']['diffusion_coefficient']['#text']
+
+
 if __name__ == "__main__":
 
     print("Running test")
@@ -354,8 +368,6 @@ if __name__ == "__main__":
     print("Generating <Potts/>")
     potts_str, pcdims, ccdims, pctime, cctime = make_potts(pcdict)
 
-
-
     print("Generating <Plugin CellType/>")
     ct_str, wall, cell_types, = make_cell_type_plugin(pcdict)
 
@@ -387,4 +399,3 @@ if __name__ == "__main__":
 
     print("______________\nDONE!!")
     # print(cc3dml)
-
