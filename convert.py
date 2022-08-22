@@ -5,8 +5,7 @@ Created on Mon Aug 15 09:45:52 2022
 @author: Juliano Ferrari Gianlupi
 """
 
-
-# import sys
+import sys
 # import string
 # import copy
 import os
@@ -16,10 +15,37 @@ import xmltodict as x2d
 
 from itertools import combinations
 
-time_convs = {}
+# defines conversion factors to meter
+space_convs = {"micron": 1e-6,
+               "micrometer": 1e-6,
+               "micro": 1e-6,
+               "milli": 1e-3,
+               "millimeter": 1e-3,
+               "nano": 1e-9,
+               "nanometer": 1e-9,
+               'meter': 1
+               }
+
+# defines conversion factors to minutes
+time_convs = {"millisecond": 1e-3 / 60,
+              "milliseconds": 1e-3 / 60,
+              "microsecond": 1e-6 / 60,
+              "microseconds": 1e-6 / 60,
+              "second": 1 / 60,
+              "s": 1 / 60,
+              "seconds": 1 / 60,
+              "hours": 60,
+              "hour": 60,
+              "h": 60,
+              "day": 24 * 60,
+              "days": 24 * 60,
+              "week": 7 * 24 * 60,
+              "weeks": 7 * 24 * 60,
+              "minutes": 1,
+              "min": 1}
 
 
-def get_dims(pcdict):
+def get_dims(pcdict, space_convs=space_convs):
     xmin = float(pcdict['domain']['x_min']) if "x_min" in pcdict['domain'].keys() else None
     xmax = float(pcdict['domain']['x_max']) if "x_max" in pcdict['domain'].keys() else None
 
@@ -31,6 +57,13 @@ def get_dims(pcdict):
 
     units = pcdict['overall']['space_units'] if 'overall' in pcdict.keys() and \
                                                 'space_units' in pcdict['overall'].keys() else 'micron'
+
+    autoconvert_space = True
+    if units not in space_convs.keys():
+        message = f"WARNING: {units} is not part of known space units. Automatic space-unit conversion disabled." \
+                  f"Available units for auto-conversion are:\n{space_convs.keys()}"
+        warnings.warn(message)
+        autoconvert_space = False
 
     # the dx/dy/dz tags mean that for every voxel there are dx space-units.
     # therefore [dx] = [space-unit/voxel]. Source: John Metzcar
@@ -58,13 +91,16 @@ def get_dims(pcdict):
 
     cc3dds = cc3dx / diffx  # pixel/unit
 
+    # [cc3dds] = pixel/unit
+    # [cc3dds] * unit = pixel
+
     cc3dspaceunitstr = f"1 pixel = {cc3dds} {units}"
 
     return ((xmin, xmax), (ymin, ymax), (zmin, zmax), units), \
-           (cc3dx, cc3dy, cc3dz, cc3dspaceunitstr, cc3dds)
+           (cc3dx, cc3dy, cc3dz, cc3dspaceunitstr, cc3dds, autoconvert_space)
 
 
-def get_time(pcdict):
+def get_time(pcdict, time_convs=time_convs):
     mt = float(pcdict['overall']['max_time']['#text']) if "max_time" in pcdict['overall'].keys() and \
                                                           '#text' in pcdict['overall']['max_time'].keys() else 100000
 
@@ -79,17 +115,27 @@ def get_time(pcdict):
                   f"`<time_units>unit</time_units>`.\nUsing: {time_unit}"
         warnings.warn(message)
 
+    autoconvert_time = True
+    if time_unit not in time_convs.keys():
+        message = f"WARNING: {time_unit} is not part of known time units. Automatic time-unit conversion disabled." \
+                  f"Available units for auto-conversion are:\n{time_convs.keys()}"
+        warnings.warn(message)
+        autoconvert_time = False
+
     mechdt = float(pcdict['overall']['dt_mechanics']['#text']) if "dt_mechanics" in pcdict['overall'].keys() else None
 
     steps = round(mt / mechdt)
 
     cc3ddt = 1 / (mt / steps)  # MCS/unit
 
+    # [cc3ddt] = MCS/unit
+    # [cc3ddt] * unit = MCS
+
     cc3dtimeunitstr = f"1 MCS = {cc3ddt} {time_unit}"
 
     # timeconvfact = 1/cc3ddt
 
-    return (mt, time_unit, mechdt), (steps, cc3dtimeunitstr, cc3ddt)
+    return (mt, time_unit, mechdt), (steps, cc3dtimeunitstr, cc3ddt, autoconvert_time)
 
 
 def get_parallel(pcdict):
@@ -211,8 +257,8 @@ def make_cell_type_plugin(pcdict):
 
     return ct_str, wall, cell_types
 
-def get_cell_mechanics(subdict):
 
+def get_cell_mechanics(subdict):
     if 'phenotype' in subdict.keys() and 'mechanics' in subdict['phenotype'].keys():
         d = {}
         for key, item in subdict['phenotype']['mechanics'].items():
@@ -223,6 +269,7 @@ def get_cell_mechanics(subdict):
         return None
 
     return d
+
 
 def get_cell_constraints(pcdict, space_unit, time_unit):
     constraints = {}
@@ -321,6 +368,205 @@ def extra_for_testing(celltypes, xmax, ymax, zmax):
     return beg + box_min + box_max + gap + types + end
 
 
+def get_field_parameters(subdict):
+    return
+
+
+def get_space_time_from_diffusion(unit):
+    parts = unit.split("/")
+    timeunit = parts[-1]
+    spaceunit = parts[0].split("^")[0]
+    return spaceunit, timeunit
+
+
+def get_microenvironment(pcdict, space_factor, space_unit, time_factor, time_unit, autoconvert_time=True,
+                         autoconvert_space=True, space_convs=space_convs, time_convs=time_convs):
+    diffusing_elements = {}
+    fields = pcdict['microenvironment_setup']['variable']
+    for subel in fields:
+
+        auto_s_this = autoconvert_space
+        auto_t_this = autoconvert_time
+
+        diffusing_elements[subel['@name']] = {}
+        diffusing_elements[subel['@name']]["concentration_units"] = subel["@units"]
+        diffusing_elements[subel['@name']]["D_w_units"] = \
+            float(subel['physical_parameter_set']['diffusion_coefficient']['#text'])
+
+        this_space, this_time = get_space_time_from_diffusion(subel['physical_parameter_set']['diffusion_coefficient']
+                                                              ['@units'])
+
+        if this_space != space_unit:
+            message = f"WARNING: space unit found in diffusion coefficient of {subel['@name']} does not match" \
+                      f"space unit found while converting <overall>:\n\t<overall>:{space_unit};\n\t{subel['@name']}:{this_space}" \
+                      f"\nautomatic space-unit conversion for {subel['@name']} disabled"
+            warnings.warn(message)
+            auto_s_this = False
+            # space_conv_factor = 1
+        if this_time != time_unit:
+            message = f"WARNING: time unit found in diffusion coefficient of {subel['@name']} does not match" \
+                      f"space unit found while converting <overall>:\n\t<overall>:{time_unit};" \
+                      f"\n\t{subel['@name']}:{this_time}" \
+                      f"\nautomatic time-unit conversion for {subel['@name']} disabled"
+            warnings.warn(message)
+            auto_t_this = False
+            # time_conv_factor = 1
+
+        diffusing_elements[subel['@name']]["auto"] = (auto_s_this, auto_t_this)
+
+        if auto_s_this:
+            space_conv_factor = space_factor
+        else:
+            space_conv_factor = 1
+
+        if auto_t_this:
+            time_conv_factor = time_factor
+        else:
+            time_conv_factor = 1
+
+        D = diffusing_elements[subel['@name']]["D_w_units"] * space_conv_factor * space_conv_factor / time_conv_factor
+        diffusing_elements[subel['@name']]["D"] = D
+
+        # [cc3dds] = pixel/unit
+        # [cc3dds] * unit = pixel -> pixel^2 = ([cc3dds] * unit)^2
+        # [cc3ddt] = MCS/unit
+        # [cc3ddt] * unit = MCS -> 1/MCS = 1/([cc3ddt] * unit)
+
+        if auto_s_this and auto_t_this:
+            diffusing_elements[subel['@name']]["D_conv_factor_text"] = f"1 pixel^2/MCS" \
+                                                                       f" = {space_conv_factor * space_conv_factor / time_conv_factor}" \
+                                                                       f"{space_unit}^2/{time_unit}"
+            diffusing_elements[subel['@name']]["D_conv_factor"] = space_conv_factor * space_conv_factor / \
+                                                                  time_conv_factor
+            diffusing_elements[subel['@name']]["D_og_unit"] = f"{space_unit}^2/{time_unit}"
+        else:
+            diffusing_elements[subel['@name']]["D_conv_factor_text"] = "disabled autoconversion"
+            diffusing_elements[subel['@name']]["D_conv_factor"] = 1
+            diffusing_elements[subel['@name']]["D_og_unit"] = "disabled autoconversion, not known"
+        diffusing_elements[subel['@name']]["gamma_w_units"] = float(subel['physical_parameter_set']['decay_rate']
+                                                                    ['#text'])
+        gamma = diffusing_elements[subel['@name']]["gamma_w_units"] / time_conv_factor
+        diffusing_elements[subel['@name']]["gamma"] = gamma
+        if auto_t_this:
+            diffusing_elements[subel['@name']][
+                "gamma_conv_factor_text"] = f"1/MCS = {1 / time_conv_factor} 1/{time_unit}"
+            diffusing_elements[subel['@name']]["gamma_conv_factor"] = 1 / time_conv_factor
+            diffusing_elements[subel['@name']]["gamma_og_unit"] = f"1/{time_unit}"
+        else:
+            diffusing_elements[subel['@name']]["gamma_conv_factor_text"] = "disabled autoconversion"
+            diffusing_elements[subel['@name']]["gamma_conv_factor"] = 1
+            diffusing_elements[subel['@name']]["gamma_og_unit"] = "disabled autoconversion, not known"
+
+        diffusing_elements[subel['@name']]["initial_condition"] = subel['initial_condition']['#text']
+
+        diffusing_elements[subel['@name']]["dirichlet"] = subel['Dirichlet_boundary_condition']['@enabled']
+        diffusing_elements[subel['@name']]["dirichlet_value"] = float(subel['Dirichlet_boundary_condition']['#text'])
+
+    return diffusing_elements
+
+
+def make_diffusion_plug(diffusing_elements, celltypes, flag_2d):
+    header = f'\n\n\t<Steppable Type="DiffusionSolverFE">\t<!-- The conversion uses DiffusionSolverFE by default. You may ' \
+             f'wish to use another diffusion solver-->'
+
+    full_str = header
+
+    for key, item in diffusing_elements.items():
+        name = key.replace(" ", "_")
+
+        # diffusion data
+        df_str = f'\t\t<DiffusionField Name="{name}">\n\t\t\t<DiffusionData>\n\t\t\t\t<FieldName>{name}</FieldName>\n'
+        conc_units = f'\t\t\t\t<Concentration_units>{item["concentration_units"]}</Concentration_units>\n'
+        og_D = f'\t\t\t\t<Original_diffusion_constant D="{item["D_w_units"]}" units= "{item["D_og_unit"]}"/>\n'
+        # conv = f'\t\t\t\t<CC3D_to_original units="(pixel^2/MCS)/(item["D_og_unit"])">{item["D_conv_factor"]}' \
+        #        '</CC3D_to_original>'
+        D_str = f'\t\t\t\t<GlobalDiffusionConstant>{item["D"]}</GlobalDiffusionConstant>\n'
+        og_g = f'\t\t\t\t<Original_decay_constant gamma="{item["gamma_w_units"]}" units= "{item["gamma_og_unit"]}"/>\n'
+        g_str = f'\t\t\t\t<GlobalDecayConstant>{item["gamma"]}</GlobalDecayConstant>\n'
+
+        init_cond_warn = '\t\t\t\t<!-- CC3D allows for diffusing fields initial conditions, if one was detected it ' \
+                         'will -->\n' \
+                         '\t\t\t\t<!-- be used here. For several reasons it may not work, if something looks wrong with' \
+                         ' -->\n' \
+                         '\t\t\t\t<!-- your diffusing field at the start of the simulation this may be the reason.' \
+                         ' -->\n' \
+                         '\t\t\t\t<!-- CC3D also allows the diffusing field initial condition to be set by a file. ' \
+                         'Conversion of a -->\n' \
+                         '\t\t\t\t<!-- PhysiCell diffusing field initial condition file into a CC3D compliant one is ' \
+                         'left as -->\n' \
+                         '\t\t\t\t<!-- an exercise to the reader. -->\n'
+
+        init_cond = f'\t\t\t\t <InitialConcentrationExpression>{item["initial_condition"]}<' \
+                    f'/InitialConcentrationExpression>' \
+                    '\n\t\t\t\t<!-- <ConcentrationFileName>INITIAL CONCENTRATION FIELD - typically a file with ' \
+                    'path Simulation/NAME_OF_THE_FILE.txt</ConcentrationFileName> -->'
+
+        het_warning = "\n\t\t\t\t<!-- CC3D allows the definition of D and gamma on a cell type basis: -->\n"
+        cells_str = ""
+        for t in celltypes:
+            cells_str += f'\t\t\t\t<!--<DiffusionCoefficient CellType="{t}">{item["D"]}</DiffusionCoefficient>-->\n'
+            cells_str += f'\t\t\t\t<!--<DecayCoefficient CellType="{t}">{item["gamma"]}</DecayCoefficient>-->\n'
+        close_diff_data = "\t\t\t</DiffusionData>\n"
+
+        # boundary conditions
+
+        bc_head = '\t\t\t<BoundaryConditions>\n\t\t\t\t<!-- PhysiCell has either Dirichlet boundary conditions (i.e. ' \
+             'constant ' \
+             'value) -->\n\t\t\t\t<!-- or "free floating" boundary conditions (i.e., constant flux = 0). -->' \
+             '\n\t\t\t\t<!-- CC3D ' \
+             'allows ' \
+             'for more control of boundary conditions, you may want to revisit the issue. -->\n'
+        if item['dirichlet']:
+            bc_body = f'\t\t\t\t<Plane Axis="X">\n\t\t\t\t\t<ConstantValue PlanePosition="Min" Value=' \
+                      f'"{item["dirichlet_value"]}"/>\n\t\t\t\t\t<ConstantValue PlanePosition="Max" Value=' \
+                      f'"{item["dirichlet_value"]}"/>\n\t\t\t\t\t<!-- Other options are (examples): -->\n\t\t\t\t\t' \
+                      f'<!--<ConstantDerivative PlanePosition="Min" Value="10.0"/> -->\n\t\t\t\t\t<!--' \
+                      f'<ConstantDerivative PlanePosition="Max" Value="10.0"/> -->\n\t\t\t\t\t<!--<Periodic/>-->' \
+                        '\t\t\t\t</Plane>\n' \
+                      f'\t\t\t\t<Plane Axis="Y">\n\t\t\t\t\t<ConstantValue PlanePosition="Min" Value=' \
+                      f'"{item["dirichlet_value"]}"/>\n\t\t\t\t\t<ConstantValue PlanePosition="Max" Value=' \
+                      f'"{item["dirichlet_value"]}"/>\n\t\t\t\t\t<!-- Other options are (examples): -->\n\t\t\t\t\t' \
+                      f'<!--<ConstantDerivative PlanePosition="Min" Value="10.0"/> -->\n\t\t\t\t\t<!--' \
+                      f'<ConstantDerivative PlanePosition="Max" Value="10.0"/> -->\n\t\t\t\t\t<!--<Periodic/>-->' \
+                      '\n\t\t\t\t</Plane>\n'
+            if not flag_2d:
+                bc_body += f'\t\t\t\t<Plane Axis="Z">\n\t\t\t\t\t<ConstantValue PlanePosition="Min" Value=' \
+                      f'"{item["dirichlet_value"]}"/>\n\t\t\t\t\t<ConstantValue PlanePosition="Max" Value=' \
+                      f'"{item["dirichlet_value"]}"/>\n\t\t\t\t\t<!-- Other options are (examples): -->\n\t\t\t\t\t' \
+                      f'<!--<ConstantDerivative PlanePosition="Min" Value="10.0"/> -->\n\t\t\t\t\t<!--' \
+                      f'<ConstantDerivative PlanePosition="Max" Value="10.0"/> -->\n\t\t\t\t\t<!--<Periodic/>-->' \
+                        '\n\t\t\t\t</Plane>\n'
+        else:
+            bc_body = f'\t\t\t\t<Plane Axis="X">\n\t\t\t\t\t<ConstantDerivative PlanePosition="Min" Value=' \
+                      f'"0"/>\n\t\t\t\t\t<ConstantDerivative PlanePosition="Max" Value=' \
+                      f'"0"/>\n\t\t\t\t\t<!-- Other options are (examples): -->\n\t\t\t\t\t' \
+                      f'<!--<ConstantValue PlanePosition="Min" Value="10.0"/> -->\n\t\t\t\t\t<!--' \
+                      f'<ConstantValue PlanePosition="Max" Value="10.0"/> -->\n\t\t\t\t\t<!--<Periodic/>-->' \
+                      '\t\t\t\t</Plane>\n' \
+                      f'\t\t\t\t<Plane Axis="Y">\n\t\t\t\t\t<ConstantDerivative PlanePosition="Min" Value=' \
+                      f'"0"/>\n\t\t\t\t\t<ConstantDerivative PlanePosition="Max" Value=' \
+                      f'"0"/>\n\t\t\t\t\t<!-- Other options are (examples): -->\n\t\t\t\t\t' \
+                      f'<!--<ConstantValue PlanePosition="Min" Value="10.0"/> -->\n\t\t\t\t\t<!--' \
+                      f'<ConstantValue PlanePosition="Max" Value="10.0"/> -->\n\t\t\t\t\t<!--<Periodic/>-->' \
+                      '\t\t\t\t</Plane>\n'
+            if not flag_2d:
+                bc_body += f'\t\t\t\t<Plane Axis="Z">\n\t\t\t\t\t<ConstantDerivative PlanePosition="Min" Value=' \
+                           f'"0"/>\n\t\t\t\t\t<ConstantDerivative PlanePosition="Max" Value=' \
+                           f'"0"/>\n\t\t\t\t\t<!-- Other options are (examples): -->\n\t\t\t\t\t' \
+                           f'<!--<ConstantDerivative PlanePosition="Min" Value="10.0"/> -->\n\t\t\t\t\t<!--' \
+                           f'<ConstantDerivative PlanePosition="Max" Value="10.0"/> -->\n\t\t\t\t\t<!--<Periodic/>-->' \
+                           '\t\t\t\t</Plane>\n'
+        close_bc = "</BoundaryConditions>\n"
+        close_field = "</DiffusionField>\n"
+
+        full_field_def = df_str+conc_units+og_D+D_str+og_g+g_str+init_cond_warn+init_cond+het_warning+cells_str+\
+                         close_diff_data+bc_head+bc_body+close_bc+close_field
+        full_str += full_field_def
+    full_str +="</Steppable>"
+    return full_str
+
+
+
 if __name__ == "__main__":
 
     print("Running test")
@@ -354,14 +600,12 @@ if __name__ == "__main__":
     print("Generating <Potts/>")
     potts_str, pcdims, ccdims, pctime, cctime = make_potts(pcdict)
 
-
-
     print("Generating <Plugin CellType/>")
     ct_str, wall, cell_types, = make_cell_type_plugin(pcdict)
 
     constraints = get_cell_constraints(pcdict, ccdims[4], cctime[2])
 
-    # sys.exit()
+
 
     with open(os.path.join(out_sim_f, "extra_definitions.py"), 'w+') as f:
         f.write("cell_constraints=" + str(constraints) + "\n")
@@ -371,9 +615,13 @@ if __name__ == "__main__":
 
     extra = extra_for_testing(cell_types, ccdims[0], ccdims[1], ccdims[2])
 
+    d_elements = get_microenvironment(pcdict, ccdims[4], pcdims[3], cctime[2], pctime[1])
+
+    diffusion_string = make_diffusion_plug(d_elements, cell_types, False)
+
     print("Merging")
     cc3dml = "<CompuCell3D>\n"
-    cc3dml += metadata_str + potts_str + ct_str + contact_plug + '\n' + extra + \
+    cc3dml += metadata_str + potts_str + ct_str + contact_plug + diffusion_string + '\n' + extra + \
               "\n</CompuCell3D>\n"
 
     print(f"Creating {out_sim_f}/test.xml")
@@ -387,4 +635,3 @@ if __name__ == "__main__":
 
     print("______________\nDONE!!")
     # print(cc3dml)
-
