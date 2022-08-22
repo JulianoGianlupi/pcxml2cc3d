@@ -379,6 +379,14 @@ def get_space_time_from_diffusion(unit):
     return spaceunit, timeunit
 
 
+def get_secretion(pcdict):
+    # will have to be done in python
+    sec_data = {}
+    for child in pcdict['cell_definitions']['cell_definition']:
+        sec_data[child['@name'].replace(" ", "_")] = {}
+        sec_dict = child['phenotype']['secretion']
+
+
 def get_microenvironment(pcdict, space_factor, space_unit, time_factor, time_unit, autoconvert_time=True,
                          autoconvert_space=True, space_convs=space_convs, time_convs=time_convs):
     diffusing_elements = {}
@@ -511,18 +519,18 @@ def make_diffusion_plug(diffusing_elements, celltypes, flag_2d):
         # boundary conditions
 
         bc_head = '\t\t\t<BoundaryConditions>\n\t\t\t\t<!-- PhysiCell has either Dirichlet boundary conditions (i.e. ' \
-             'constant ' \
-             'value) -->\n\t\t\t\t<!-- or "free floating" boundary conditions (i.e., constant flux = 0). -->' \
-             '\n\t\t\t\t<!-- CC3D ' \
-             'allows ' \
-             'for more control of boundary conditions, you may want to revisit the issue. -->\n'
+                  'constant ' \
+                  'value) -->\n\t\t\t\t<!-- or "free floating" boundary conditions (i.e., constant flux = 0). -->' \
+                  '\n\t\t\t\t<!-- CC3D ' \
+                  'allows ' \
+                  'for more control of boundary conditions, you may want to revisit the issue. -->\n'
         if item['dirichlet']:
             bc_body = f'\t\t\t\t<Plane Axis="X">\n\t\t\t\t\t<ConstantValue PlanePosition="Min" Value=' \
                       f'"{item["dirichlet_value"]}"/>\n\t\t\t\t\t<ConstantValue PlanePosition="Max" Value=' \
                       f'"{item["dirichlet_value"]}"/>\n\t\t\t\t\t<!-- Other options are (examples): -->\n\t\t\t\t\t' \
                       f'<!--<ConstantDerivative PlanePosition="Min" Value="10.0"/> -->\n\t\t\t\t\t<!--' \
                       f'<ConstantDerivative PlanePosition="Max" Value="10.0"/> -->\n\t\t\t\t\t<!--<Periodic/>-->' \
-                        '\t\t\t\t</Plane>\n' \
+                      '\t\t\t\t</Plane>\n' \
                       f'\t\t\t\t<Plane Axis="Y">\n\t\t\t\t\t<ConstantValue PlanePosition="Min" Value=' \
                       f'"{item["dirichlet_value"]}"/>\n\t\t\t\t\t<ConstantValue PlanePosition="Max" Value=' \
                       f'"{item["dirichlet_value"]}"/>\n\t\t\t\t\t<!-- Other options are (examples): -->\n\t\t\t\t\t' \
@@ -531,11 +539,11 @@ def make_diffusion_plug(diffusing_elements, celltypes, flag_2d):
                       '\n\t\t\t\t</Plane>\n'
             if not flag_2d:
                 bc_body += f'\t\t\t\t<Plane Axis="Z">\n\t\t\t\t\t<ConstantValue PlanePosition="Min" Value=' \
-                      f'"{item["dirichlet_value"]}"/>\n\t\t\t\t\t<ConstantValue PlanePosition="Max" Value=' \
-                      f'"{item["dirichlet_value"]}"/>\n\t\t\t\t\t<!-- Other options are (examples): -->\n\t\t\t\t\t' \
-                      f'<!--<ConstantDerivative PlanePosition="Min" Value="10.0"/> -->\n\t\t\t\t\t<!--' \
-                      f'<ConstantDerivative PlanePosition="Max" Value="10.0"/> -->\n\t\t\t\t\t<!--<Periodic/>-->' \
-                        '\n\t\t\t\t</Plane>\n'
+                           f'"{item["dirichlet_value"]}"/>\n\t\t\t\t\t<ConstantValue PlanePosition="Max" Value=' \
+                           f'"{item["dirichlet_value"]}"/>\n\t\t\t\t\t<!-- Other options are (examples): -->\n\t\t\t\t\t' \
+                           f'<!--<ConstantDerivative PlanePosition="Min" Value="10.0"/> -->\n\t\t\t\t\t<!--' \
+                           f'<ConstantDerivative PlanePosition="Max" Value="10.0"/> -->\n\t\t\t\t\t<!--<Periodic/>-->' \
+                           '\n\t\t\t\t</Plane>\n'
         else:
             bc_body = f'\t\t\t\t<Plane Axis="X">\n\t\t\t\t\t<ConstantDerivative PlanePosition="Min" Value=' \
                       f'"0"/>\n\t\t\t\t\t<ConstantDerivative PlanePosition="Max" Value=' \
@@ -559,12 +567,11 @@ def make_diffusion_plug(diffusing_elements, celltypes, flag_2d):
         close_bc = "</BoundaryConditions>\n"
         close_field = "</DiffusionField>\n"
 
-        full_field_def = df_str+conc_units+og_D+D_str+og_g+g_str+init_cond_warn+init_cond+het_warning+cells_str+\
-                         close_diff_data+bc_head+bc_body+close_bc+close_field
+        full_field_def = df_str + conc_units + og_D + D_str + og_g + g_str + init_cond_warn + init_cond + het_warning + cells_str + \
+                         close_diff_data + bc_head + bc_body + close_bc + close_field
         full_str += full_field_def
-    full_str +="</Steppable>"
+    full_str += "</Steppable>"
     return full_str
-
 
 
 if __name__ == "__main__":
@@ -605,8 +612,6 @@ if __name__ == "__main__":
 
     constraints = get_cell_constraints(pcdict, ccdims[4], cctime[2])
 
-
-
     with open(os.path.join(out_sim_f, "extra_definitions.py"), 'w+') as f:
         f.write("cell_constraints=" + str(constraints) + "\n")
 
@@ -615,8 +620,10 @@ if __name__ == "__main__":
 
     extra = extra_for_testing(cell_types, ccdims[0], ccdims[1], ccdims[2])
 
+    print("parsing micro environment")
     d_elements = get_microenvironment(pcdict, ccdims[4], pcdims[3], cctime[2], pctime[1])
 
+    print("Generating diffusion plugin")
     diffusion_string = make_diffusion_plug(d_elements, cell_types, False)
 
     print("Merging")
