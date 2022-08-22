@@ -368,10 +368,6 @@ def extra_for_testing(celltypes, xmax, ymax, zmax):
     return beg + box_min + box_max + gap + types + end
 
 
-def get_field_parameters(subdict):
-    return
-
-
 def get_space_time_from_diffusion(unit):
     parts = unit.split("/")
     timeunit = parts[-1]
