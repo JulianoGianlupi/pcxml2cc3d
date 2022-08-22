@@ -379,8 +379,21 @@ def get_secretion(pcdict):
     # will have to be done in python
     sec_data = {}
     for child in pcdict['cell_definitions']['cell_definition']:
-        sec_data[child['@name'].replace(" ", "_")] = {}
-        sec_dict = child['phenotype']['secretion']
+        ctype =child['@name'].replace(" ", "_")
+        sec_data[ctype] = {}
+        sec_list = child['phenotype']['secretion']['substrate']
+        for sec in sec_list:
+            substrate = sec["@name"].replace(" ", "_")
+            sec_data[ctype][substrate] = {}
+            sec_data[ctype][substrate]['secretion_rate'] = float(sec['secretion_rate']['#text'])
+            sec_data[ctype][substrate]['secretion_unit'] = sec['secretion_rate']['@units']
+            sec_data[ctype][substrate]['secretion_target'] = float(sec['secretion_target']['#text'])
+            sec_data[ctype][substrate]['uptake_rate'] = float(sec['uptake_rate']['#text'])
+            sec_data[ctype][substrate]['uptake_unit'] = sec['uptake_rate']['@units']
+            sec_data[ctype][substrate]['net_export'] = float(sec['net_export_rate']['#text'])
+            sec_data[ctype][substrate]['net_export_unit'] = sec['net_export_rate']['@units']
+    return sec_data
+
 
 
 def get_microenvironment(pcdict, space_factor, space_unit, time_factor, time_unit, autoconvert_time=True,
@@ -621,6 +634,8 @@ if __name__ == "__main__":
 
     print("Generating diffusion plugin")
     diffusion_string = make_diffusion_plug(d_elements, cell_types, False)
+
+    secretion_dict = get_secretion(pcdict)  # todo: unit conversion
 
     print("Merging")
     cc3dml = "<CompuCell3D>\n"
