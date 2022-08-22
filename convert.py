@@ -42,7 +42,7 @@ time_convs = {"millisecond": 1e-3 / 60,
               "weeks": 7 * 24 * 60}
 
 
-def get_dims(pcdict):
+def get_dims(pcdict, space_convs=space_convs):
     xmin = float(pcdict['domain']['x_min']) if "x_min" in pcdict['domain'].keys() else None
     xmax = float(pcdict['domain']['x_max']) if "x_max" in pcdict['domain'].keys() else None
 
@@ -54,6 +54,14 @@ def get_dims(pcdict):
 
     units = pcdict['overall']['space_units'] if 'overall' in pcdict.keys() and \
                                                 'space_units' in pcdict['overall'].keys() else 'micron'
+
+    autoconvert_space = True
+    if units not in space_convs.keys():
+        message = f"WARNING: {units} is not part of known space units. Automatic space-unit conversion disabled."\
+                f"Available units for auto-conversion are:\n{space_convs.keys()}"
+        warnings.warn(message)
+        autoconvert_space = False
+
 
     # the dx/dy/dz tags mean that for every voxel there are dx space-units.
     # therefore [dx] = [space-unit/voxel]. Source: John Metzcar
@@ -84,10 +92,10 @@ def get_dims(pcdict):
     cc3dspaceunitstr = f"1 pixel = {cc3dds} {units}"
 
     return ((xmin, xmax), (ymin, ymax), (zmin, zmax), units), \
-           (cc3dx, cc3dy, cc3dz, cc3dspaceunitstr, cc3dds)
+           (cc3dx, cc3dy, cc3dz, cc3dspaceunitstr, cc3dds, autoconvert_space)
 
 
-def get_time(pcdict):
+def get_time(pcdict, time_convs=time_convs):
     mt = float(pcdict['overall']['max_time']['#text']) if "max_time" in pcdict['overall'].keys() and \
                                                           '#text' in pcdict['overall']['max_time'].keys() else 100000
 
@@ -102,6 +110,13 @@ def get_time(pcdict):
                   f"`<time_units>unit</time_units>`.\nUsing: {time_unit}"
         warnings.warn(message)
 
+    autoconvert_time = True
+    if time_unit not in time_convs.keys():
+        message = f"WARNING: {time_unit} is not part of known time units. Automatic time-unit conversion disabled." \
+                  f"Available units for auto-conversion are:\n{time_convs.keys()}"
+        warnings.warn(message)
+        autoconvert_time = False
+
     mechdt = float(pcdict['overall']['dt_mechanics']['#text']) if "dt_mechanics" in pcdict['overall'].keys() else None
 
     steps = round(mt / mechdt)
@@ -112,7 +127,7 @@ def get_time(pcdict):
 
     # timeconvfact = 1/cc3ddt
 
-    return (mt, time_unit, mechdt), (steps, cc3dtimeunitstr, cc3ddt)
+    return (mt, time_unit, mechdt), (steps, cc3dtimeunitstr, cc3ddt, autoconvert_time)
 
 
 def get_parallel(pcdict):
