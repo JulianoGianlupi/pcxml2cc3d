@@ -88,6 +88,9 @@ def get_dims(pcdict, space_convs=space_convs):
 
     cc3dds = cc3dx / diffx  # pixel/unit
 
+    # [cc3dds] = pixel/unit
+    # [cc3dds] * unit = pixel
+
     cc3dspaceunitstr = f"1 pixel = {cc3dds} {units}"
 
     return ((xmin, xmax), (ymin, ymax), (zmin, zmax), units), \
@@ -121,6 +124,9 @@ def get_time(pcdict, time_convs=time_convs):
     steps = round(mt / mechdt)
 
     cc3ddt = 1 / (mt / steps)  # MCS/unit
+
+    # [cc3ddt] = MCS/unit
+    # [cc3ddt] * unit = MCS
 
     cc3dtimeunitstr = f"1 MCS = {cc3ddt} {time_unit}"
 
