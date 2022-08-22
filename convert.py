@@ -384,7 +384,23 @@ def get_microenvironment(pcdict, space_unit, time_unit, autoconvert_space, autoc
         diffusing_elements[subel['@name']]["D_w_units"] = \
             subel['physical_parameter_set']['diffusion_coefficient']['#text']
 
-        spaceunit, timeunit = get_space_time_from_diffusion(diffusing_elements[subel['@name']]["D_w_units"])
+        this_space, this_time = get_space_time_from_diffusion(diffusing_elements[subel['@name']]["D_w_units"])
+
+        if this_space != space_unit:
+            message = f"WARNING: space unit found in diffusion coefficient of {subel['@name']} does not match"\
+            f"space unit found while converting <overall>:\n\t<overall>:{space_unit};\n\t{subel['@name']}:{this_space}"\
+            f"\nautomatic space-unit conversion for {subel['@name']} disabled"
+            warnings.warn(message)
+            auto_s_this = False
+            space_conv_factor = 1
+        if this_space != time_unit:
+            message = f"WARNING: time unit found in diffusion coefficient of {subel['@name']} does not match" \
+                      f"space unit found while converting <overall>:\n\t<overall>:{time_unit};"\
+                      f"\n\t{subel['@name']}:{this_time}" \
+                      f"\nautomatic time-unit conversion for {subel['@name']} disabled"
+            warnings.warn(message)
+            auto_t_this = False
+            time_conv_factor = 1
 
         # if auto_s_this and auto_t_this:
 
