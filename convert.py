@@ -15,6 +15,17 @@ import xmltodict as x2d
 
 from itertools import combinations
 
+# defines conversion factors to meter
+space_convs = {"micron": 1e-6,
+               "micrometer": 1e-6,
+               "micro": 1e-6,
+               "milli": 1e-3,
+               "millimeter": 1e-3,
+               "nano": 1e-9,
+               "nanometer": 1e-9
+               }
+
+# defines conversion factors to minutes
 time_convs = {}
 
 
