@@ -5,7 +5,7 @@ Created on Mon Aug 15 09:45:52 2022
 @author: Juliano Ferrari Gianlupi
 """
 
-# import sys
+import sys
 # import string
 # import copy
 import os
@@ -22,7 +22,8 @@ space_convs = {"micron": 1e-6,
                "milli": 1e-3,
                "millimeter": 1e-3,
                "nano": 1e-9,
-               "nanometer": 1e-9
+               "nanometer": 1e-9,
+               'meter': 1
                }
 
 # defines conversion factors to minutes
@@ -39,7 +40,9 @@ time_convs = {"millisecond": 1e-3 / 60,
               "day": 24 * 60,
               "days": 24 * 60,
               "week": 7 * 24 * 60,
-              "weeks": 7 * 24 * 60}
+              "weeks": 7 * 24 * 60,
+              "minutes": 1,
+              "min": 1}
 
 
 def get_dims(pcdict, space_convs=space_convs):
@@ -372,15 +375,15 @@ def get_field_parameters(subdict):
 def get_space_time_from_diffusion(unit):
     parts = unit.split("/")
     timeunit = parts[-1]
-    spaceunit = parts[1].split("^")[0]
+    spaceunit = parts[0].split("^")[0]
     return spaceunit, timeunit
 
 
-def get_microenvironment(pcdict, space_unit, time_unit, autoconvert_space, autoconvert_time,
-                         space_convs=space_convs, time_convs=time_convs):
+def get_microenvironment(pcdict, space_factor, space_unit, time_factor, time_unit, autoconvert_time=True,
+                         autoconvert_space=True, space_convs=space_convs, time_convs=time_convs):
     diffusing_elements = {}
     fields = pcdict['microenvironment_setup']['variable']
-    for subel in field:
+    for subel in fields:
 
         auto_s_this = autoconvert_space
         auto_t_this = autoconvert_time
@@ -388,9 +391,10 @@ def get_microenvironment(pcdict, space_unit, time_unit, autoconvert_space, autoc
         diffusing_elements[subel['@name']] = {}
         diffusing_elements[subel['@name']]["concentration_units"] = subel["@units"]
         diffusing_elements[subel['@name']]["D_w_units"] = \
-            subel['physical_parameter_set']['diffusion_coefficient']['#text']
+            float(subel['physical_parameter_set']['diffusion_coefficient']['#text'])
 
-        this_space, this_time = get_space_time_from_diffusion(diffusing_elements[subel['@name']]["D_w_units"])
+        this_space, this_time = get_space_time_from_diffusion(subel['physical_parameter_set']['diffusion_coefficient']
+                                                              ['@units'])
 
         if this_space != space_unit:
             message = f"WARNING: space unit found in diffusion coefficient of {subel['@name']} does not match" \
@@ -398,30 +402,63 @@ def get_microenvironment(pcdict, space_unit, time_unit, autoconvert_space, autoc
                       f"\nautomatic space-unit conversion for {subel['@name']} disabled"
             warnings.warn(message)
             auto_s_this = False
-            space_conv_factor = 1
-        if this_space != time_unit:
+            # space_conv_factor = 1
+        if this_time != time_unit:
             message = f"WARNING: time unit found in diffusion coefficient of {subel['@name']} does not match" \
                       f"space unit found while converting <overall>:\n\t<overall>:{time_unit};" \
                       f"\n\t{subel['@name']}:{this_time}" \
                       f"\nautomatic time-unit conversion for {subel['@name']} disabled"
             warnings.warn(message)
             auto_t_this = False
-            time_conv_factor = 1
+            # time_conv_factor = 1
+
+        diffusing_elements[subel['@name']]["auto"] = (auto_s_this, auto_t_this)
 
         if auto_s_this:
-            space_conv_factor = autoconvert_space
+            space_conv_factor = space_factor
+        else:
+            space_conv_factor = 1
 
         if auto_t_this:
-            time_conv_factor = autoconvert_time
+            time_conv_factor = time_factor
+        else:
+            time_conv_factor = 1
 
         D = diffusing_elements[subel['@name']]["D_w_units"] * space_conv_factor * space_conv_factor / time_conv_factor
         diffusing_elements[subel['@name']]["D"] = D
 
+        # [cc3dds] = pixel/unit
+        # [cc3dds] * unit = pixel -> pixel^2 = ([cc3dds] * unit)^2
+        # [cc3ddt] = MCS/unit
+        # [cc3ddt] * unit = MCS -> 1/MCS = 1/([cc3ddt] * unit)
 
-        # todo: WRONG
-        diffusing_elements[subel['@name']]["D_conv_factor"] = f"1 pixel^2/MCS" \
-                                                              f" = {space_conv_factor * space_conv_factor / time_conv_factor}" \
-        f""
+        if auto_s_this and auto_t_this:
+            diffusing_elements[subel['@name']]["D_conv_factor_text"] = f"1 pixel^2/MCS" \
+                                                                       f" = {space_conv_factor * space_conv_factor / time_conv_factor}" \
+                                                                       f"{space_unit}^2/{time_unit}"
+            diffusing_elements[subel['@name']]["D_conv_factor"] = space_conv_factor * space_conv_factor / \
+                                                                  time_conv_factor
+        else:
+            diffusing_elements[subel['@name']]["D_conv_factor_text"] ="disabled autoconversion"
+            diffusing_elements[subel['@name']]["D_conv_factor"] = 1
+        diffusing_elements[subel['@name']]["gamma_w_units"] = float(subel['physical_parameter_set']['decay_rate']
+                                                                    ['#text'])
+        gamma = diffusing_elements[subel['@name']]["gamma_w_units"] / time_conv_factor
+        diffusing_elements[subel['@name']]["gamma"] = gamma
+        if auto_t_this:
+            diffusing_elements[subel['@name']]["gamma_conv_factor_text"] = f"1/MCS = {1/time_conv_factor} 1/{time_unit}"
+            diffusing_elements[subel['@name']]["gamma_conv_factor"] = 1/time_conv_factor
+        else:
+            diffusing_elements[subel['@name']]["gamma_conv_factor_text"] = "disabled autoconversion"
+            diffusing_elements[subel['@name']]["gamma_conv_factor"] = 1
+
+        diffusing_elements[subel['@name']]["initial_condition"] = subel['initial_condition']['#text']
+
+        diffusing_elements[subel['@name']]["dirichlet"] = subel['Dirichlet_boundary_condition']['@enabled']
+        diffusing_elements[subel['@name']]["dirichlet_value"] = float(subel['Dirichlet_boundary_condition']['#text'])
+
+    return diffusing_elements
+
 
 if __name__ == "__main__":
 
@@ -461,7 +498,9 @@ if __name__ == "__main__":
 
     constraints = get_cell_constraints(pcdict, ccdims[4], cctime[2])
 
-    # sys.exit()
+    d_elements = get_microenvironment(pcdict, ccdims[4], pcdims[3], cctime[2], pctime[1])
+
+    sys.exit()
 
     with open(os.path.join(out_sim_f, "extra_definitions.py"), 'w+') as f:
         f.write("cell_constraints=" + str(constraints) + "\n")
