@@ -579,7 +579,7 @@ def make_diffusion_plug(diffusing_elements, celltypes, flag_2d):
         full_field_def = df_str + conc_units + og_D + D_str + og_g + g_str + init_cond_warn + init_cond + het_warning + cells_str + \
                          close_diff_data + bc_head + bc_body + close_bc + close_field
         full_str += full_field_def
-    full_str += "</Steppable>"
+    full_str += "</Steppable>\n"
     return full_str
 
 
