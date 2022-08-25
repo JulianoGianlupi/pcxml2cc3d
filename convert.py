@@ -584,10 +584,18 @@ def make_diffusion_plug(diffusing_elements, celltypes, flag_2d):
 
 
 def make_cell_loop(cell_type):
-    return f"for cell in self.cell_list_by_type(self.{cell_type.upper()})"
+    return f"for cell in self.cell_list_by_type(self.{cell_type.upper()}):\n"
 
 
-def make_cell_dict():
+def make_cell_dict(cell_types, secretion_dict):
+    for ctype in cell_types:
+        loop_start = make_cell_loop(ctype)
+        if ctype in secretion_dict.keys():
+            type_sec = secretion_dict[ctype]
+        else:
+            type_sec = None
+
+
 
 
 
