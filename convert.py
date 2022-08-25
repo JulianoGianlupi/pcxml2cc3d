@@ -596,6 +596,52 @@ def make_cell_dict(cell_types, secretion_dict):
             type_sec = None
 
 
+def convert_secretion_rate(rate, unit, time_conv, pctimeunit, time_convs=time_convs):
+    secretion_comment = ''
+    if pctimeunit in unit:  # if it's the same as the "main" time unit
+        mcs_rate = rate / time_conv
+        return mcs_rate, secretion_comment
+    else:
+        tu = unit.split('/')[-1]
+        if tu not in time_convs.keys():
+            message = f"WARNING: 1/(rate unit) = {tu} not found in {time_convs.keys()}.\nAutomatic conversion of " \
+                      f"this rate is disabled."
+            secretion_comment += "\n#" + message.replace("\n", "\n#")
+            warnings.warn(message)
+            mcs_rate = rate
+            return mcs_rate, secretion_comment
+        else:
+            message = f"WARNING: 1/(rate unit) = {tu} is not the main PhysiCell time unit {pctimeunit}.\nTherefor" \
+                      f"e, the automatic conversion may be incorrect"
+            secretion_comment += "\n#" + message.replace("\n", "\n#")
+            warnings.warn(message)
+            rate_minutes = rate / time_convs[tu]
+            rate_pctime = rate_minutes / time_conv[pctimeunit]
+            mcs_rate = rate_pctime / time_conv
+            return mcs_rate, secretion_comment
+
+
+def convert_secretion_data(sec_dict, time_conv, pctimeunit, time_convs=time_convs):
+
+    if not sec_dict:
+        return {}
+
+    new_sec_dict = sec_dict
+
+    secretion_comment = '#WARNING: PhysiCell has a concept of "target secretion" that CompuCell3D does not. \n#The ' \
+                        'translating ' \
+              'program attempts to implement it, but it may not be a 1 to 1 conversion.'
+    uptake_comment = ''
+    for field, data in sec_dict.items():
+        unit = data['secretion_unit']
+
+        mcs_secretion_rate, extra_sec_comment = convert_secretion_rate(data['secretion_rate'], unit, time_conv,
+                                                                       pctimeunit)
+        data['secretion_rate_MCS'] = mcs_secretion_rate
+        data['secretion_comment'] = secretion_comment+extra_sec_comment
+
+        
+
 
 
 
