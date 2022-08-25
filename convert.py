@@ -583,6 +583,14 @@ def make_diffusion_plug(diffusing_elements, celltypes, flag_2d):
     return full_str
 
 
+def make_cell_loop(cell_type):
+    return f"for cell in self.cell_list_by_type(self.{cell_type.upper()})"
+
+
+def make_cell_dict():
+
+
+
 if __name__ == "__main__":
 
     print("Running test")
