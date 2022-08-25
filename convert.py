@@ -674,8 +674,8 @@ def convert_secretion_data(sec_dict, time_conv, pctimeunit):
             mcs_uptake_rate, extra_up_comment = convert_uptake_rate(data['uptake_rate'], data['uptake_unit'], time_conv,
                                                                     pctimeunit)
 
-            data['uptake_rate_MCS'] = mcs_secretion_rate
-            data['uptake_comment'] = uptake_comment + extra_sec_comment
+            data['uptake_rate_MCS'] = mcs_uptake_rate
+            data['uptake_comment'] = uptake_comment + extra_up_comment
 
             new_type_sec[field] = data
         new_sec_dict[ctype] = new_type_sec
@@ -737,7 +737,7 @@ if __name__ == "__main__":
 
     secretion_dict = get_secretion(pcdict)
 
-    conv_sec = convert_secretion_data(secretion_dict, cctime[2], pctime[1]) # todo: debug
+    conv_sec = convert_secretion_data(secretion_dict, cctime[2], pctime[1]) 
 
     print("Merging")
     cc3dml = "<CompuCell3D>\n"
