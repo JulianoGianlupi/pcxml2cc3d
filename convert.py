@@ -16,7 +16,7 @@ import xmltodict as x2d
 from itertools import combinations
 
 # defines conversion factors to meter
-space_convs = {"micron": 1e-6,
+_space_convs = {"micron": 1e-6,
                "micrometer": 1e-6,
                "micro": 1e-6,
                "milli": 1e-3,
@@ -24,10 +24,10 @@ space_convs = {"micron": 1e-6,
                "nano": 1e-9,
                "nanometer": 1e-9,
                'meter': 1
-               }
+                }
 
 # defines conversion factors to minutes
-time_convs = {"millisecond": 1e-3 / 60,
+_time_convs = {"millisecond": 1e-3 / 60,
               "milliseconds": 1e-3 / 60,
               "microsecond": 1e-6 / 60,
               "microseconds": 1e-6 / 60,
@@ -45,7 +45,7 @@ time_convs = {"millisecond": 1e-3 / 60,
               "min": 1}
 
 
-def get_dims(pcdict, space_convs=space_convs):
+def get_dims(pcdict, space_convs=_space_convs):
     xmin = float(pcdict['domain']['x_min']) if "x_min" in pcdict['domain'].keys() else None
     xmax = float(pcdict['domain']['x_max']) if "x_max" in pcdict['domain'].keys() else None
 
@@ -100,7 +100,7 @@ def get_dims(pcdict, space_convs=space_convs):
            (cc3dx, cc3dy, cc3dz, cc3dspaceunitstr, cc3dds, autoconvert_space)
 
 
-def get_time(pcdict, time_convs=time_convs):
+def get_time(pcdict, time_convs=_time_convs):
     mt = float(pcdict['overall']['max_time']['#text']) if "max_time" in pcdict['overall'].keys() and \
                                                           '#text' in pcdict['overall']['max_time'].keys() else 100000
 
@@ -397,7 +397,7 @@ def get_secretion(pcdict):
 
 
 def get_microenvironment(pcdict, space_factor, space_unit, time_factor, time_unit, autoconvert_time=True,
-                         autoconvert_space=True, space_convs=space_convs, time_convs=time_convs):
+                         autoconvert_space=True, space_convs=_space_convs, time_convs=_time_convs):
     diffusing_elements = {}
     fields = pcdict['microenvironment_setup']['variable']
     for subel in fields:
@@ -596,7 +596,7 @@ def make_cell_dict(cell_types, secretion_dict):
             type_sec = None
 
 
-def convert_secretion_rate(rate, unit, time_conv, pctimeunit, time_convs=time_convs):
+def convert_secretion_rate(rate, unit, time_conv, pctimeunit, time_convs=_time_convs):
     secretion_comment = ''
     if pctimeunit in unit:  # if it's the same as the "main" time unit
         mcs_rate = rate / time_conv
@@ -604,15 +604,16 @@ def convert_secretion_rate(rate, unit, time_conv, pctimeunit, time_convs=time_co
     else:
         tu = unit.split('/')[-1]
         if tu not in time_convs.keys():
-            message = f"WARNING: 1/(rate unit) = {tu} not found in {time_convs.keys()}.\nAutomatic conversion of " \
+            message = f"WARNING: Secretion 1/(rate unit) = {tu} not found in {time_convs.keys()}.\nAutomatic conversion" \
+                      f" of " \
                       f"this rate is disabled."
             secretion_comment += "\n#" + message.replace("\n", "\n#")
             warnings.warn(message)
             mcs_rate = rate
             return mcs_rate, secretion_comment
         else:
-            message = f"WARNING: 1/(rate unit) = {tu} is not the main PhysiCell time unit {pctimeunit}.\nTherefor" \
-                      f"e, the automatic conversion may be incorrect"
+            message = f"WARNING: Secretion 1/(rate unit) = {tu} is not the main PhysiCell time unit {pctimeunit}." \
+                      f"\nTherefore, the automatic conversion may be incorrect"
             secretion_comment += "\n#" + message.replace("\n", "\n#")
             warnings.warn(message)
             rate_minutes = rate / time_convs[tu]
@@ -620,8 +621,33 @@ def convert_secretion_rate(rate, unit, time_conv, pctimeunit, time_convs=time_co
             mcs_rate = rate_pctime / time_conv
             return mcs_rate, secretion_comment
 
+def convert_uptake_rate(rate, unit, time_conv, pctimeunit, time_convs=_time_convs):
+    uptake_comment = ''
+    if pctimeunit in unit:
+        mcs_rate = rate / time_conv
+        return mcs_rate, uptake_comment
+    else:
+        tu = unit.split('/')[-1]
+        if tu not in time_convs.keys():
+            message = f"WARNING: Uptake 1/(rate unit) = {tu} not found in {time_convs.keys()}.\nAutomatic " \
+                      f"conversion of this rate is disabled."
+            warnings.warn(message)
+            uptake_comment += "#" + message.replace("\n", "\n#")
+            mcs_rate = rate
+            return mcs_rate, uptake_comment
+        else:
+            message = f"WARNING: Uptake 1/(rate unit) = {tu} is not the main PhysiCell time unit {pctimeunit}." \
+                      f"\nTherefore, the automatic conversion may be incorrect"
+            warnings.warn(message)
+            uptake_comment += "#" + message.replace("\n", "\n#")
 
-def convert_secretion_data(sec_dict, time_conv, pctimeunit, time_convs=time_convs):
+            rate_minutes = rate / time_convs[tu]
+            rate_pctime = rate_minutes / time_conv[pctimeunit]
+            mcs_rate = rate_pctime / time_conv
+            return mcs_rate, uptake_comment
+
+
+def convert_secretion_data(sec_dict, time_conv, pctimeunit):
 
     if not sec_dict:
         return {}
@@ -629,19 +655,31 @@ def convert_secretion_data(sec_dict, time_conv, pctimeunit, time_convs=time_conv
     new_sec_dict = sec_dict
 
     secretion_comment = '#WARNING: PhysiCell has a concept of "target secretion" that CompuCell3D does not. \n#The ' \
-                        'translating ' \
-              'program attempts to implement it, but it may not be a 1 to 1 conversion.'
-    uptake_comment = ''
-    for field, data in sec_dict.items():
-        unit = data['secretion_unit']
+                        'translating program attempts to implement it, but it may not be a 1 to 1 conversion.'
+    uptake_comment = '#WARNING: To avoid negative concentrations, in CompuCell3D uptake is "bounded." \n# If the amount' \
+                     ' that would be uptaken is larger than the value at that pixel,\n# the uptake will be a set ratio ' \
+                     'of the amount available.\n# The conversion program uses 1 as the ratio,\n# you may want to ' \
+                     'revisit this.'
+    for ctype in sec_dict.keys():
+        type_sec = sec_dict[ctype]
+        new_type_sec = type_sec
+        for field, data in type_sec.items():
+            unit = data['secretion_unit']
 
-        mcs_secretion_rate, extra_sec_comment = convert_secretion_rate(data['secretion_rate'], unit, time_conv,
-                                                                       pctimeunit)
-        data['secretion_rate_MCS'] = mcs_secretion_rate
-        data['secretion_comment'] = secretion_comment+extra_sec_comment
+            mcs_secretion_rate, extra_sec_comment = convert_secretion_rate(data['secretion_rate'], unit, time_conv,
+                                                                           pctimeunit)
+            data['secretion_rate_MCS'] = mcs_secretion_rate
+            data['secretion_comment'] = secretion_comment+extra_sec_comment
 
-        
+            mcs_uptake_rate, extra_up_comment = convert_uptake_rate(data['uptake_rate'], data['uptake_unit'], time_conv,
+                                                                    pctimeunit)
 
+            data['uptake_rate_MCS'] = mcs_secretion_rate
+            data['uptake_comment'] = uptake_comment + extra_sec_comment
+
+            new_type_sec[field] = data
+        new_sec_dict[ctype] = new_type_sec
+    return new_sec_dict
 
 
 
@@ -697,7 +735,9 @@ if __name__ == "__main__":
     print("Generating diffusion plugin")
     diffusion_string = make_diffusion_plug(d_elements, cell_types, False)
 
-    secretion_dict = get_secretion(pcdict)  # todo: unit conversion
+    secretion_dict = get_secretion(pcdict)
+
+    conv_sec = convert_secretion_data(secretion_dict, cctime[2], pctime[1]) # todo: debug
 
     print("Merging")
     cc3dml = "<CompuCell3D>\n"
