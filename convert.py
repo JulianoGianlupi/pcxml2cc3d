@@ -613,7 +613,7 @@ def convert_secretion_rate(rate, unit, time_conv, pctimeunit, time_convs=_time_c
             return mcs_rate, secretion_comment
         else:
             message = f"WARNING: Secretion 1/(rate unit) = {tu} is not the main PhysiCell time unit {pctimeunit}." \
-                      f"\nTherefore, the automatic conversion may be incorrect"
+                      f"\nTherefore, the automatic conversion may be incorrect."
             secretion_comment += "\n#" + message.replace("\n", "\n#")
             warnings.warn(message)
             rate_minutes = rate / time_convs[tu]
