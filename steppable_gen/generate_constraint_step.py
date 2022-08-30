@@ -1,9 +1,9 @@
 from gen_functions import generate_steppable, steppable_imports
 
+
 # TODO: have volume, surface, etc, be initialized to their proper cell property
 
 def cell_type_constraint(ctype, this_type_dicts):
-
     loop = f"\t\tfor cell in self.cell_list_by_type(self.{ctype.upper()}):\n"
     lines = []
     full = loop
@@ -46,9 +46,7 @@ def generate_constraint_steppable(cell_types, cell_dicts, first=True):
     return constraint_step
 
 
-if __name__=="__main__":
-    dicts = [{"a": {"exemplo":1, "asdasd":3}, "b": {"kkkkkk": "popop"}},
-             {"a": {"exeo":1, "uip":3}, "b": {"oooooo": "lololo"}}]
+if __name__ == "__main__":
+    dicts = [{"a": {"exemplo": 1, "asdasd": 3}, "b": {"kkkkkk": "popop"}},
+             {"a": {"exeo": 1, "uip": 3}, "b": {"oooooo": "lololo"}}]
     print(generate_constraint_steppable(["a", "b"], dicts))
-
-
