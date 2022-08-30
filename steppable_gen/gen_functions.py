@@ -31,7 +31,7 @@ from cc3d.core.PySteppables import *\nimport numpy as np\n
 
 
 def steppable_declaration(step_name, mitosis=False):
-    if mitosis:
+    if not mitosis:
         stype = "SteppableBasePy"
     else:
         stype = "MitosisSteppableBase"
@@ -44,7 +44,7 @@ def mitosis_init(frequency):
 
 
 def steppable_init(frequency, mitosis=False):
-    if not mitosis:
+    if mitosis:
         return mitosis_init(frequency)
     return f'''\n\tdef __init__(self, frequency={frequency}):
 \t\tSteppableBasePy.__init__(self,frequency)\n'''
@@ -91,8 +91,8 @@ def steppable_on_stop():
     return stop
 
 
-def generate_steppable(step_name, frequency, mitosis, already_imports=False, additional_init=None, additional_start=None,
-                       additional_step=None, additional_finish=None, additional_on_stop=None):
+def generate_steppable(step_name, frequency, mitosis, minimal=False, already_imports=False, additional_init=None,
+                       additional_start=None, additional_step=None, additional_finish=None, additional_on_stop=None):
     imports = steppable_imports()
     declare = steppable_declaration(step_name, mitosis=mitosis)
     init = steppable_init(frequency, mitosis=mitosis)
@@ -117,7 +117,9 @@ def generate_steppable(step_name, frequency, mitosis, already_imports=False, add
     if additional_on_stop is not None:
         on_stop = add_to_on_stop(on_stop, additional_on_stop)
 
-    if not already_imports:
+    if minimal:
+        return declare+init+start
+    elif not already_imports:
         return imports+declare+init+start+step+finish+on_stop+"\n"
     return declare+init+start+step+finish+on_stop+"\n"
 
