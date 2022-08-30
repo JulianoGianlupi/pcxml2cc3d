@@ -1,4 +1,8 @@
-from gen_functions import generate_steppable, steppable_imports
+try:
+    from .gen_functions import generate_steppable, steppable_imports
+except:
+    from gen_functions import generate_steppable, steppable_imports  # why are python imports like this? 1st option
+    # does not work when running this file by itself. Second doesn't work when importing the file........................................................................................................................
 
 
 # TODO: have volume, surface, etc, be initialized to their proper cell property
