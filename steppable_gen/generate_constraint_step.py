@@ -33,7 +33,6 @@ def cell_type_constraint(ctype, this_type_dicts):
     if not this_type_dicts:
         return ''
     loop = f"\t\tfor cell in self.cell_list_by_type(self.{ctype.upper()}):\n"
-    lines = []
     full = loop
     for cell_dict in this_type_dicts:
         for key, value in cell_dict.items():
