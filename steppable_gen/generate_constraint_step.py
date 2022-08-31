@@ -8,7 +8,9 @@ except:
 # TODO: have volume, surface, etc, be initialized to their proper cell property
 
 def cell_type_constraint(ctype, this_type_dicts):
-    loop = f"\t\tfor cell in self.cell_list_by_type(self.{ctype.upper()}):\n\t\t\tpass\n"
+    if not this_type_dicts:
+        return ''
+    loop = f"\t\tfor cell in self.cell_list_by_type(self.{ctype.upper()}):\n"
     lines = []
     full = loop
     for cell_dict in this_type_dicts:
@@ -18,7 +20,7 @@ def cell_type_constraint(ctype, this_type_dicts):
             else:
                 line = f"\t\t\tcell.dict['{key}']={value}\n"
             full += line
-    return full
+    return full + '\n\n'
 
 
 def get_dicts_for_type(ctype, cell_dicts):
