@@ -738,6 +738,7 @@ if __name__ == "__main__":
 
     secretion_dict = get_secretion(pcdict)
 
+    # TODO: convert net export to CC3D units
     conv_sec = convert_secretion_data(secretion_dict, cctime[2], pctime[1]) 
 
     constraint_step = steppable_gen.generate_constraint_steppable(cell_types,
