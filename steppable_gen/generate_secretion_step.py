@@ -30,11 +30,14 @@ def make_secretion_loop(ctype, comment):
     loop = generate_cell_type_loop(ctype, 3)
     check_field = "\t\t\t\tif field_name in cell.dict.keys():\n\t\t\t\t\tdata=cell.dict[field_name]\n"
     seen = "\t\t\t\t\tseen = secretor.amountSeenByCell(cell)\n"
-    # comment = this_sec['secretion_comment']+'\n'
     secrete_rate = "\t\t\t\t\tnet_secretion = max(0, seen-data['secretion_rate_MCS']) + data['net_export_MCS']\n"
+    where_secrete = "\t\t\t\t\t# In PhysiCell cells are point-like, in CC3D they have an arbitrary shape. With this " \
+                    "\n\t\t\t\t\t# CC3D allows several different secretion locations: over the whole cell (what the " \
+                    "translator uses),\n\t\t\t\t\t# just inside the cell surface, just outside the surface, " \
+                    "at the surface. You should explore the options"
     secrete = "\t\t\t\t\tsecretor.secreteInsideCell(cell, net_secretion)\n"
 
-    return loop+check_field+seen+comment+secrete_rate+secrete
+    return loop+check_field+seen+comment+secrete_rate+where_secrete+secrete
 
 
 def make_secretion_loops(cell_types, sec_dict, secretors, field_names):
