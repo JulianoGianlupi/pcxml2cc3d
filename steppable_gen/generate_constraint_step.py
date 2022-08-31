@@ -5,7 +5,30 @@ except:
     # does not work when running this file by itself. Second doesn't work when importing the file........................................................................................................................
 
 
-# TODO: have volume, surface, etc, be initialized to their proper cell property
+
+def _apply_volume_constraint(cdict):
+    cstr = f'\t\t\tcell.targetVolume = {cdict["volume (pixels)"]}'
+    cstr += '\n\t\t\tcell.lambdaVolume = 8 # NOTE: PC does not ' \
+            f'have an equivalent parameter. You have to adjust it\n'
+    # TODO: check if <custom_data><elastic_coefficient> shouldn't be lambdaVolume
+    return cstr
+
+
+def _apply_surface_constraint(cdict):
+    cstr = f'\t\t\tcell.targetSurface = {cdict["surface (pixels)"]}'
+    cstr += '\n\t\t\tcell.lambdaSurface = 8 # NOTE: PC does not ' \
+            'have an equivalent parameter. You have to adjust it\n'
+    return cstr
+
+
+# noinspection PyPep8Naming
+def apply_CC3D_constraint(cname, cdict):
+    if cname.upper() == "VOLUME":
+        return _apply_volume_constraint(cdict)
+    elif cname.upper() == "SURFACE":
+        return _apply_surface_constraint(cdict)
+    return ''
+
 
 def cell_type_constraint(ctype, this_type_dicts):
     if not this_type_dicts:
@@ -19,6 +42,8 @@ def cell_type_constraint(ctype, this_type_dicts):
                 line = f"\t\t\tcell.dict['{key}']='{value}'\n"
             else:
                 line = f"\t\t\tcell.dict['{key}']={value}\n"
+            if key in ["volume", "surface"]:
+                line += apply_CC3D_constraint(key, value)
             full += line
     return full + '\n\n'
 
