@@ -26,7 +26,7 @@ def generate_cell_type_loop(ctype, ntabs):
     for i in range(ntabs):
         tab += '\t'
 
-    return tab + f"for cell in self.cell_list_by_type(self.{ctype.upper()}):"
+    return tab + f"for cell in self.cell_list_by_type(self.{ctype.upper()}):\n"
 
 
 def steppable_imports():
