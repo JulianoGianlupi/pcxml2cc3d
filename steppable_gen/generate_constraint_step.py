@@ -5,7 +5,6 @@ except:
     # does not work when running this file by itself. Second doesn't work when importing the file........................................................................................................................
 
 
-
 def _apply_volume_constraint(cdict):
     cstr = f'\t\t\tcell.targetVolume = {cdict["volume (pixels)"]}'
     cstr += '\n\t\t\tcell.lambdaVolume = 8 # NOTE: PC does not ' \
