@@ -34,7 +34,7 @@ def make_secretion_loop(ctype, comment):
     where_secrete = "\t\t\t\t\t# In PhysiCell cells are point-like, in CC3D they have an arbitrary shape. With this " \
                     "\n\t\t\t\t\t# CC3D allows several different secretion locations: over the whole cell (what the " \
                     "translator uses),\n\t\t\t\t\t# just inside the cell surface, just outside the surface, " \
-                    "at the surface. You should explore the options"
+                    "at the surface. You should explore the options\n"
     secrete = "\t\t\t\t\tsecretor.secreteInsideCell(cell, net_secretion)\n"
 
     return loop+check_field+seen+comment+secrete_rate+where_secrete+secrete
@@ -49,6 +49,7 @@ def make_secretion_loops(cell_types, sec_dict, secretors, field_names):
             comment = sec_dict[ctype][field_names[0]]['secretion_comment']+'\n'
             loops += make_secretion_loop(ctype, comment)
     return secretor_loop+loops
+
 
 def generate_secretion_step(cell_types, sec_dict, first=False):
 
@@ -68,74 +69,36 @@ def generate_secretion_step(cell_types, sec_dict, first=False):
 
 
 if __name__ == "__main__":
-    sdict = {'cancer_cell': {'oxygen': {'secretion_rate': 0.0, 'secretion_unit': '1/min', 'secretion_target': 38.0,
-                                        'uptake_rate': 10.0, 'uptake_unit': '1/min', 'net_export': 0.0,
-                                        'net_export_unit': 'total substrate/min', 'secretion_rate_MCS': 0.0,
-                                        'secretion_comment': '#WARNING: PhysiCell has a concept of "target secretion" '
-                                                             'that CompuCell3D does not. \n#The translating program '
-                                                             'attempts to implement it, but it may not be a 1 to 1 '
-                                                             'conversion.',
-                                        'uptake_rate_MCS': 1.0, 'uptake_comment': '#WARNING: To avoid negative '
-                                                                                  'concentrations, in CompuCell3D '
-                                                                                  'uptake is "bounded." \n# If the '
-                                                                                  'amount that would be uptaken is '
-                                                                                  'larger than the value at that '
-                                                                                  'pixel,\n# the uptake will be a set '
-                                                                                  'ratio of the amount available.\n# '
-                                                                                  'The conversion program uses 1 as '
-                                                                                  'the ratio,\n# you may want to '
-                                                                                  'revisit this.'},
-                             'immunostimulatory_factor': {'secretion_rate': 0.0, 'secretion_unit': '1/min',
-                                                          'secretion_target': 1.0, 'uptake_rate': 0.0,
-                                                          'uptake_unit': '1/min', 'net_export': 0.0,
-                                                          'net_export_unit': 'total substrate/min',
-                                                          'secretion_rate_MCS': 0.0,
-                                                          'secretion_comment': '#WARNING: PhysiCell has a concept of '
-                                                                               '"target secretion" that CompuCell3D '
-                                                                               'does not. \n#The translating program '
-                                                                               'attempts to implement it, but it may '
-                                                                               'not be a 1 to 1 conversion.',
-                                                          'uptake_rate_MCS': 0.0,
-                                                          'uptake_comment': '#WARNING: To avoid negative '
-                                                                            'concentrations, in CompuCell3D uptake is '
-                                                                            '"bounded." \n# If the amount that would '
-                                                                            'be uptaken is larger than the value at '
-                                                                            'that pixel,\n# the uptake will be a set '
-                                                                            'ratio of the amount available.\n# The '
-                                                                            'conversion program uses 1 as the ratio,'
-                                                                            '\n# you may want to revisit this.'}},
-             'immune_cell': {'oxygen': {'secretion_rate': 0.0, 'secretion_unit': '1/min', 'secretion_target': 38.0,
-                                        'uptake_rate': 10.0, 'uptake_unit': '1/min', 'net_export': 0.0,
-                                        'net_export_unit': 'total substrate/min', 'secretion_rate_MCS': 0.0,
-                                        'secretion_comment': '#WARNING: PhysiCell has a concept of "target secretion" '
-                                                             'that CompuCell3D does not. \n#The translating program '
-                                                             'attempts to implement it, but it may not be a 1 to 1 '
-                                                             'conversion.', 'uptake_rate_MCS': 1.0,
-                                        'uptake_comment': '#WARNING: To avoid negative concentrations, in CompuCell3D '
-                                                          'uptake is "bounded." \n# If the amount that would be '
-                                                          'uptaken is larger than the value at that pixel,\n# the '
-                                                          'uptake will be a set ratio of the amount available.\n# The '
-                                                          'conversion program uses 1 as the ratio,\n# you may want to '
-                                                          'revisit this.'},
-                             'immunostimulatory_factor': {'secretion_rate': 0.0, 'secretion_unit': '1/min',
-                                                          'secretion_target': 1.0, 'uptake_rate': 0.0,
-                                                          'uptake_unit': '1/min', 'net_export': 0.0,
-                                                          'net_export_unit': 'total substrate/min',
-                                                          'secretion_rate_MCS': 0.0,
-                                                          'secretion_comment': '#WARNING: PhysiCell has a concept of '
-                                                                               '"target secretion" that CompuCell3D '
-                                                                               'does not. \n#The translating program '
-                                                                               'attempts to implement it, but it may '
-                                                                               'not be a 1 to 1 conversion.',
-                                                          'uptake_rate_MCS': 0.0,
-                                                          'uptake_comment': '#WARNING: To avoid negative '
-                                                                            'concentrations, in CompuCell3D uptake is '
-                                                                            '"bounded." \n# If the amount that would be'
-                                                                            ' uptaken is larger than the value at that '
-                                                                            'pixel,\n# the uptake will be a set ratio'
-                                                                            ' of the amount available.\n# The '
-                                                                            'conversion program uses 1 as the ratio,\n#'
-                                                                            ' you may want to revisit this.'}}}
+    sdict = {'cancer_cell': {
+        'oxygen': {'secretion_rate': 0.0, 'secretion_unit': '1/min', 'secretion_target': 38.0, 'uptake_rate': 10.0,
+                   'uptake_unit': '1/min', 'net_export': 0.0, 'net_export_unit': 'total substrate/min',
+                   'secretion_rate_MCS': 0.0,
+                   'secretion_comment': '#WARNING: PhysiCell has a concept of "target secretion" that CompuCell3D does not. \n#The translating program attempts to implement it, but it may not be a 1 to 1 conversion.',
+                   'net_export_MCS': 0.0, 'net_secretion_comment': '', 'uptake_rate_MCS': 1.0,
+                   'uptake_comment': '#WARNING: To avoid negative concentrations, in CompuCell3D uptake is "bounded." \n# If the amount that would be uptaken is larger than the value at that pixel,\n# the uptake will be a set ratio of the amount available.\n# The conversion program uses 1 as the ratio,\n# you may want to revisit this.'},
+        'immunostimulatory_factor': {'secretion_rate': 0.0, 'secretion_unit': '1/min', 'secretion_target': 1.0,
+                                     'uptake_rate': 0.0, 'uptake_unit': '1/min', 'net_export': 0.0,
+                                     'net_export_unit': 'total substrate/min', 'secretion_rate_MCS': 0.0,
+                                     'secretion_comment': '#WARNING: PhysiCell has a concept of "target secretion" that CompuCell3D does not. \n#The translating program attempts to implement it, but it may not be a 1 to 1 conversion.',
+                                     'net_export_MCS': 0.0, 'net_secretion_comment': '', 'uptake_rate_MCS': 0.0,
+                                     'uptake_comment': '#WARNING: To avoid negative concentrations, in CompuCell3D uptake is "bounded." \n# If the amount that would be uptaken is larger than the value at that pixel,\n# the uptake will be a set ratio of the amount available.\n# The conversion program uses 1 as the ratio,\n# you may want to revisit this.'}},
+                    'immune_cell': {
+                        'oxygen': {'secretion_rate': 0.0, 'secretion_unit': '1/min', 'secretion_target': 38.0,
+                                   'uptake_rate': 10.0, 'uptake_unit': '1/min', 'net_export': 0.0,
+                                   'net_export_unit': 'total substrate/min', 'secretion_rate_MCS': 0.0,
+                                   'secretion_comment': '#WARNING: PhysiCell has a concept of "target secretion" that CompuCell3D does not. \n#The translating program attempts to implement it, but it may not be a 1 to 1 conversion.',
+                                   'net_export_MCS': 0.0, 'net_secretion_comment': '', 'uptake_rate_MCS': 1.0,
+                                   'uptake_comment': '#WARNING: To avoid negative concentrations, in CompuCell3D uptake is "bounded." \n# If the amount that would be uptaken is larger than the value at that pixel,\n# the uptake will be a set ratio of the amount available.\n# The conversion program uses 1 as the ratio,\n# you may want to revisit this.'},
+                        'immunostimulatory_factor': {'secretion_rate': 0.0, 'secretion_unit': '1/min',
+                                                     'secretion_target': 1.0, 'uptake_rate': 0.0,
+                                                     'uptake_unit': '1/min', 'net_export': 0.0,
+                                                     'net_export_unit': 'total substrate/min',
+                                                     'secretion_rate_MCS': 0.0,
+                                                     'secretion_comment': '#WARNING: PhysiCell has a concept of "target secretion" that CompuCell3D does not. \n#The translating program attempts to implement it, but it may not be a 1 to 1 conversion.',
+                                                     'net_export_MCS': 0.0, 'net_secretion_comment': '',
+                                                     'uptake_rate_MCS': 0.0,
+                                                     'uptake_comment': '#WARNING: To avoid negative concentrations, in CompuCell3D uptake is "bounded." \n# If the amount that would be uptaken is larger than the value at that pixel,\n# the uptake will be a set ratio of the amount available.\n# The conversion program uses 1 as the ratio,\n# you may want to revisit this.'}}}
+
     fields = get_field_names(sdict)
     secretors = make_secretors(fields)
 
