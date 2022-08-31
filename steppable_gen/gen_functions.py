@@ -21,6 +21,12 @@ def add_to_finish(finish, additional_finish):
 def add_to_on_stop(on_stop, additional_on_stop):
     return _add_to_function(on_stop, additional_on_stop)
 
+def generate_cell_type_loop(ctype, ntabs):
+    tab = ''
+    for i in range(ntabs):
+        tab += '\t'
+
+    return tab + f"for cell in self.cell_list_by_type(self.{ctype.upper()}):"
 
 
 def steppable_imports():
