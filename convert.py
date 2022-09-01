@@ -145,6 +145,7 @@ def get_parallel(pcdict):
 
 
 def make_potts(pcdict):
+    # todo: remove this todo
     # todo: figure out the spatial dimensions. What dx/dy/dz mean in
     #     <domain>
     # 		<x_min>-400</x_min>
@@ -622,6 +623,7 @@ def convert_secretion_rate(rate, unit, time_conv, pctimeunit, time_convs=_time_c
             mcs_rate = rate_pctime / time_conv
             return mcs_rate, secretion_comment
 
+
 def convert_uptake_rate(rate, unit, time_conv, pctimeunit, time_convs=_time_convs):
     uptake_comment = ''
     if pctimeunit in unit:
@@ -648,6 +650,31 @@ def convert_uptake_rate(rate, unit, time_conv, pctimeunit, time_convs=_time_conv
             return mcs_rate, uptake_comment
 
 
+def convert_net_secretion(rate, unit, time_conv, pctimeunit, time_convs=_time_convs):
+    net_comment = ''
+    if pctimeunit in unit:
+        mcs_rate = rate / time_conv
+        return mcs_rate, net_comment
+    else:
+        tu = unit.split('/')[-1]
+        if tu not in time_convs.keys():
+            message = f"WARNING: Time component of net secretion unit ({unit}) not found in {time_convs.keys()}." \
+                      f"\nAutomatic conversion of this rate is disabled."
+            warnings.warn(message)
+            net_comment += "#" + message.replace("\n", "\n#")
+            mcs_rate = rate
+            return mcs_rate, net_comment
+        else:
+            message = f"WARNING: Time component of net secretion unit ({unit}) is not the main PhysiCell time unit " \
+                      f"{pctimeunit}. \nTherefore, the automatic conversion may be incorrect"
+            warnings.warn(message)
+            net_comment += "#" + message.replace("\n", "\n#")
+            rate_minutes = rate / time_convs[tu]
+            rate_pctime = rate_minutes / time_conv[pctimeunit]
+            mcs_rate = rate_pctime / time_conv
+            return mcs_rate, net_comment
+
+
 def convert_secretion_data(sec_dict, time_conv, pctimeunit):
 
     if not sec_dict:
@@ -671,6 +698,13 @@ def convert_secretion_data(sec_dict, time_conv, pctimeunit):
                                                                            pctimeunit)
             data['secretion_rate_MCS'] = mcs_secretion_rate
             data['secretion_comment'] = secretion_comment+extra_sec_comment
+
+            unit = data['net_export_unit']
+
+            mcs_net_secretion_rate, extra_net_sec_comment = convert_net_secretion(data['net_export'], unit, time_conv,
+                                                                                  pctimeunit)
+            data['net_export_MCS'] = mcs_net_secretion_rate
+            data['net_secretion_comment'] = extra_net_sec_comment
 
             mcs_uptake_rate, extra_up_comment = convert_uptake_rate(data['uptake_rate'], data['uptake_unit'], time_conv,
                                                                     pctimeunit)

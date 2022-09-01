@@ -21,6 +21,12 @@ def add_to_finish(finish, additional_finish):
 def add_to_on_stop(on_stop, additional_on_stop):
     return _add_to_function(on_stop, additional_on_stop)
 
+def generate_cell_type_loop(ctype, ntabs):
+    tab = ''
+    for i in range(ntabs):
+        tab += '\t'
+
+    return tab + f"for cell in self.cell_list_by_type(self.{ctype.upper()}):\n"
 
 
 def steppable_imports():
@@ -55,7 +61,7 @@ def steppable_start():
 \tdef start(self):
 \t\t"""
 \t\tCalled before MCS=0 while building the initial simulation
-\t\t"""\n'''
+\t\t"""'''
 
 
 def steppable_step():
@@ -102,10 +108,14 @@ def generate_steppable(step_name, frequency, mitosis, minimal=False, already_imp
     start = steppable_start()
     if additional_start is not None:
         start = add_to_start(start, additional_start)
+    else:
+        start += "\n\t\tpass\n"
 
     step = steppable_step()
     if additional_step is not None:
         step = add_to_step(step, additional_step)
+    else:
+        step += "\n\t\tpass\n"
 
     finish = steppable_finish()
 
@@ -124,4 +134,7 @@ def generate_steppable(step_name, frequency, mitosis, minimal=False, already_imp
     return declare+init+start+step+finish+on_stop+"\n"
 
 
-
+if __name__ == "__main__":
+    test_step = generate_steppable("test", 1, False)
+    test_mit = generate_steppable("mit", 1, True)
+    pass
