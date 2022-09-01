@@ -16,7 +16,7 @@ import xmltodict as x2d
 from itertools import combinations
 
 # defines conversion factors to meter
-space_convs = {"micron": 1e-6,
+_space_convs = {"micron": 1e-6,
                "micrometer": 1e-6,
                "micro": 1e-6,
                "milli": 1e-3,
@@ -24,10 +24,10 @@ space_convs = {"micron": 1e-6,
                "nano": 1e-9,
                "nanometer": 1e-9,
                'meter': 1
-               }
+                }
 
 # defines conversion factors to minutes
-time_convs = {"millisecond": 1e-3 / 60,
+_time_convs = {"millisecond": 1e-3 / 60,
               "milliseconds": 1e-3 / 60,
               "microsecond": 1e-6 / 60,
               "microseconds": 1e-6 / 60,
@@ -45,7 +45,7 @@ time_convs = {"millisecond": 1e-3 / 60,
               "min": 1}
 
 
-def get_dims(pcdict, space_convs=space_convs):
+def get_dims(pcdict, space_convs=_space_convs):
     xmin = float(pcdict['domain']['x_min']) if "x_min" in pcdict['domain'].keys() else None
     xmax = float(pcdict['domain']['x_max']) if "x_max" in pcdict['domain'].keys() else None
 
@@ -100,7 +100,7 @@ def get_dims(pcdict, space_convs=space_convs):
            (cc3dx, cc3dy, cc3dz, cc3dspaceunitstr, cc3dds, autoconvert_space)
 
 
-def get_time(pcdict, time_convs=time_convs):
+def get_time(pcdict, time_convs=_time_convs):
     mt = float(pcdict['overall']['max_time']['#text']) if "max_time" in pcdict['overall'].keys() and \
                                                           '#text' in pcdict['overall']['max_time'].keys() else 100000
 
@@ -368,10 +368,6 @@ def extra_for_testing(celltypes, xmax, ymax, zmax):
     return beg + box_min + box_max + gap + types + end
 
 
-def get_field_parameters(subdict):
-    return
-
-
 def get_space_time_from_diffusion(unit):
     parts = unit.split("/")
     timeunit = parts[-1]
@@ -379,8 +375,29 @@ def get_space_time_from_diffusion(unit):
     return spaceunit, timeunit
 
 
+def get_secretion(pcdict):
+    # will have to be done in python
+    sec_data = {}
+    for child in pcdict['cell_definitions']['cell_definition']:
+        ctype =child['@name'].replace(" ", "_")
+        sec_data[ctype] = {}
+        sec_list = child['phenotype']['secretion']['substrate']
+        for sec in sec_list:
+            substrate = sec["@name"].replace(" ", "_")
+            sec_data[ctype][substrate] = {}
+            sec_data[ctype][substrate]['secretion_rate'] = float(sec['secretion_rate']['#text'])
+            sec_data[ctype][substrate]['secretion_unit'] = sec['secretion_rate']['@units']
+            sec_data[ctype][substrate]['secretion_target'] = float(sec['secretion_target']['#text'])
+            sec_data[ctype][substrate]['uptake_rate'] = float(sec['uptake_rate']['#text'])
+            sec_data[ctype][substrate]['uptake_unit'] = sec['uptake_rate']['@units']
+            sec_data[ctype][substrate]['net_export'] = float(sec['net_export_rate']['#text'])
+            sec_data[ctype][substrate]['net_export_unit'] = sec['net_export_rate']['@units']
+    return sec_data
+
+
+
 def get_microenvironment(pcdict, space_factor, space_unit, time_factor, time_unit, autoconvert_time=True,
-                         autoconvert_space=True, space_convs=space_convs, time_convs=time_convs):
+                         autoconvert_space=True, space_convs=_space_convs, time_convs=_time_convs):
     diffusing_elements = {}
     fields = pcdict['microenvironment_setup']['variable']
     for subel in fields:
@@ -511,18 +528,18 @@ def make_diffusion_plug(diffusing_elements, celltypes, flag_2d):
         # boundary conditions
 
         bc_head = '\t\t\t<BoundaryConditions>\n\t\t\t\t<!-- PhysiCell has either Dirichlet boundary conditions (i.e. ' \
-             'constant ' \
-             'value) -->\n\t\t\t\t<!-- or "free floating" boundary conditions (i.e., constant flux = 0). -->' \
-             '\n\t\t\t\t<!-- CC3D ' \
-             'allows ' \
-             'for more control of boundary conditions, you may want to revisit the issue. -->\n'
+                  'constant ' \
+                  'value) -->\n\t\t\t\t<!-- or "free floating" boundary conditions (i.e., constant flux = 0). -->' \
+                  '\n\t\t\t\t<!-- CC3D ' \
+                  'allows ' \
+                  'for more control of boundary conditions, you may want to revisit the issue. -->\n'
         if item['dirichlet']:
             bc_body = f'\t\t\t\t<Plane Axis="X">\n\t\t\t\t\t<ConstantValue PlanePosition="Min" Value=' \
                       f'"{item["dirichlet_value"]}"/>\n\t\t\t\t\t<ConstantValue PlanePosition="Max" Value=' \
                       f'"{item["dirichlet_value"]}"/>\n\t\t\t\t\t<!-- Other options are (examples): -->\n\t\t\t\t\t' \
                       f'<!--<ConstantDerivative PlanePosition="Min" Value="10.0"/> -->\n\t\t\t\t\t<!--' \
                       f'<ConstantDerivative PlanePosition="Max" Value="10.0"/> -->\n\t\t\t\t\t<!--<Periodic/>-->' \
-                        '\t\t\t\t</Plane>\n' \
+                      '\t\t\t\t</Plane>\n' \
                       f'\t\t\t\t<Plane Axis="Y">\n\t\t\t\t\t<ConstantValue PlanePosition="Min" Value=' \
                       f'"{item["dirichlet_value"]}"/>\n\t\t\t\t\t<ConstantValue PlanePosition="Max" Value=' \
                       f'"{item["dirichlet_value"]}"/>\n\t\t\t\t\t<!-- Other options are (examples): -->\n\t\t\t\t\t' \
@@ -531,11 +548,11 @@ def make_diffusion_plug(diffusing_elements, celltypes, flag_2d):
                       '\n\t\t\t\t</Plane>\n'
             if not flag_2d:
                 bc_body += f'\t\t\t\t<Plane Axis="Z">\n\t\t\t\t\t<ConstantValue PlanePosition="Min" Value=' \
-                      f'"{item["dirichlet_value"]}"/>\n\t\t\t\t\t<ConstantValue PlanePosition="Max" Value=' \
-                      f'"{item["dirichlet_value"]}"/>\n\t\t\t\t\t<!-- Other options are (examples): -->\n\t\t\t\t\t' \
-                      f'<!--<ConstantDerivative PlanePosition="Min" Value="10.0"/> -->\n\t\t\t\t\t<!--' \
-                      f'<ConstantDerivative PlanePosition="Max" Value="10.0"/> -->\n\t\t\t\t\t<!--<Periodic/>-->' \
-                        '\n\t\t\t\t</Plane>\n'
+                           f'"{item["dirichlet_value"]}"/>\n\t\t\t\t\t<ConstantValue PlanePosition="Max" Value=' \
+                           f'"{item["dirichlet_value"]}"/>\n\t\t\t\t\t<!-- Other options are (examples): -->\n\t\t\t\t\t' \
+                           f'<!--<ConstantDerivative PlanePosition="Min" Value="10.0"/> -->\n\t\t\t\t\t<!--' \
+                           f'<ConstantDerivative PlanePosition="Max" Value="10.0"/> -->\n\t\t\t\t\t<!--<Periodic/>-->' \
+                           '\n\t\t\t\t</Plane>\n'
         else:
             bc_body = f'\t\t\t\t<Plane Axis="X">\n\t\t\t\t\t<ConstantDerivative PlanePosition="Min" Value=' \
                       f'"0"/>\n\t\t\t\t\t<ConstantDerivative PlanePosition="Max" Value=' \
@@ -559,11 +576,110 @@ def make_diffusion_plug(diffusing_elements, celltypes, flag_2d):
         close_bc = "</BoundaryConditions>\n"
         close_field = "</DiffusionField>\n"
 
-        full_field_def = df_str+conc_units+og_D+D_str+og_g+g_str+init_cond_warn+init_cond+het_warning+cells_str+\
-                         close_diff_data+bc_head+bc_body+close_bc+close_field
+        full_field_def = df_str + conc_units + og_D + D_str + og_g + g_str + init_cond_warn + init_cond + het_warning + cells_str + \
+                         close_diff_data + bc_head + bc_body + close_bc + close_field
         full_str += full_field_def
-    full_str +="</Steppable>"
+    full_str += "</Steppable>\n"
     return full_str
+
+
+def make_cell_loop(cell_type):
+    return f"for cell in self.cell_list_by_type(self.{cell_type.upper()}):\n"
+
+
+def make_cell_dict(cell_types, secretion_dict):
+    for ctype in cell_types:
+        loop_start = make_cell_loop(ctype)
+        if ctype in secretion_dict.keys():
+            type_sec = secretion_dict[ctype]
+        else:
+            type_sec = None
+
+
+def convert_secretion_rate(rate, unit, time_conv, pctimeunit, time_convs=_time_convs):
+    secretion_comment = ''
+    if pctimeunit in unit:  # if it's the same as the "main" time unit
+        mcs_rate = rate / time_conv
+        return mcs_rate, secretion_comment
+    else:
+        tu = unit.split('/')[-1]
+        if tu not in time_convs.keys():
+            message = f"WARNING: Secretion 1/(rate unit) = {tu} not found in {time_convs.keys()}.\nAutomatic conversion" \
+                      f" of " \
+                      f"this rate is disabled."
+            secretion_comment += "\n#" + message.replace("\n", "\n#")
+            warnings.warn(message)
+            mcs_rate = rate
+            return mcs_rate, secretion_comment
+        else:
+            message = f"WARNING: Secretion 1/(rate unit) = {tu} is not the main PhysiCell time unit {pctimeunit}." \
+                      f"\nTherefore, the automatic conversion may be incorrect."
+            secretion_comment += "\n#" + message.replace("\n", "\n#")
+            warnings.warn(message)
+            rate_minutes = rate / time_convs[tu]
+            rate_pctime = rate_minutes / time_conv[pctimeunit]
+            mcs_rate = rate_pctime / time_conv
+            return mcs_rate, secretion_comment
+
+def convert_uptake_rate(rate, unit, time_conv, pctimeunit, time_convs=_time_convs):
+    uptake_comment = ''
+    if pctimeunit in unit:
+        mcs_rate = rate / time_conv
+        return mcs_rate, uptake_comment
+    else:
+        tu = unit.split('/')[-1]
+        if tu not in time_convs.keys():
+            message = f"WARNING: Uptake 1/(rate unit) = {tu} not found in {time_convs.keys()}.\nAutomatic " \
+                      f"conversion of this rate is disabled."
+            warnings.warn(message)
+            uptake_comment += "#" + message.replace("\n", "\n#")
+            mcs_rate = rate
+            return mcs_rate, uptake_comment
+        else:
+            message = f"WARNING: Uptake 1/(rate unit) = {tu} is not the main PhysiCell time unit {pctimeunit}." \
+                      f"\nTherefore, the automatic conversion may be incorrect"
+            warnings.warn(message)
+            uptake_comment += "#" + message.replace("\n", "\n#")
+
+            rate_minutes = rate / time_convs[tu]
+            rate_pctime = rate_minutes / time_conv[pctimeunit]
+            mcs_rate = rate_pctime / time_conv
+            return mcs_rate, uptake_comment
+
+
+def convert_secretion_data(sec_dict, time_conv, pctimeunit):
+
+    if not sec_dict:
+        return {}
+
+    new_sec_dict = sec_dict
+
+    secretion_comment = '#WARNING: PhysiCell has a concept of "target secretion" that CompuCell3D does not. \n#The ' \
+                        'translating program attempts to implement it, but it may not be a 1 to 1 conversion.'
+    uptake_comment = '#WARNING: To avoid negative concentrations, in CompuCell3D uptake is "bounded." \n# If the amount' \
+                     ' that would be uptaken is larger than the value at that pixel,\n# the uptake will be a set ratio ' \
+                     'of the amount available.\n# The conversion program uses 1 as the ratio,\n# you may want to ' \
+                     'revisit this.'
+    for ctype in sec_dict.keys():
+        type_sec = sec_dict[ctype]
+        new_type_sec = type_sec
+        for field, data in type_sec.items():
+            unit = data['secretion_unit']
+
+            mcs_secretion_rate, extra_sec_comment = convert_secretion_rate(data['secretion_rate'], unit, time_conv,
+                                                                           pctimeunit)
+            data['secretion_rate_MCS'] = mcs_secretion_rate
+            data['secretion_comment'] = secretion_comment+extra_sec_comment
+
+            mcs_uptake_rate, extra_up_comment = convert_uptake_rate(data['uptake_rate'], data['uptake_unit'], time_conv,
+                                                                    pctimeunit)
+
+            data['uptake_rate_MCS'] = mcs_uptake_rate
+            data['uptake_comment'] = uptake_comment + extra_up_comment
+
+            new_type_sec[field] = data
+        new_sec_dict[ctype] = new_type_sec
+    return new_sec_dict
 
 
 
@@ -605,8 +721,6 @@ if __name__ == "__main__":
 
     constraints = get_cell_constraints(pcdict, ccdims[4], cctime[2])
 
-
-
     with open(os.path.join(out_sim_f, "extra_definitions.py"), 'w+') as f:
         f.write("cell_constraints=" + str(constraints) + "\n")
 
@@ -615,9 +729,15 @@ if __name__ == "__main__":
 
     extra = extra_for_testing(cell_types, ccdims[0], ccdims[1], ccdims[2])
 
+    print("parsing micro environment")
     d_elements = get_microenvironment(pcdict, ccdims[4], pcdims[3], cctime[2], pctime[1])
 
+    print("Generating diffusion plugin")
     diffusion_string = make_diffusion_plug(d_elements, cell_types, False)
+
+    secretion_dict = get_secretion(pcdict)
+
+    conv_sec = convert_secretion_data(secretion_dict, cctime[2], pctime[1]) 
 
     print("Merging")
     cc3dml = "<CompuCell3D>\n"
