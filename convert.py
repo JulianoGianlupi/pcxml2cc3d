@@ -145,20 +145,6 @@ def get_parallel(pcdict):
 
 
 def make_potts(pcdict):
-    # todo: remove this todo
-    # todo: figure out the spatial dimensions. What dx/dy/dz mean in
-    #     <domain>
-    # 		<x_min>-400</x_min>
-    # 		<x_max>400</x_max>
-    # 		<y_min>-400</y_min>
-    # 		<y_max>400</y_max>
-    # 		<z_min>-10</z_min>
-    # 		<z_max>10</z_max>
-    # 		<dx>20</dx>
-    # 		<dy>20</dy>
-    # 		<dz>20</dz>
-    # 		<use_2D>true</use_2D>
-    # 	</domain>
     pcdims, ccdims = get_dims(pcdict)
 
     # space_units_str = f'"1 pixel = 1 {space_units}"'
