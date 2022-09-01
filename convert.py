@@ -12,6 +12,7 @@ import os
 import warnings
 import shutil as sh
 import xmltodict as x2d
+import steppable_gen
 
 from itertools import combinations
 
@@ -738,6 +739,10 @@ if __name__ == "__main__":
     secretion_dict = get_secretion(pcdict)
 
     conv_sec = convert_secretion_data(secretion_dict, cctime[2], pctime[1]) 
+
+    constraint_step = steppable_gen.generate_constraint_steppable(cell_types,
+                                                                  [constraints,
+                                                                   conv_sec])
 
     print("Merging")
     cc3dml = "<CompuCell3D>\n"
