@@ -128,7 +128,7 @@ def generate_steppable(step_name, frequency, mitosis, minimal=False, already_imp
         on_stop = add_to_on_stop(on_stop, additional_on_stop)
 
     if minimal:
-        return declare+init+start
+        return declare+init+start+"\n"
     elif not already_imports:
         return imports+declare+init+start+step+finish+on_stop+"\n"
     return declare+init+start+step+finish+on_stop+"\n"
