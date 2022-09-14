@@ -1,2 +1,4 @@
 from .gen_functions import generate_steppable
 from .generate_constraint_step import generate_constraint_steppable
+from .generate_secretion_step import generate_secretion_step
+

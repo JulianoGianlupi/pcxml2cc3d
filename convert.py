@@ -764,6 +764,8 @@ if __name__ == "__main__":
                                                                   [constraints,
                                                                    conv_sec])
 
+    secretion_step = generate_
+
     print("Merging")
     cc3dml = "<CompuCell3D>\n"
     cc3dml += metadata_str + potts_str + ct_str + contact_plug + diffusion_string + '\n' + extra + \
