@@ -5,8 +5,8 @@ except:
     # like this? 1st option does not work when running this file by itself. Second doesn't work when importing the
     # file.............................................................................................................
 
-
 import warnings
+
 
 # general idea: define secretor objects in start as self variables. Use those in the step function
 # in cell loops. Could I list all secretors and loop them? probably
@@ -56,7 +56,6 @@ def make_secretion_loops(cell_types, sec_dict, secretors, field_names):
 
 
 def generate_secretion_step(cell_types, sec_dict, secretion_dt=None, first=False):
-
     if not sec_dict:
         message = "WARNING: no secretion data found\n"
         warnings.warn(message)
@@ -69,10 +68,10 @@ def generate_secretion_step(cell_types, sec_dict, secretion_dt=None, first=False
         return ''
 
     if first:
-        already_imports=False
+        already_imports = False
 
     else:
-        already_imports=True
+        already_imports = True
 
     field_names = get_field_names(sec_dict)
 
@@ -84,7 +83,6 @@ def generate_secretion_step(cell_types, sec_dict, secretion_dt=None, first=False
                                   already_imports=already_imports)
 
     return sec_step
-
 
 
 if __name__ == "__main__":
