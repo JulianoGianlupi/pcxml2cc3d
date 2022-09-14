@@ -756,17 +756,21 @@ if __name__ == "__main__":
     print("Generating diffusion plugin")
     diffusion_string = make_diffusion_plug(d_elements, cell_types, False)
 
+
+    print("Parsing secretion data")
     secretion_dict = get_secretion(pcdict)
 
-    conv_sec = convert_secretion_data(secretion_dict, cctime[2], pctime[1]) 
+    conv_sec = convert_secretion_data(secretion_dict, cctime[2], pctime[1])
 
+    print("Generating constraint steppable")
     constraint_step = steppable_gen.generate_constraint_steppable(cell_types,
                                                                   [constraints,
                                                                    conv_sec])
 
-    secretion_step = generate_
+    print("Generating secretion steppable")
+    secretion_step = steppable_gen.generate_secretion_step(cell_types, secretion_dict)
 
-    print("Merging")
+    print("Generating CC3DML")
     cc3dml = "<CompuCell3D>\n"
     cc3dml += metadata_str + potts_str + ct_str + contact_plug + diffusion_string + '\n' + extra + \
               "\n</CompuCell3D>\n"
@@ -774,6 +778,10 @@ if __name__ == "__main__":
     print(f"Creating {out_sim_f}/test.xml")
     with open(os.path.join(out_sim_f, "test.xml"), "w+") as f:
         f.write(cc3dml)
+
+    print("Merging steppables")
+
+    all_step = constraint_step+"\n"+secretion_step
 
     print("Copying python files")
 
