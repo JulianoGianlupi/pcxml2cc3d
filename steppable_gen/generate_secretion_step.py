@@ -70,10 +70,9 @@ def generate_secretion_step(cell_types, sec_dict, secretion_dt=None, first=False
 
     if first:
         already_imports=False
-        imports = steppable_imports()
+
     else:
         already_imports=True
-        imports = ""
 
     field_names = get_field_names(sec_dict)
 
