@@ -779,7 +779,7 @@ if __name__ == "__main__":
     with open(os.path.join(out_sim_f, "test.xml"), "w+") as f:
         f.write(cc3dml)
 
-    print("Merging steppables")
+    print("Merging steppables")  # todo: merge steps and create step and main py file
 
     all_step = constraint_step+"\n"+secretion_step
 
