@@ -29,6 +29,7 @@ _time_convs = {"millisecond": 1e-3 / 60,
                "minutes": 1,
                "min": 1}
 
+
 def get_dims(pcdict, space_convs=_space_convs):
     xmin = float(pcdict['domain']['x_min']) if "x_min" in pcdict['domain'].keys() else None
     xmax = float(pcdict['domain']['x_max']) if "x_max" in pcdict['domain'].keys() else None
@@ -161,6 +162,10 @@ def get_cell_mechanics(subdict):
     return d
 
 
+def check_below_minimum_volume(volume, minimum=8):
+    return volume < minimum, minimum
+
+
 def get_cell_constraints(pcdict, space_unit, time_unit):
     constraints = {}
 
@@ -169,9 +174,20 @@ def get_cell_constraints(pcdict, space_unit, time_unit):
         constraints[ctype] = {}
         volume, unit = get_cell_volume(child)
         dim = int(unit.split("^")[-1])
+        # todo: force minimal volume
         volumepx = volume * (space_unit ** dim)
+        below, mini = check_below_minimum_volume(volumepx)
         constraints[ctype]["volume"] = {f"volume ({unit})": volume,
                                         "volume (pixels)": volumepx}
+        if below:
+            message = f"WARNING: converted cell volume for cell type {ctype} is below {mini}. Converted volume " \
+                      f"{volumepx}. If cells are too small in CC3D they do not behave in a biological manner and may " \
+                      f"disapear. Volume for {ctype} set to {mini}."
+            warnings.warn(message)
+            constraints[ctype]["volume"]["original_conversion"] = volumepx
+            constraints[ctype]["volume"]["warning"] = message
+            constraints[ctype]["volume"]["volume (pixels)"] = mini
+
         constraints[ctype]["mechanics"] = get_cell_mechanics(child)
 
     return constraints
