@@ -1,8 +1,6 @@
 import warnings
 
 # defines conversion factors to meter
-from convert import _space_convs, _time_convs
-
 _space_convs = {"micron": 1e-6,
                 "micrometer": 1e-6,
                 "micro": 1e-6,

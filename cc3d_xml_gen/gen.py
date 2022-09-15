@@ -134,7 +134,7 @@ def make_cc3d_file(name=None):
 
 
 def make_contact_plugin(celltypes):
-    # replace ASAP with contact flex
+    #todo: replace ASAP with contact flex
 
     combs = list(combinations(celltypes, 2))
 

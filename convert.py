@@ -11,7 +11,7 @@ import os
 import xmltodict as x2d
 import steppable_gen
 
-from cc3d_xml_gen.cc3d_xml_gen import make_potts, make_metadata, make_cell_type_plugin, make_cc3d_file, \
+from cc3d_xml_gen.gen import make_potts, make_metadata, make_cell_type_plugin, make_cc3d_file, \
     make_contact_plugin, make_diffusion_plug
 
 

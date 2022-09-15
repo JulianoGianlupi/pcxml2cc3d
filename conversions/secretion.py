@@ -1,6 +1,21 @@
 import warnings
 
-from convert import _time_convs
+_time_convs = {"millisecond": 1e-3 / 60,
+               "milliseconds": 1e-3 / 60,
+               "microsecond": 1e-6 / 60,
+               "microseconds": 1e-6 / 60,
+               "second": 1 / 60,
+               "s": 1 / 60,
+               "seconds": 1 / 60,
+               "hours": 60,
+               "hour": 60,
+               "h": 60,
+               "day": 24 * 60,
+               "days": 24 * 60,
+               "week": 7 * 24 * 60,
+               "weeks": 7 * 24 * 60,
+               "minutes": 1,
+               "min": 1}
 
 
 def convert_secretion_rate(rate, unit, time_conv, pctimeunit, time_convs=_time_convs):
