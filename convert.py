@@ -724,6 +724,7 @@ if __name__ == "__main__":
     with open("test/test.cc3d", "w+") as f:
         f.write(make_cc3d_file())
 
+    # todo: remember to extract the name of the original PC sim and use it for naming the cc3d sim
     example_path = r"./example_pcxml/" + "annotated_cancer_immune3D_flat.xml"
 
     print(f"Loading {example_path}")
