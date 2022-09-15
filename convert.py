@@ -788,7 +788,10 @@ if __name__ == "__main__":
 
     print("Generating steppables file")
 
+    steppable_gen.generate_steppable_file(out_sim_f, "steppable_test.py", all_step)
 
+    print("Generating steppable registration file")
+    steppable_gen.generate_main_python(out_sim_f, "main_test.py", "steppable_test.py", step_names)
 
     print("Copying python files")
 
