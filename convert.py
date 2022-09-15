@@ -18,32 +18,32 @@ from itertools import combinations
 
 # defines conversion factors to meter
 _space_convs = {"micron": 1e-6,
-               "micrometer": 1e-6,
-               "micro": 1e-6,
-               "milli": 1e-3,
-               "millimeter": 1e-3,
-               "nano": 1e-9,
-               "nanometer": 1e-9,
-               'meter': 1
+                "micrometer": 1e-6,
+                "micro": 1e-6,
+                "milli": 1e-3,
+                "millimeter": 1e-3,
+                "nano": 1e-9,
+                "nanometer": 1e-9,
+                'meter': 1
                 }
 
 # defines conversion factors to minutes
 _time_convs = {"millisecond": 1e-3 / 60,
-              "milliseconds": 1e-3 / 60,
-              "microsecond": 1e-6 / 60,
-              "microseconds": 1e-6 / 60,
-              "second": 1 / 60,
-              "s": 1 / 60,
-              "seconds": 1 / 60,
-              "hours": 60,
-              "hour": 60,
-              "h": 60,
-              "day": 24 * 60,
-              "days": 24 * 60,
-              "week": 7 * 24 * 60,
-              "weeks": 7 * 24 * 60,
-              "minutes": 1,
-              "min": 1}
+               "milliseconds": 1e-3 / 60,
+               "microsecond": 1e-6 / 60,
+               "microseconds": 1e-6 / 60,
+               "second": 1 / 60,
+               "s": 1 / 60,
+               "seconds": 1 / 60,
+               "hours": 60,
+               "hour": 60,
+               "h": 60,
+               "day": 24 * 60,
+               "days": 24 * 60,
+               "week": 7 * 24 * 60,
+               "weeks": 7 * 24 * 60,
+               "minutes": 1,
+               "min": 1}
 
 
 def get_dims(pcdict, space_convs=_space_convs):
@@ -367,7 +367,7 @@ def get_secretion(pcdict):
     # will have to be done in python
     sec_data = {}
     for child in pcdict['cell_definitions']['cell_definition']:
-        ctype =child['@name'].replace(" ", "_")
+        ctype = child['@name'].replace(" ", "_")
         sec_data[ctype] = {}
         sec_list = child['phenotype']['secretion']['substrate']
         for sec in sec_list:
@@ -381,7 +381,6 @@ def get_secretion(pcdict):
             sec_data[ctype][substrate]['net_export'] = float(sec['net_export_rate']['#text'])
             sec_data[ctype][substrate]['net_export_unit'] = sec['net_export_rate']['@units']
     return sec_data
-
 
 
 def get_microenvironment(pcdict, space_factor, space_unit, time_factor, time_unit, autoconvert_time=True,
@@ -662,7 +661,6 @@ def convert_net_secretion(rate, unit, time_conv, pctimeunit, time_convs=_time_co
 
 
 def convert_secretion_data(sec_dict, time_conv, pctimeunit):
-
     if not sec_dict:
         return {}
 
@@ -683,7 +681,7 @@ def convert_secretion_data(sec_dict, time_conv, pctimeunit):
             mcs_secretion_rate, extra_sec_comment = convert_secretion_rate(data['secretion_rate'], unit, time_conv,
                                                                            pctimeunit)
             data['secretion_rate_MCS'] = mcs_secretion_rate
-            data['secretion_comment'] = secretion_comment+extra_sec_comment
+            data['secretion_comment'] = secretion_comment + extra_sec_comment
 
             unit = data['net_export_unit']
 
@@ -701,7 +699,6 @@ def convert_secretion_data(sec_dict, time_conv, pctimeunit):
             new_type_sec[field] = data
         new_sec_dict[ctype] = new_type_sec
     return new_sec_dict
-
 
 
 if __name__ == "__main__":
@@ -724,6 +721,7 @@ if __name__ == "__main__":
     with open("test/test.cc3d", "w+") as f:
         f.write(make_cc3d_file())
 
+    # todo: remember to extract the name of the original PC sim and use it for naming the cc3d sim
     example_path = r"./example_pcxml/" + "annotated_cancer_immune3D_flat.xml"
 
     print(f"Loading {example_path}")
@@ -756,7 +754,6 @@ if __name__ == "__main__":
     print("Generating diffusion plugin")
     diffusion_string = make_diffusion_plug(d_elements, cell_types, False)
 
-
     print("Parsing secretion data")
     secretion_dict = get_secretion(pcdict)
 
@@ -781,12 +778,15 @@ if __name__ == "__main__":
 
     print("Merging steppables")  # todo: merge steps and create step and main py file
 
-    all_step = constraint_step+"\n"+secretion_step
+    all_step = constraint_step + "\n" + secretion_step
 
-    print("Copying python files")
+    step_names = steppable_gen.get_steppables_names(all_step)
 
-    sh.copy(r'./base_cc3d_python_scripts/test.py', out_sim_f)
-    sh.copy(r'./base_cc3d_python_scripts/testSteppables.py', out_sim_f)
+    print("Generating steppables file")
+
+    steppable_gen.generate_steppable_file(out_sim_f, "steppable_test.py", all_step)
+
+    print("Generating steppable registration file")
+    steppable_gen.generate_main_python(out_sim_f, "main_test.py", "steppable_test.py", step_names)
 
     print("______________\nDONE!!")
-    # print(cc3dml)
