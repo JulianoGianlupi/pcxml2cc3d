@@ -784,7 +784,9 @@ if __name__ == "__main__":
 
     all_step = constraint_step+"\n"+secretion_step
 
-    # todo: list steppable names dynamically
+    step_names = steppable_gen.get_steppables_names(all_step)
+
+    print("Generating steppables file")
 
 
 
