@@ -784,6 +784,10 @@ if __name__ == "__main__":
 
     all_step = constraint_step+"\n"+secretion_step
 
+    # todo: list steppable names dynamically
+
+
+
     print("Copying python files")
 
     sh.copy(r'./base_cc3d_python_scripts/test.py', out_sim_f)
