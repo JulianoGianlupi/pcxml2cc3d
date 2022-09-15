@@ -18,7 +18,7 @@ def _register_steppable(step_name):
     return f"CompuCellSetup.register_steppable(steppable={step_name}())\n\n"
 
 
-def generate_main_py_string(step_file, step_names):
+def _generate_main_py_string(step_file, step_names):
     full = _main_py_header()
 
     for name in step_names:
@@ -31,7 +31,7 @@ def generate_main_py_string(step_file, step_names):
 
     return full
 
-def write_main_py_file(path, filename, main_string):
+def _write_main_py_file(path, filename, main_string):
     path = Path(path)
 
     if not isdir(path):
@@ -45,9 +45,9 @@ def generate_main_python(path, filename, step_file, step_names):
     if ".py" in step_file:
         step_file = step_file.replace(".py", "")
 
-    full_string = generate_main_py_string(step_file, step_names)
+    full_string = _generate_main_py_string(step_file, step_names)
 
-    write_main_py_file(path, filename, full_string)
+    _write_main_py_file(path, filename, full_string)
 
 
 if __name__ == "__main__":
