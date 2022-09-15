@@ -86,6 +86,16 @@ def make_cell_dict(cell_types, secretion_dict):
         else:
             type_sec = None
 
+def get_volume_constraints(con_dict):
+    vdict = {}
+    for ctype, consts in con_dict.items():
+        vdict[ctype]["original_conv"] = consts["original_conversion"]
+        vdict[ctype]["current_conv"] = consts["volume (pixels)"]
+    return vdict
+
+def reconvert_space(constraints, ccdims):
+    volumes = get_volume_constraints(constraints)
+
 
 if __name__ == "__main__":
 
@@ -124,7 +134,12 @@ if __name__ == "__main__":
     print("Generating <Plugin CellType/>")
     ct_str, wall, cell_types, = make_cell_type_plugin(pcdict)
 
-    constraints = get_cell_constraints(pcdict, ccdims[4], cctime[2])
+    # todo: after checking minimal volume redo space conversion if need be. Order of generating potts etc needs to be
+    #  rearranged
+    constraints, any_below = get_cell_constraints(pcdict, ccdims[4], cctime[2])
+
+    if any_below:
+        ccdims, constraints = reconvert_space(constraints, ccdims)
 
     with open(os.path.join(out_sim_f, "extra_definitions.py"), 'w+') as f:
         f.write("cell_constraints=" + str(constraints) + "\n")

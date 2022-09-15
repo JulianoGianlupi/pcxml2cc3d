@@ -168,18 +168,19 @@ def check_below_minimum_volume(volume, minimum=8):
 
 def get_cell_constraints(pcdict, space_unit, time_unit):
     constraints = {}
-
+    any_below = False
     for child in pcdict['cell_definitions']['cell_definition']:
         ctype = child['@name'].replace(" ", "_")
         constraints[ctype] = {}
         volume, unit = get_cell_volume(child)
         dim = int(unit.split("^")[-1])
-        # todo: force minimal volume
         volumepx = volume * (space_unit ** dim)
         below, mini = check_below_minimum_volume(volumepx)
         constraints[ctype]["volume"] = {f"volume ({unit})": volume,
                                         "volume (pixels)": volumepx}
+        # todo: reconvert space based on the minimal volume
         if below:
+            any_below = True
             message = f"WARNING: converted cell volume for cell type {ctype} is below {mini}. Converted volume " \
                       f"{volumepx}. If cells are too small in CC3D they do not behave in a biological manner and may " \
                       f"disapear. Volume for {ctype} set to {mini}."
@@ -190,7 +191,7 @@ def get_cell_constraints(pcdict, space_unit, time_unit):
 
         constraints[ctype]["mechanics"] = get_cell_mechanics(child)
 
-    return constraints
+    return constraints, any_below
 
 
 def get_space_time_from_diffusion(unit):
