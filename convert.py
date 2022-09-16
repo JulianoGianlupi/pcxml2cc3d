@@ -11,11 +11,8 @@ import os
 import xmltodict as x2d
 import steppable_gen
 
-from math import ceil
-
 from cc3d_xml_gen.gen import make_potts, make_metadata, make_cell_type_plugin, make_cc3d_file, \
-    make_contact_plugin, make_diffusion_plug
-
+    make_contact_plugin, make_diffusion_plug, reconvert_spatial_parameters_with_minimum_cell_volume
 
 from cc3d_xml_gen.get_physicell_data import get_cell_constraints, get_secretion, get_microenvironment, get_dims, \
     get_time
@@ -77,64 +74,6 @@ def extra_for_testing(celltypes, xmax, ymax, zmax):
     return beg + box_min + box_max + gap + types + end
 
 
-def make_cell_loop(cell_type):
-    return f"for cell in self.cell_list_by_type(self.{cell_type.upper()}):\n"
-
-
-def make_cell_dict(cell_types, secretion_dict):
-    for ctype in cell_types:
-        loop_start = make_cell_loop(ctype)
-        if ctype in secretion_dict.keys():
-            type_sec = secretion_dict[ctype]
-        else:
-            type_sec = None
-
-def get_volume_constraints(con_dict):
-    vdict = {}
-    for ctype, consts in con_dict.items():
-        vdict[ctype]["original_conv"] = consts["original_conversion"]
-        vdict[ctype]["current_conv"] = consts["volume (pixels)"]
-    return vdict
-
-def reconvert_cc3d_dims(ccdims, ratio):
-
-    # ccdims is a tupple of: int x pixels, int y pixels, int z pixels,
-    # string showing the pixel -- real unit relationship, the pixel -- real unit ratio
-
-    ccdims = list(ccdims)
-
-    number_pixels = [ratio*ccdims[0], ratio*ccdims[1], ratio*ccdims[2]]
-
-    old_pixel_unit_ratio = ccdims[-2]
-
-    # pixel` = ratio*pixel = ratio * conv * unit
-    new_pixel_unit_ratio = ratio*old_pixel_unit_ratio
-
-    new_string = ccdims[3].replace(str(old_pixel_unit_ratio), str(new_pixel_unit_ratio))
-    new_ccdims = (number_pixels[0], number_pixels[1], number_pixels[2], new_string, new_pixel_unit_ratio, ccdims[-1])
-    return new_ccdims
-
-def reconvert_cell_volume_constraints(con_dict, ratio):
-    new_con = {}
-    for ctype, const in con_dict.items():
-        new_con[ctype] = const
-        new_con[ctype]['volume']["volume (pixels)"] = ratio*const['volume']["volume (pixels)"]
-    return new_con
-
-
-def reconvert_spatial_parameters_with_minimum_cell_volume(constraints, ccdims, pixel_volumes, minimum_volume):
-
-    minimum_converted_volume = min(pixel_volumes)
-
-    reconvert_ratio = ceil(minimum_volume/minimum_converted_volume)
-
-    ccdims = reconvert_cc3d_dims(ccdims, reconvert_ratio)
-
-    constraints = reconvert_cell_volume_constraints(constraints, reconvert_ratio)
-
-    return ccdims, constraints
-
-
 if __name__ == "__main__":
 
     print("Running test")
@@ -180,7 +119,7 @@ if __name__ == "__main__":
     old_ccdims = ccdims
     if any_below:
         ccdims, constraints = reconvert_spatial_parameters_with_minimum_cell_volume(constraints, ccdims, pixel_volumes,
-                                                                           minimum_volume)
+                                                                                    minimum_volume)
     print("Generating <Potts/>")
     potts_str = make_potts(ccdims, ccdims, pctime, cctime)
 
