@@ -31,14 +31,8 @@ _time_convs = {"millisecond": 1e-3 / 60,
                "minutes": 1,
                "min": 1}
 
-def make_potts(pcdict):
-    pcdims, ccdims = get_dims(pcdict)
+def make_potts(pcdims, ccdims, pctime, cctime):
 
-    # space_units_str = f'"1 pixel = 1 {space_units}"'
-
-    pctime, cctime = get_time(pcdict)
-
-    # still need to implement space units
     potts_str = f""" 
 <Potts>
    <!-- Basic properties of CPM (GGH) algorithm -->
@@ -59,7 +53,7 @@ def make_potts(pcdict):
    <!-- <Boundary_y>Periodic</Boundary_y> -->
 </Potts>\n"""
 
-    return potts_str, pcdims, ccdims, pctime, cctime
+    return potts_str
 
 
 def make_metadata(pcdict, out=100):

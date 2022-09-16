@@ -17,7 +17,8 @@ from cc3d_xml_gen.gen import make_potts, make_metadata, make_cell_type_plugin, m
     make_contact_plugin, make_diffusion_plug
 
 
-from cc3d_xml_gen.get_physicell_data import get_cell_constraints, get_secretion, get_microenvironment
+from cc3d_xml_gen.get_physicell_data import get_cell_constraints, get_secretion, get_microenvironment, get_dims, \
+    get_time
 from conversions.secretion import convert_secretion_data
 
 # defines conversion factors to meter
@@ -165,21 +166,23 @@ if __name__ == "__main__":
     print("Generating <Metadata/>")
     metadata_str, n_threads = make_metadata(pcdict)
 
-    print("Generating <Potts/>")
-    potts_str, pcdims, ccdims, pctime, cctime = make_potts(pcdict)
+    print("Extracting space and time data")
+    pcdims, ccdims = get_dims(pcdict)
+    pctime, cctime = get_time(pcdict)
+
 
     print("Generating <Plugin CellType/>")
     ct_str, wall, cell_types, = make_cell_type_plugin(pcdict)
 
-    # todo:  Order of generating potts etc needs to be
-    #  rearranged
     constraints, any_below, pixel_volumes, minimum_volume = \
         get_cell_constraints(pcdict, ccdims[4], minimum_volume=8)
     old_cons = constraints
     old_ccdims = ccdims
     if any_below:
         ccdims, constraints = reconvert_spatial_parameters_with_minimum_cell_volume(constraints, ccdims, pixel_volumes,
-                                                                                    minimum_volume)
+                                                                           minimum_volume)
+    print("Generating <Potts/>")
+    potts_str = make_potts(ccdims, ccdims, pctime, cctime)
 
     with open(os.path.join(out_sim_f, "extra_definitions.py"), 'w+') as f:
         f.write("cell_constraints=" + str(constraints) + "\n")
