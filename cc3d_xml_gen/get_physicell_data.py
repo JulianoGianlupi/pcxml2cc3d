@@ -166,32 +166,30 @@ def check_below_minimum_volume(volume, minimum=8):
     return volume < minimum, minimum
 
 
-def get_cell_constraints(pcdict, space_unit, time_unit):
+def get_cell_constraints(pcdict, space_unit, minimum_volume=8):
     constraints = {}
     any_below = False
+    volumes = []
     for child in pcdict['cell_definitions']['cell_definition']:
         ctype = child['@name'].replace(" ", "_")
         constraints[ctype] = {}
         volume, unit = get_cell_volume(child)
         dim = int(unit.split("^")[-1])
         volumepx = volume * (space_unit ** dim)
-        below, mini = check_below_minimum_volume(volumepx)
+        below, minimum_volume = check_below_minimum_volume(volumepx, minimum=minimum_volume)
         constraints[ctype]["volume"] = {f"volume ({unit})": volume,
                                         "volume (pixels)": volumepx}
-        # todo: reconvert space based on the minimal volume
+        volumes.append(volumepx)
         if below:
             any_below = True
-            message = f"WARNING: converted cell volume for cell type {ctype} is below {mini}. Converted volume " \
+            message = f"WARNING: converted cell volume for cell type {ctype} is below {minimum_volume}. Converted volume " \
                       f"{volumepx}. If cells are too small in CC3D they do not behave in a biological manner and may " \
-                      f"disapear. Volume for {ctype} set to {mini}."
+                      f"disapear. This program will enforce that: 1) the volume proportions stay as before; 2) the " \
+                      f"lowest cell volume is {minimum_volume}"
             warnings.warn(message)
-            constraints[ctype]["volume"]["original_conversion"] = volumepx
-            constraints[ctype]["volume"]["warning"] = message
-            constraints[ctype]["volume"]["volume (pixels)"] = mini
-
         constraints[ctype]["mechanics"] = get_cell_mechanics(child)
 
-    return constraints, any_below
+    return constraints, any_below, volumes, minimum_volume
 
 
 def get_space_time_from_diffusion(unit):

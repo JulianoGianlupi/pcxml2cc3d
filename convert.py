@@ -11,6 +11,8 @@ import os
 import xmltodict as x2d
 import steppable_gen
 
+from math import ceil
+
 from cc3d_xml_gen.gen import make_potts, make_metadata, make_cell_type_plugin, make_cc3d_file, \
     make_contact_plugin, make_diffusion_plug
 
@@ -93,8 +95,43 @@ def get_volume_constraints(con_dict):
         vdict[ctype]["current_conv"] = consts["volume (pixels)"]
     return vdict
 
-def reconvert_space(constraints, ccdims):
-    volumes = get_volume_constraints(constraints)
+def reconvert_cc3d_dims(ccdims, ratio):
+
+    # ccdims is a tupple of: int x pixels, int y pixels, int z pixels,
+    # string showing the pixel -- real unit relationship, the pixel -- real unit ratio
+
+    ccdims = list(ccdims)
+
+    number_pixels = [ratio*ccdims[0], ratio*ccdims[1], ratio*ccdims[2]]
+
+    old_pixel_unit_ratio = ccdims[-2]
+
+    # pixel` = ratio*pixel = ratio * conv * unit
+    new_pixel_unit_ratio = ratio*old_pixel_unit_ratio
+
+    new_string = ccdims[3].replace(str(old_pixel_unit_ratio), str(new_pixel_unit_ratio))
+    new_ccdims = (number_pixels[0], number_pixels[1], number_pixels[2], new_string, new_pixel_unit_ratio, ccdims[-1])
+    return new_ccdims
+
+def reconvert_cell_volume_constraints(con_dict, ratio):
+    new_con = {}
+    for ctype, const in con_dict.items():
+        new_con[ctype] = const
+        new_con[ctype]['volume']["volume (pixels)"] = ratio*const['volume']["volume (pixels)"]
+    return new_con
+
+
+def reconvert_spatial_parameters_with_minimum_cell_volume(constraints, ccdims, pixel_volumes, minimum_volume):
+
+    minimum_converted_volume = min(pixel_volumes)
+
+    reconvert_ratio = ceil(minimum_volume/minimum_converted_volume)
+
+    ccdims = reconvert_cc3d_dims(ccdims, reconvert_ratio)
+
+    constraints = reconvert_cell_volume_constraints(constraints, reconvert_ratio)
+
+    return ccdims, constraints
 
 
 if __name__ == "__main__":
@@ -134,12 +171,15 @@ if __name__ == "__main__":
     print("Generating <Plugin CellType/>")
     ct_str, wall, cell_types, = make_cell_type_plugin(pcdict)
 
-    # todo: after checking minimal volume redo space conversion if need be. Order of generating potts etc needs to be
+    # todo:  Order of generating potts etc needs to be
     #  rearranged
-    constraints, any_below = get_cell_constraints(pcdict, ccdims[4], cctime[2])
-
+    constraints, any_below, pixel_volumes, minimum_volume = \
+        get_cell_constraints(pcdict, ccdims[4], minimum_volume=8)
+    old_cons = constraints
+    old_ccdims = ccdims
     if any_below:
-        ccdims, constraints = reconvert_space(constraints, ccdims)
+        ccdims, constraints = reconvert_spatial_parameters_with_minimum_cell_volume(constraints, ccdims, pixel_volumes,
+                                                                                    minimum_volume)
 
     with open(os.path.join(out_sim_f, "extra_definitions.py"), 'w+') as f:
         f.write("cell_constraints=" + str(constraints) + "\n")
@@ -177,7 +217,7 @@ if __name__ == "__main__":
     with open(os.path.join(out_sim_f, "test.xml"), "w+") as f:
         f.write(cc3dml)
 
-    print("Merging steppables")  # todo: merge steps and create step and main py file
+    print("Merging steppables") 
 
     all_step = constraint_step + "\n" + secretion_step
 
