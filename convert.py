@@ -12,10 +12,10 @@ import xmltodict as x2d
 import steppable_gen
 
 from cc3d_xml_gen.gen import make_potts, make_metadata, make_cell_type_plugin, make_cc3d_file, \
-    make_contact_plugin, make_diffusion_plug
+    make_contact_plugin, make_diffusion_plug, reconvert_spatial_parameters_with_minimum_cell_volume
 
-
-from cc3d_xml_gen.get_physicell_data import get_cell_constraints, get_secretion, get_microenvironment
+from cc3d_xml_gen.get_physicell_data import get_cell_constraints, get_secretion, get_microenvironment, get_dims, \
+    get_time
 from conversions.secretion import convert_secretion_data
 
 # defines conversion factors to meter
@@ -74,19 +74,6 @@ def extra_for_testing(celltypes, xmax, ymax, zmax):
     return beg + box_min + box_max + gap + types + end
 
 
-def make_cell_loop(cell_type):
-    return f"for cell in self.cell_list_by_type(self.{cell_type.upper()}):\n"
-
-
-def make_cell_dict(cell_types, secretion_dict):
-    for ctype in cell_types:
-        loop_start = make_cell_loop(ctype)
-        if ctype in secretion_dict.keys():
-            type_sec = secretion_dict[ctype]
-        else:
-            type_sec = None
-
-
 if __name__ == "__main__":
 
     print("Running test")
@@ -118,13 +105,23 @@ if __name__ == "__main__":
     print("Generating <Metadata/>")
     metadata_str, n_threads = make_metadata(pcdict)
 
-    print("Generating <Potts/>")
-    potts_str, pcdims, ccdims, pctime, cctime = make_potts(pcdict)
+    print("Extracting space and time data")
+    pcdims, ccdims = get_dims(pcdict)
+    pctime, cctime = get_time(pcdict)
+
 
     print("Generating <Plugin CellType/>")
     ct_str, wall, cell_types, = make_cell_type_plugin(pcdict)
 
-    constraints = get_cell_constraints(pcdict, ccdims[4], cctime[2])
+    constraints, any_below, pixel_volumes, minimum_volume = \
+        get_cell_constraints(pcdict, ccdims[4], minimum_volume=8)
+    old_cons = constraints
+    old_ccdims = ccdims
+    if any_below:
+        ccdims, constraints = reconvert_spatial_parameters_with_minimum_cell_volume(constraints, ccdims, pixel_volumes,
+                                                                                    minimum_volume)
+    print("Generating <Potts/>")
+    potts_str = make_potts(ccdims, ccdims, pctime, cctime)
 
     with open(os.path.join(out_sim_f, "extra_definitions.py"), 'w+') as f:
         f.write("cell_constraints=" + str(constraints) + "\n")
@@ -162,7 +159,7 @@ if __name__ == "__main__":
     with open(os.path.join(out_sim_f, "test.xml"), "w+") as f:
         f.write(cc3dml)
 
-    print("Merging steppables")  # todo: merge steps and create step and main py file
+    print("Merging steppables") 
 
     all_step = constraint_step + "\n" + secretion_step
 
