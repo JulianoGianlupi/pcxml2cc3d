@@ -18,6 +18,13 @@ from cc3d_xml_gen.get_physicell_data import get_cell_constraints, get_secretion,
     get_time
 from conversions.secretion import convert_secretion_data
 
+# TODO:
+#  - phenotypes
+#  - bash script
+#  - cell configuration
+#  - mechanics (e.g. elasticity)
+
+
 # defines conversion factors to meter
 _space_convs = {"micron": 1e-6,
                 "micrometer": 1e-6,
