@@ -112,13 +112,13 @@ def make_cc3d_file(name=None):
         cc3d = '''
 <Simulation version="4.3.0">
    <XMLScript Type="XMLScript">Simulation/test.xml</XMLScript>
-    <PythonScript Type="PythonScript">Simulation/test.py</PythonScript> 
-    <Resource Type="Python">Simulation/testSteppables.py</Resource> 
+    <PythonScript Type="PythonScript">Simulation/main_test.py</PythonScript> 
+    <Resource Type="Python">Simulation/steppable_test.py</Resource> 
     <Resource Type="Python">Simulation/extra_definitions.py</Resource> 
 </Simulation>\n'''
         return cc3d
     else:
-        cc3d = '''
+        cc3d = f'''
 <Simulation version="4.3.0">
    <XMLScript Type="XMLScript">Simulation/{name}.xml</XMLScript>
    <PythonScript Type="PythonScript">Simulation/{name}.py</PythonScript>

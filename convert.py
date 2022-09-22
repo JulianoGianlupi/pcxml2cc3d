@@ -23,6 +23,8 @@ from conversions.secretion import convert_secretion_data
 #  - bash script
 #  - cell configuration
 #  - mechanics (e.g. elasticity)
+#  - dynamic simulation name gen; custom sim name gen
+#  - cc3dml file has to always have the correct file names
 
 
 # defines conversion factors to meter
