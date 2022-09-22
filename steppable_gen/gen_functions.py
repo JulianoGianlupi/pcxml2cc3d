@@ -96,7 +96,7 @@ def steppable_on_stop():
 '''
     return stop
 
-
+# todo: use frequency when generating the steppable.
 def generate_steppable(step_name, frequency, mitosis, minimal=False, already_imports=False, additional_init=None,
                        additional_start=None, additional_step=None, additional_finish=None, additional_on_stop=None):
     imports = steppable_imports()
