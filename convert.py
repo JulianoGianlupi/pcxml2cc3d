@@ -118,7 +118,6 @@ if __name__ == "__main__":
     pcdims, ccdims = get_dims(pcdict)
     pctime, cctime = get_time(pcdict)
 
-
     print("Generating <Plugin CellType/>")
     ct_str, wall, cell_types, = make_cell_type_plugin(pcdict)
 
@@ -169,7 +168,7 @@ if __name__ == "__main__":
     with open(os.path.join(out_sim_f, "test.xml"), "w+") as f:
         f.write(cc3dml)
 
-    print("Merging steppables") 
+    print("Merging steppables")
 
     all_step = constraint_step + "\n" + secretion_step
 
