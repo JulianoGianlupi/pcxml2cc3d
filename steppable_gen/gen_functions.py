@@ -29,11 +29,27 @@ def generate_cell_type_loop(ctype, ntabs):
     return tab + f"for cell in self.cell_list_by_type(self.{ctype.upper()}):\n"
 
 
-def steppable_imports():
+def steppable_imports(phenocell_dir=False):
+    if not phenocell_dir:
+        phenocell_dir = "C:\\PhenoCellPy"
     imports = '''from cc3d.cpp.PlayerPython import *\nfrom cc3d import CompuCellSetup
 from cc3d.core.PySteppables import *\nimport numpy as np\n
 '''
-    return imports
+    phenocell = f'''import sys\n
+# IMPORTANT: PhysiCell has a concept of cell phenotype, PhenoCellPy (https://github.com/JulianoGianlupi/PhenoCellPy) 
+# has a similar implementation of phenotypes. You should install PhenoCellPy to translate the Phenotypes from PhysiCell.
+# Then change the default path used below with your PhenoCellPy's installation directory
+sys.path.extend(['{phenocell_dir}'])
+global pcp_imp
+pcp_imp = False
+try:
+\timport Phenotypes as pcp
+\tpcp_imp = True
+except:
+\tpass\n
+
+'''
+    return imports+phenocell
 
 
 def steppable_declaration(step_name, mitosis=False):
@@ -95,6 +111,7 @@ def steppable_on_stop():
 \t\tself.finish()\n
 '''
     return stop
+
 
 # todo: use frequency when generating the steppable.
 def generate_steppable(step_name, frequency, mitosis, minimal=False, already_imports=False, additional_init=None,
