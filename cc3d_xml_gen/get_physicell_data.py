@@ -250,7 +250,8 @@ def get_microenvironment(pcdict, space_factor, space_unit, time_factor, time_uni
 
         if this_space != space_unit:
             message = f"WARNING: space unit found in diffusion coefficient of {subel['@name']} does not match" \
-                      f"space unit found while converting <overall>:\n\t<overall>:{space_unit};\n\t{subel['@name']}:{this_space}" \
+                      f"space unit found while converting <overall>:\n\t<overall>:{space_unit};\n\t{subel['@name']}:" \
+                      f"{this_space}" \
                       f"\nautomatic space-unit conversion for {subel['@name']} disabled"
             warnings.warn(message)
             auto_s_this = False
