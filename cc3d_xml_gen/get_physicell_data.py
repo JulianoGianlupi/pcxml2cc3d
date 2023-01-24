@@ -212,6 +212,8 @@ def get_secretion(pcdict):
     # will have to be done in python
     sec_data = {}
     for child in pcdict['cell_definitions']['cell_definition']:
+        if 'secretion' not in child['phenotype'].keys():
+            break
         ctype = child['@name'].replace(" ", "_")
         sec_data[ctype] = {}
         sec_list = child['phenotype']['secretion']['substrate']
