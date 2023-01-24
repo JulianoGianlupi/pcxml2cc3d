@@ -174,7 +174,16 @@ def get_cell_constraints(pcdict, space_unit, minimum_volume=8):
         ctype = child['@name'].replace(" ", "_")
         constraints[ctype] = {}
         volume, unit = get_cell_volume(child)
-        dim = int(unit.split("^")[-1])
+        if volume is None or unit is None:
+            message = f"WARNING: cell volume for cell type {ctype} either doesn't have a unit (unit found: {unit}) or" \
+                      f" doesn't have a value (value found: {volume}). Setting the volume to be the minimum volume, " \
+                      f"{minimum_volume}"
+            warnings.warn(message)
+            volume = minimum_volume
+            unit = "not specified"
+            dim = 3
+        else:
+            dim = int(unit.split("^")[-1])
         volumepx = volume * (space_unit ** dim)
         below, minimum_volume = check_below_minimum_volume(volumepx, minimum=minimum_volume)
         constraints[ctype]["volume"] = {f"volume ({unit})": volume,
