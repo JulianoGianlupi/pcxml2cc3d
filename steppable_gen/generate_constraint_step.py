@@ -72,8 +72,8 @@ def generate_constraint_steppable(cell_types, cell_dicts, first=True):
 
     loops = generate_constraint_loops(cell_types, cell_dicts)
 
-    constraint_step = generate_steppable("Constraints", 1, False, minimal=True, additional_start=loops,
-                                         already_imports=already_imports)
+    constraint_step = generate_steppable("Constraints", 1, False, minimal=True, already_imports=already_imports,
+                                         additional_start=loops)
 
     return constraint_step
 

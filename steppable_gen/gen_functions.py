@@ -114,8 +114,9 @@ def steppable_on_stop():
 
 
 def generate_steppable(step_name, frequency, mitosis, minimal=False, already_imports=False, additional_init=None,
-                       additional_start=None, additional_step=None, additional_finish=None, additional_on_stop=None):
-    imports = steppable_imports()
+                       additional_start=None, additional_step=None, additional_finish=None, additional_on_stop=None,
+                       phenocell_dir=False):
+    imports = steppable_imports(phenocell_dir=phenocell_dir)
     declare = steppable_declaration(step_name, mitosis=mitosis)
     init = steppable_init(frequency, mitosis=mitosis)
     if additional_init is not None:
