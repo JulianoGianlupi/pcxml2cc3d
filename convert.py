@@ -152,9 +152,8 @@ if __name__ == "__main__":
     conv_sec = convert_secretion_data(secretion_dict, cctime[2], pctime[1])
 
     print("Generating constraint steppable")
-    constraint_step = steppable_gen.generate_constraint_steppable(cell_types,
-                                                                  [constraints,
-                                                                   conv_sec])
+    constraint_step = steppable_gen.generate_constraint_steppable(cell_types, [constraints,
+                                                                               conv_sec], wall)
 
     print("Generating secretion steppable")
     secretion_step = steppable_gen.generate_secretion_step(cell_types, secretion_dict)

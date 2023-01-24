@@ -63,7 +63,7 @@ def generate_constraint_loops(cell_types, cell_dicts):
     return loops
 
 
-def generate_constraint_steppable(cell_types, cell_dicts, first=True):
+def generate_constraint_steppable(cell_types, cell_dicts, wall, first=True):
     if first:
         already_imports = False
 
@@ -71,9 +71,13 @@ def generate_constraint_steppable(cell_types, cell_dicts, first=True):
         already_imports = True
 
     loops = generate_constraint_loops(cell_types, cell_dicts)
+    if not wall:
+        wall_str = ""
+    else:
+        wall_str = "\t\tself.build_wall(self.WALL)\n"
 
     constraint_step = generate_steppable("Constraints", 1, False, minimal=True, already_imports=already_imports,
-                                         additional_start=loops)
+                                         additional_start=loops+wall_str)
 
     return constraint_step
 
@@ -81,4 +85,4 @@ def generate_constraint_steppable(cell_types, cell_dicts, first=True):
 if __name__ == "__main__":
     dicts = [{"a": {"exemplo": 1, "asdasd": 3}, "b": {"kkkkkk": "popop"}},
              {"a": {"exeo": 1, "uip": 3}, "b": {"oooooo": "lololo"}}]
-    print(generate_constraint_steppable(["a", "b"], dicts))
+    print(generate_constraint_steppable(["a", "b"], dicts, False))
