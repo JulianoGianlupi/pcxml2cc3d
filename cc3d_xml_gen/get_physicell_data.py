@@ -175,8 +175,9 @@ def get_cell_constraints(pcdict, space_unit, minimum_volume=8):
         constraints[ctype] = {}
         volume, unit = get_cell_volume(child)
         if volume is None or unit is None:
-            message = f"WARNING: cell volume for cell type {ctype} either doesn't have a unit (unit found: {unit}) or" \
-                      f" doesn't have a value (value found: {volume}). Setting the volume to be the minimum volume, " \
+            message = f"WARNING: cell volume for cell type {ctype} either doesn't have a unit \n(unit found: {unit}) " \
+                      f"or" \
+                      f" doesn't have a value (value found: {volume}). \nSetting the volume to be the minimum volume, "\
                       f"{minimum_volume}"
             warnings.warn(message)
             volume = minimum_volume
@@ -192,8 +193,8 @@ def get_cell_constraints(pcdict, space_unit, minimum_volume=8):
         if below:
             any_below = True
             message = f"WARNING: converted cell volume for cell type {ctype} is below {minimum_volume}. Converted volume " \
-                      f"{volumepx}. If cells are too small in CC3D they do not behave in a biological manner and may " \
-                      f"disapear. This program will enforce that: 1) the volume proportions stay as before; 2) the " \
+                      f"{volumepx}. \nIf cells are too small in CC3D they do not behave in a biological manner and may " \
+                      f"disapear. \nThis program will enforce that: 1) the volume proportions stay as before; 2) the " \
                       f"lowest cell volume is {minimum_volume}"
             warnings.warn(message)
         constraints[ctype]["mechanics"] = get_cell_mechanics(child)
