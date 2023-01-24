@@ -165,6 +165,68 @@ def get_cell_mechanics(subdict):
 def check_below_minimum_volume(volume, minimum=8):
     return volume < minimum, minimum
 
+_physicell_phenotype_codes = {
+    "0": "Ki67 Advanced",
+    "1": "Ki67 Basic",
+    "2": "Flow Cytometry Basic",
+    "5": "Simple Live",
+    "6": "Flow Cytometry Advanced",
+    "7": "Ki67 Basic",
+    "100": "Standard apoptosis model",
+    "101": "Standard necrosis model"}
+
+
+def get_cell_phenotypes(subdict, ppc=_physicell_phenotype_codes):
+    if 'phenotype' not in subdict.keys():
+        return None
+
+    phenotypes = {}
+    if 'cycle' in subdict['phenotype'].keys():
+        if subdict['phenotype']['cycle']['@code'] not in ppc.keys():
+            message = f"WARNING: PhysiCell phenotype of code {subdict['phenotype']['cycle']['@code']}\n" \
+                      f"not among PhenoCellPy's phenotypes. Falling back on Simple Live phenotype"
+            phenotypes[ppc["5"]] = None
+        else:
+            code = subdict['phenotype']['cycle']['@code']
+            phenotype = ppc[code]
+            pheno_data = subdict['phenotype']['cycle']['phase_transition_rates']
+            if 'volume' in subdict['phenotype'].keys():
+                volume_data = subdict['phenotype']['volume']
+                phenotypes[phenotype] = {"rate units": pheno_data['@units'],
+                                         "fixed duration": pheno_data['rate']['@fixed_duration'].upper(),
+                                         "phase transition rate": float(pheno_data['rate']['#text']),
+                                         "fluid fraction": float(volume_data['fluid_fraction']['#text']),
+                                         "fluid change rate": float(volume_data['fluid_change_rate']['#text']),
+                                         "nuclear volume": float(volume_data['nuclear']['#text']),
+                                         "cytoplasm biomass change rate":
+                                             float(volume_data['cytoplasmic_biomass_change_rate']['#text']),
+                                         "nuclear biomass change rate":
+                                             float(volume_data['nuclear_biomass_change_rate']['#text']),
+                                         "calcified fraction": float(volume_data['calcified_fraction']['#text']),
+                                         "calcification rate": float(volume_data['calcification_rate']['#text'])}
+            else:
+                phenotypes[phenotype] = {"rate units": pheno_data['@units'],
+                                         "fixed duration": pheno_data['rate']['@fixed_duration'].upper(),
+                                         "phase transition rate": float(pheno_data['rate']['#text'])}
+    if 'death' in subdict['phenotype'].keys():
+        death_models = subdict['phenotype']['death']['model']
+        if type(death_models) == list:
+            for model in death_models:
+                print("hi")
+                code = ['@code']
+                if code not in ppc.keys():
+                    message = f"WARNING: PhysiCell phenotype of code {subdict['phenotype']['cycle']['@code']}\n" \
+                              f"not among PhenoCellPy's phenotypes. Falling back on Standard apoptosis model phenotype"
+                    phenotypes[ppc["100"]] = None
+                else:
+                    phenotype = ppc[code]
+                    phenotypes[phenotype] = {"rate units": model['death_rate']['@units']}
+
+
+    print("hi")
+
+
+
 
 def get_cell_constraints(pcdict, space_unit, minimum_volume=8):
     constraints = {}
@@ -198,6 +260,7 @@ def get_cell_constraints(pcdict, space_unit, minimum_volume=8):
                       f"lowest cell volume is {minimum_volume}"
             warnings.warn(message)
         constraints[ctype]["mechanics"] = get_cell_mechanics(child)
+        constraints[ctype]["phenotypes"] = get_cell_phenotypes(child)
 
     return constraints, any_below, volumes, minimum_volume
 
