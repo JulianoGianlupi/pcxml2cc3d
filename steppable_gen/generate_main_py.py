@@ -38,7 +38,7 @@ def _write_main_py_file(path, filename, main_string):
         path.mkdir(parents=True)
 
     with open(join(path, filename), "w+") as f:
-        f.write(main_string)
+        f.write(main_string.replace("\t", "    "))
 
 def generate_main_python(path, filename, step_file, step_names):
 
