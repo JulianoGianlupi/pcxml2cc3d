@@ -199,8 +199,7 @@ def get_cell_phenotypes(subdict, ppc=_physicell_phenotype_codes):
             else:
                 raise ValueError(f"Couldn't find phenotype phase transition data for "
                                  f"{subdict['phenotype']['cycle']['name']}.\nIs this PhisiCell model valid?")
-            # todo: need to check if biomass change rates are even defined, if not set to None (PhenoCellPy will use
-            #  defaults)
+
             rate_data = pheno_data['rate']
             if 'volume' in subdict['phenotype'].keys():
                 volume_datum = subdict['phenotype']['volume']
