@@ -190,17 +190,28 @@ def get_cell_phenotypes(subdict, ppc=_physicell_phenotype_codes):
         else:
             code_name = subdict['phenotype']['cycle']['@code']
             phenotype = ppc[code_name]
-            pheno_data = subdict['phenotype']['cycle']['phase_transition_rates']
+            if 'phase_transition_rates' in subdict['phenotype']['cycle'].keys():
+                using_rates = True
+                pheno_data = subdict['phenotype']['cycle']['phase_transition_rates']
+            elif 'phase_durations' in subdict['phenotype']['cycle'].keys():
+                using_rates = False
+                pheno_data = subdict['phenotype']['cycle']['phase_durations']
+            else:
+                raise ValueError(f"Couldn't find phenotype phase transition data for "
+                                 f"{subdict['phenotype']['cycle']['name']}.\nIs this PhisiCell model valid?")
             # todo: need to check if biomass change rates are even defined, if not set to None (PhenoCellPy will use
             #  defaults)
-            # todo: some times physicell defines phase duration, sometimes rates
             rate_data = pheno_data['rate']
             if 'volume' in subdict['phenotype'].keys():
                 volume_datum = subdict['phenotype']['volume']
                 if type(rate_data) != list:
 
-                    phase_duration = 1 / float(pheno_data['rate']['#text']) if float(pheno_data['rate']['#text']) \
-                        else 9e99
+                    if using_rates:
+                        phase_duration = 1 / float(pheno_data['rate']['#text']) if float(pheno_data['rate']['#text']) \
+                            else 9e99
+                    else:
+                        phase_duration = float(pheno_data['rate']['#text']) if float(pheno_data['rate']['#text']) \
+                            else 9e99
 
                     fixed_duration = pheno_data['rate']['@fixed_duration'].upper()
                     duration_data = (fixed_duration, phase_duration)
@@ -228,8 +239,13 @@ def get_cell_phenotypes(subdict, ppc=_physicell_phenotype_codes):
 
                     for rate_datum in rate_data:
                         fixed_duration = rate_datum['@fixed_duration'].upper()
-                        phase_duration = 1 / float(rate_datum['#text']) if float(rate_datum['#text']) \
-                            else 9e99
+                        if using_rates:
+                            phase_duration = 1 / float(pheno_data['rate']['#text']) if float(
+                                pheno_data['rate']['#text']) \
+                                else 9e99
+                        else:
+                            phase_duration = float(pheno_data['rate']['#text']) if float(pheno_data['rate']['#text']) \
+                                else 9e99
                         duration_data = (fixed_duration, phase_duration)
                         phase_durations.append(duration_data)
 
