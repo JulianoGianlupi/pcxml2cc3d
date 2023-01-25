@@ -267,6 +267,7 @@ def get_cell_phenotypes(subdict, ppc=_physicell_phenotype_codes):
                 if code_name not in ppc.keys():
                     message = f"WARNING: PhysiCell phenotype of code {subdict['phenotype']['cycle']['@code']}\n" \
                               f"not among PhenoCellPy's phenotypes. Falling back on Standard apoptosis model phenotype"
+                    warnings.warn(message)
                     phenotypes[ppc["100"]] = None
                 else:
                     phenotype = ppc[code_name]
@@ -315,6 +316,7 @@ def get_cell_phenotypes(subdict, ppc=_physicell_phenotype_codes):
             if code_name not in ppc.keys():
                 message = f"WARNING: PhysiCell phenotype of code {subdict['phenotype']['cycle']['@code']}\n" \
                           f"not among PhenoCellPy's phenotypes. Falling back on Standard apoptosis model phenotype"
+                warnings.warn(message)
                 phenotypes[ppc["100"]] = None
             else:
                 phenotype = ppc[code_name]
