@@ -38,10 +38,10 @@ def make_potts(pcdims, ccdims, pctime, cctime):
 <Potts>
    <!-- Basic properties of CPM (GGH) algorithm -->
    <Space_Units>{ccdims[3]}</Space_Units>
-   <Pixel_to_Space units="pixel/{pcdims[3]}">{ccdims[4]}</Pixel_to_Space>
+   <Pixel_to_Space units="pixel/{pcdims[3]}" id = "pixel_to_space">{ccdims[4]}</Pixel_to_Space>
    <Dimensions x="{ccdims[0]}" y="{ccdims[1]}" z="{ccdims[2]}"/>
    <Time_Units>{cctime[1]}</Time_Units>
-   <MCS_to_Time units="MCS/{pctime[1]}">{cctime[2]}</MCS_to_Time>
+   <MCS_to_Time units="MCS/{pctime[1]}" id = "mcs_to_time">{cctime[2]}</MCS_to_Time>
    <Steps>{cctime[0]}</Steps>
    <!-- As the frameworks of CC3D and PhysiCell are very different -->
    <!-- PC doesn't have some concepts that CC3D does. Temperature is one of -->
