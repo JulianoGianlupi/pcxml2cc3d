@@ -311,66 +311,10 @@ def get_cycle_phenotypes(phenotypes, subdict, ppc):
     return phenotypes
 
 
-def get_cell_phenotypes(subdict, ppc=_physicell_phenotype_codes):
-    if 'phenotype' not in subdict.keys():
-        return None
-
-    phenotypes = {}
-    if 'cycle' in subdict['phenotype'].keys():
-        phenotypes = get_cycle_phenotypes(phenotypes, subdict, ppc)
-    if 'death' in subdict['phenotype'].keys():
-        death_models = subdict['phenotype']['death']['model']
-        if type(death_models) == list:
-            for model in death_models:
-                code_name = model['@code']
-                if code_name not in ppc.keys():
-                    message = f"WARNING: PhysiCell phenotype of code {subdict['phenotype']['cycle']['@code']}\n" \
-                              f"not among PhenoCellPy's phenotypes. Falling back on Standard apoptosis model phenotype"
-                    warnings.warn(message)
-                    phenotypes[ppc["100"]] = None
-                else:
-                    phenotype = ppc[code_name]
-                    phenotypes[phenotype] = {"rate units": model['death_rate']['@units']}
-                    phase_durations = model['phase_durations']['duration']
-                    duration_data = []
-                    if type(phase_durations) == list:
-                        for phasedur in phase_durations:
-                            fixed = phasedur['@fixed_duration'].upper()
-                            duration = float(phasedur['#text']) if float(phasedur['#text']) else 9e99
-                            duration_data.append((fixed, duration))
-                    else:
-                        fixed = phase_durations['@fixed_duration'].upper()
-                        duration = float(phase_durations['#text']) if float(phase_durations['#text']) else 9e99
-                        duration_data.append((fixed, duration))
-                    phenotypes[phenotype]["phase duration"] = duration_data
-
-                    biomass_chage_rates = model['parameters']
-                    if code_name == "100":  # apoptosis
-                        phenotypes[phenotype]["fluid change rate"] = \
-                            [float(biomass_chage_rates['unlysed_fluid_change_rate']['#text'])]
-                        phenotypes[phenotype]["cytoplasm biomass change rate"] = \
-                            [float(biomass_chage_rates['cytoplasmic_biomass_change_rate']['#text'])]
-                        phenotypes[phenotype]["nuclear biomass change rate"] = \
-                            [float(biomass_chage_rates['nuclear_biomass_change_rate']['#text'])]
-                        phenotypes[phenotype]["calcification rate"] = \
-                            [float(biomass_chage_rates['calcification_rate']['#text'])]
-                        phenotypes[phenotype]["relative rupture volume"] = [None]
-                    elif code_name == "101":  # necrosis
-                        phenotypes[phenotype]["fluid change rate"] = \
-                            [float(biomass_chage_rates['unlysed_fluid_change_rate']['#text']),
-                             float(biomass_chage_rates['lysed_fluid_change_rate']['#text'])]
-                        phenotypes[phenotype]["cytoplasm biomass change rate"] = \
-                            [float(biomass_chage_rates['cytoplasmic_biomass_change_rate']['#text']),
-                             float(biomass_chage_rates['cytoplasmic_biomass_change_rate']['#text'])]
-                        phenotypes[phenotype]["nuclear biomass change rate"] = \
-                            [float(biomass_chage_rates['nuclear_biomass_change_rate']['#text']),
-                             float(biomass_chage_rates['nuclear_biomass_change_rate']['#text'])]
-                        phenotypes[phenotype]["calcification rate"] = \
-                            [float(biomass_chage_rates['calcification_rate']['#text']),
-                             float(biomass_chage_rates['calcification_rate']['#text'])]
-                        phenotypes[phenotype]["relative rupture volume"] = [None, 2]
-        else:
-            model = death_models
+def get_death_phenotypes(phenotypes, subdict, ppc):
+    death_models = subdict['phenotype']['death']['model']
+    if type(death_models) == list:
+        for model in death_models:
             code_name = model['@code']
             if code_name not in ppc.keys():
                 message = f"WARNING: PhysiCell phenotype of code {subdict['phenotype']['cycle']['@code']}\n" \
@@ -385,11 +329,11 @@ def get_cell_phenotypes(subdict, ppc=_physicell_phenotype_codes):
                 if type(phase_durations) == list:
                     for phasedur in phase_durations:
                         fixed = phasedur['@fixed_duration'].upper()
-                        duration = float(phasedur['#text'])
+                        duration = float(phasedur['#text']) if float(phasedur['#text']) else 9e99
                         duration_data.append((fixed, duration))
                 else:
                     fixed = phase_durations['@fixed_duration'].upper()
-                    duration = float(phase_durations['#text'])
+                    duration = float(phase_durations['#text']) if float(phase_durations['#text']) else 9e99
                     duration_data.append((fixed, duration))
                 phenotypes[phenotype]["phase duration"] = duration_data
 
@@ -418,6 +362,67 @@ def get_cell_phenotypes(subdict, ppc=_physicell_phenotype_codes):
                         [float(biomass_chage_rates['calcification_rate']['#text']),
                          float(biomass_chage_rates['calcification_rate']['#text'])]
                     phenotypes[phenotype]["relative rupture volume"] = [None, 2]
+    else:
+        model = death_models
+        code_name = model['@code']
+        if code_name not in ppc.keys():
+            message = f"WARNING: PhysiCell phenotype of code {subdict['phenotype']['cycle']['@code']}\n" \
+                      f"not among PhenoCellPy's phenotypes. Falling back on Standard apoptosis model phenotype"
+            warnings.warn(message)
+            phenotypes[ppc["100"]] = None
+            return phenotypes
+        else:
+            phenotype = ppc[code_name]
+            phenotypes[phenotype] = {"rate units": model['death_rate']['@units']}
+            phase_durations = model['phase_durations']['duration']
+            duration_data = []
+            if type(phase_durations) == list:
+                for phasedur in phase_durations:
+                    fixed = phasedur['@fixed_duration'].upper()
+                    duration = float(phasedur['#text'])
+                    duration_data.append((fixed, duration))
+            else:
+                fixed = phase_durations['@fixed_duration'].upper()
+                duration = float(phase_durations['#text'])
+                duration_data.append((fixed, duration))
+            phenotypes[phenotype]["phase duration"] = duration_data
+
+            biomass_chage_rates = model['parameters']
+            if code_name == "100":  # apoptosis
+                phenotypes[phenotype]["fluid change rate"] = \
+                    [float(biomass_chage_rates['unlysed_fluid_change_rate']['#text'])]
+                phenotypes[phenotype]["cytoplasm biomass change rate"] = \
+                    [float(biomass_chage_rates['cytoplasmic_biomass_change_rate']['#text'])]
+                phenotypes[phenotype]["nuclear biomass change rate"] = \
+                    [float(biomass_chage_rates['nuclear_biomass_change_rate']['#text'])]
+                phenotypes[phenotype]["calcification rate"] = \
+                    [float(biomass_chage_rates['calcification_rate']['#text'])]
+                phenotypes[phenotype]["relative rupture volume"] = [None]
+            elif code_name == "101":  # necrosis
+                phenotypes[phenotype]["fluid change rate"] = \
+                    [float(biomass_chage_rates['unlysed_fluid_change_rate']['#text']),
+                     float(biomass_chage_rates['lysed_fluid_change_rate']['#text'])]
+                phenotypes[phenotype]["cytoplasm biomass change rate"] = \
+                    [float(biomass_chage_rates['cytoplasmic_biomass_change_rate']['#text']),
+                     float(biomass_chage_rates['cytoplasmic_biomass_change_rate']['#text'])]
+                phenotypes[phenotype]["nuclear biomass change rate"] = \
+                    [float(biomass_chage_rates['nuclear_biomass_change_rate']['#text']),
+                     float(biomass_chage_rates['nuclear_biomass_change_rate']['#text'])]
+                phenotypes[phenotype]["calcification rate"] = \
+                    [float(biomass_chage_rates['calcification_rate']['#text']),
+                     float(biomass_chage_rates['calcification_rate']['#text'])]
+                phenotypes[phenotype]["relative rupture volume"] = [None, 2]
+    return phenotypes
+
+
+def get_cell_phenotypes(subdict, ppc=_physicell_phenotype_codes):
+    phenotypes = {}
+    if 'phenotype' not in subdict.keys():
+        return phenotypes
+    if 'cycle' in subdict['phenotype'].keys():
+        phenotypes = get_cycle_phenotypes(phenotypes, subdict, ppc)
+    if 'death' in subdict['phenotype'].keys():
+        phenotypes = get_death_phenotypes(phenotypes, subdict, ppc)
     return phenotypes
 
 
