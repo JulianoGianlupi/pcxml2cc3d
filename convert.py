@@ -105,6 +105,7 @@ if __name__ == "__main__":
 
     # todo: remember to extract the name of the original PC sim and use it for naming the cc3d sim
     example_path = r"./example_pcxml/" + "annotated_cancer_immune3D_flat.xml"
+    example_path = r"./example_pcxml/" + "virus_macrophage_flat.xml"
 
     print(f"Loading {example_path}")
     with open(example_path, 'r') as f:
