@@ -12,7 +12,7 @@ import xmltodict as x2d
 import steppable_gen
 
 from cc3d_xml_gen.gen import make_potts, make_metadata, make_cell_type_plugin, make_cc3d_file, \
-    make_contact_plugin, make_diffusion_plug, reconvert_spatial_parameters_with_minimum_cell_volume
+    make_contact_plugin, make_diffusion_plug, reconvert_spatial_parameters_with_minimum_cell_volume, make_secretion
 
 from cc3d_xml_gen.get_physicell_data import get_cell_constraints, get_secretion, get_microenvironment, get_dims, \
     get_time
@@ -128,8 +128,8 @@ if __name__ == "__main__":
     old_cons = constraints
     old_ccdims = ccdims
     if any_below:
-        ccdims, constraints = reconvert_spatial_parameters_with_minimum_cell_volume(constraints, ccdims, pixel_volumes,
-                                                                                    minimum_volume)
+        ccdims, constraints = \
+            reconvert_spatial_parameters_with_minimum_cell_volume(constraints, ccdims, pixel_volumes, minimum_volume)
     print("Generating <Potts/>")
     potts_str = make_potts(pcdims, ccdims, pctime, cctime)
 
@@ -159,9 +159,11 @@ if __name__ == "__main__":
     print("Generating secretion steppable")
     secretion_step = steppable_gen.generate_secretion_step(cell_types, secretion_dict)
 
+    secretion_plug = make_secretion(secretion_dict)
+
     print("Generating CC3DML")
     cc3dml = "<CompuCell3D>\n"
-    cc3dml += metadata_str + potts_str + ct_str + contact_plug + diffusion_string + '\n' + extra + \
+    cc3dml += metadata_str + potts_str + ct_str + contact_plug + diffusion_string + secretion_plug + '\n' + extra + \
               "\n</CompuCell3D>\n"
 
     print(f"Creating {out_sim_f}/test.xml")
