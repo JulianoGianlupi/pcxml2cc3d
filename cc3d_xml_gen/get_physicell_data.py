@@ -373,8 +373,7 @@ def get_cell_phenotypes(subdict, ppc=_physicell_phenotype_codes):
                         [float(biomass_chage_rates['calcification_rate']['#text']),
                          float(biomass_chage_rates['calcification_rate']['#text'])]
                     phenotypes[phenotype]["relative rupture volume"] = [None, 2]
-    print("hi")
-
+    return phenotypes
 
 def get_cell_constraints(pcdict, space_unit, minimum_volume=8):
     constraints = {}
