@@ -2,3 +2,4 @@ example_pcxml/
 test/
 .idea/
 **/__pycache__/
+PhysiCell/
