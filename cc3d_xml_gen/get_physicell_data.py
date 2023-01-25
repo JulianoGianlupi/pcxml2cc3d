@@ -174,7 +174,17 @@ def get_cell_constraints(pcdict, space_unit, minimum_volume=8):
         ctype = child['@name'].replace(" ", "_")
         constraints[ctype] = {}
         volume, unit = get_cell_volume(child)
-        dim = int(unit.split("^")[-1])
+        if volume is None or unit is None:
+            message = f"WARNING: cell volume for cell type {ctype} either doesn't have a unit \n(unit found: {unit}) " \
+                      f"or" \
+                      f" doesn't have a value (value found: {volume}). \nSetting the volume to be the minimum volume, "\
+                      f"{minimum_volume}"
+            warnings.warn(message)
+            volume = minimum_volume
+            unit = "not specified"
+            dim = 3
+        else:
+            dim = int(unit.split("^")[-1])
         volumepx = volume * (space_unit ** dim)
         below, minimum_volume = check_below_minimum_volume(volumepx, minimum=minimum_volume)
         constraints[ctype]["volume"] = {f"volume ({unit})": volume,
@@ -183,8 +193,8 @@ def get_cell_constraints(pcdict, space_unit, minimum_volume=8):
         if below:
             any_below = True
             message = f"WARNING: converted cell volume for cell type {ctype} is below {minimum_volume}. Converted volume " \
-                      f"{volumepx}. If cells are too small in CC3D they do not behave in a biological manner and may " \
-                      f"disapear. This program will enforce that: 1) the volume proportions stay as before; 2) the " \
+                      f"{volumepx}. \nIf cells are too small in CC3D they do not behave in a biological manner and may " \
+                      f"disapear. \nThis program will enforce that: 1) the volume proportions stay as before; 2) the " \
                       f"lowest cell volume is {minimum_volume}"
             warnings.warn(message)
         constraints[ctype]["mechanics"] = get_cell_mechanics(child)
@@ -203,6 +213,8 @@ def get_secretion(pcdict):
     # will have to be done in python
     sec_data = {}
     for child in pcdict['cell_definitions']['cell_definition']:
+        if 'secretion' not in child['phenotype'].keys():
+            break
         ctype = child['@name'].replace(" ", "_")
         sec_data[ctype] = {}
         sec_list = child['phenotype']['secretion']['substrate']
@@ -238,7 +250,8 @@ def get_microenvironment(pcdict, space_factor, space_unit, time_factor, time_uni
 
         if this_space != space_unit:
             message = f"WARNING: space unit found in diffusion coefficient of {subel['@name']} does not match" \
-                      f"space unit found while converting <overall>:\n\t<overall>:{space_unit};\n\t{subel['@name']}:{this_space}" \
+                      f"space unit found while converting <overall>:\n\t<overall>:{space_unit};\n\t{subel['@name']}:" \
+                      f"{this_space}" \
                       f"\nautomatic space-unit conversion for {subel['@name']} disabled"
             warnings.warn(message)
             auto_s_this = False

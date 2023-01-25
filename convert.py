@@ -121,7 +121,6 @@ if __name__ == "__main__":
     print("Generating <Plugin CellType/>")
     ct_str, wall, cell_types, = make_cell_type_plugin(pcdict)
 
-    # todo: reconvert the diffusion stuff after this step
     constraints, any_below, pixel_volumes, minimum_volume = \
         get_cell_constraints(pcdict, ccdims[4], minimum_volume=8)
     old_cons = constraints
