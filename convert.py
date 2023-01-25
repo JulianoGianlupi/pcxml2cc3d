@@ -105,7 +105,7 @@ if __name__ == "__main__":
 
     # todo: remember to extract the name of the original PC sim and use it for naming the cc3d sim
     example_path = r"./example_pcxml/" + "annotated_cancer_immune3D_flat.xml"
-    example_path = r"./example_pcxml/" + "virus_macrophage_flat.xml"
+    # example_path = r"./example_pcxml/" + "virus_macrophage_flat.xml"
 
     print(f"Loading {example_path}")
     with open(example_path, 'r') as f:
@@ -131,7 +131,7 @@ if __name__ == "__main__":
         ccdims, constraints = reconvert_spatial_parameters_with_minimum_cell_volume(constraints, ccdims, pixel_volumes,
                                                                                     minimum_volume)
     print("Generating <Potts/>")
-    potts_str = make_potts(ccdims, ccdims, pctime, cctime)
+    potts_str = make_potts(pcdims, ccdims, pctime, cctime)
 
     with open(os.path.join(out_sim_f, "extra_definitions.py"), 'w+') as f:
         f.write("cell_constraints=" + str(constraints) + "\n")
