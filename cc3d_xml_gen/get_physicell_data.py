@@ -418,7 +418,7 @@ def get_death_phenotypes(phenotypes, subdict, ppc):
 def get_cell_phenotypes(subdict, ppc=_physicell_phenotype_codes):
     phenotypes = {}
     if 'phenotype' not in subdict.keys():
-        return phenotypes
+        return None
     if 'cycle' in subdict['phenotype'].keys():
         phenotypes = get_cycle_phenotypes(phenotypes, subdict, ppc)
     if 'death' in subdict['phenotype'].keys():
