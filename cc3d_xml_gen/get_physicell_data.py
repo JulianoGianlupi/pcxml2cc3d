@@ -177,11 +177,72 @@ _physicell_phenotype_codes = {
     "101": "Standard necrosis model"}
 
 
+def get_cycle_rate_data(rate_data, volume_datum, using_rates):
+    if type(rate_data) != list:
+
+        if using_rates:
+            phase_duration = 1 / float(rate_data['#text']) if float(rate_data['#text']) \
+                else 9e99
+        else:
+            phase_duration = float(rate_data['#text']) if float(rate_data['#text']) \
+                else 9e99
+
+        fixed_duration = rate_data['@fixed_duration'].upper()
+        duration_data = (fixed_duration, phase_duration)
+        phase_durations = [duration_data]
+        fluid_change_rate = [float(volume_datum['fluid_change_rate']['#text'])]
+        cytoplasmic_biomass_change_rate = [float(volume_datum['cytoplasmic_biomass_change_rate']['#text'])]
+        nuclear_biomass_change_rate = [float(volume_datum['nuclear_biomass_change_rate']['#text'])]
+        calcification_rate = [float(volume_datum['calcification_rate']['#text'])]
+        fluid_fraction = [float(volume_datum['fluid_fraction']['#text'])]
+        nuclear = [float(volume_datum['nuclear']['#text'])]
+        calcified_fraction = [float(volume_datum['calcified_fraction']['#text'])]
+        rel_rupture = [None]
+    else:
+
+        phase_durations = []
+        fluid_change_rate = []
+        cytoplasmic_biomass_change_rate = []
+        nuclear_biomass_change_rate = []
+        calcification_rate = []
+
+        fluid_fraction = []
+        nuclear = []
+        calcified_fraction = []
+        rel_rupture = []
+
+        for rate_datum in rate_data:
+            fixed_duration = rate_datum['@fixed_duration'].upper()
+            if using_rates:
+                phase_duration = 1 / float(rate_datum['#text']) if float(rate_datum['#text']) \
+                    else 9e99
+            else:
+                phase_duration = float(rate_datum['#text']) if float(rate_datum['#text']) \
+                    else 9e99
+            duration_data = (fixed_duration, phase_duration)
+            phase_durations.append(duration_data)
+
+            fluid_change_rate.append(float(volume_datum['fluid_change_rate']['#text']))
+            cytoplasmic_biomass_change_rate.append(
+                float(volume_datum['cytoplasmic_biomass_change_rate']['#text']))
+            nuclear_biomass_change_rate.append(float(volume_datum['nuclear_biomass_change_rate']['#text']))
+            calcification_rate.append(float(volume_datum['calcification_rate']['#text']))
+
+            fluid_fraction.append(float(volume_datum['fluid_fraction']['#text']))
+            nuclear.append(float(volume_datum['nuclear']['#text']))
+            calcified_fraction.append(float(volume_datum['calcified_fraction']['#text']))
+            rel_rupture.append(None)
+
+    return phase_durations, fluid_change_rate, cytoplasmic_biomass_change_rate, nuclear_biomass_change_rate, \
+           calcification_rate, fluid_fraction, nuclear, calcified_fraction, rel_rupture
+
+
 def get_cycle_phenotypes(phenotypes, subdict, ppc):
     if subdict['phenotype']['cycle']['@code'] not in ppc.keys():
         message = f"WARNING: PhysiCell phenotype of code {subdict['phenotype']['cycle']['@code']}\n" \
                   f"not among PhenoCellPy's phenotypes. Falling back on Simple Live phenotype"
         phenotypes[ppc["5"]] = None
+        return phenotypes
     else:
         code_name = subdict['phenotype']['cycle']['@code']
         phenotype = ppc[code_name]
@@ -198,60 +259,9 @@ def get_cycle_phenotypes(phenotypes, subdict, ppc):
         rate_data = pheno_data['rate']
         if 'volume' in subdict['phenotype'].keys():
             volume_datum = subdict['phenotype']['volume']
-            if type(rate_data) != list:
-
-                if using_rates:
-                    phase_duration = 1 / float(pheno_data['rate']['#text']) if float(pheno_data['rate']['#text']) \
-                        else 9e99
-                else:
-                    phase_duration = float(pheno_data['rate']['#text']) if float(pheno_data['rate']['#text']) \
-                        else 9e99
-
-                fixed_duration = pheno_data['rate']['@fixed_duration'].upper()
-                duration_data = (fixed_duration, phase_duration)
-                phase_durations = [duration_data]
-                fluid_change_rate = [float(volume_datum['fluid_change_rate']['#text'])]
-                cytoplasmic_biomass_change_rate = [float(volume_datum['cytoplasmic_biomass_change_rate']['#text'])]
-                nuclear_biomass_change_rate = [float(volume_datum['nuclear_biomass_change_rate']['#text'])]
-                calcification_rate = [float(volume_datum['calcification_rate']['#text'])]
-                fluid_fraction = [float(volume_datum['fluid_fraction']['#text'])]
-                nuclear = [float(volume_datum['nuclear']['#text'])]
-                calcified_fraction = [float(volume_datum['calcified_fraction']['#text'])]
-                rel_rupture = [None]
-            else:
-
-                phase_durations = []
-                fluid_change_rate = []
-                cytoplasmic_biomass_change_rate = []
-                nuclear_biomass_change_rate = []
-                calcification_rate = []
-
-                fluid_fraction = []
-                nuclear = []
-                calcified_fraction = []
-                rel_rupture = []
-
-                for rate_datum in rate_data:
-                    fixed_duration = rate_datum['@fixed_duration'].upper()
-                    if using_rates:
-                        phase_duration = 1 / float(rate_datum['#text']) if float(rate_datum['#text']) \
-                            else 9e99
-                    else:
-                        phase_duration = float(rate_datum['#text']) if float(rate_datum['#text']) \
-                            else 9e99
-                    duration_data = (fixed_duration, phase_duration)
-                    phase_durations.append(duration_data)
-
-                    fluid_change_rate.append(float(volume_datum['fluid_change_rate']['#text']))
-                    cytoplasmic_biomass_change_rate.append(
-                        float(volume_datum['cytoplasmic_biomass_change_rate']['#text']))
-                    nuclear_biomass_change_rate.append(float(volume_datum['nuclear_biomass_change_rate']['#text']))
-                    calcification_rate.append(float(volume_datum['calcification_rate']['#text']))
-
-                    fluid_fraction.append(float(volume_datum['fluid_fraction']['#text']))
-                    nuclear.append(float(volume_datum['nuclear']['#text']))
-                    calcified_fraction.append(float(volume_datum['calcified_fraction']['#text']))
-                    rel_rupture.append(None)
+            phase_durations, fluid_change_rate, cytoplasmic_biomass_change_rate, nuclear_biomass_change_rate, \
+            calcification_rate, fluid_fraction, nuclear, calcified_fraction, rel_rupture = \
+                get_cycle_rate_data(rate_data, volume_datum, using_rates)
 
             phenotypes[phenotype] = {"rate units": pheno_data['@units'],
                                      "phase durations": phase_durations,
