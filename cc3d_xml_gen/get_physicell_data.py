@@ -241,6 +241,7 @@ def get_cycle_phenotypes(phenotypes, subdict, ppc):
     if subdict['phenotype']['cycle']['@code'] not in ppc.keys():
         message = f"WARNING: PhysiCell phenotype of code {subdict['phenotype']['cycle']['@code']}\n" \
                   f"not among PhenoCellPy's phenotypes. Falling back on Simple Live phenotype"
+        warnings.warn(message)
         phenotypes[ppc["5"]] = None
         return phenotypes
     else:
