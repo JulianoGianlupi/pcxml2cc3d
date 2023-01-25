@@ -255,11 +255,6 @@ def get_cell_phenotypes(subdict, ppc=_physicell_phenotype_codes):
                                          "calcification rate": calcification_rate,
                                          "relative rupture volume": rel_rupture}
 
-
-
-
-
-
             else:
                 phenotypes[phenotype] = {"rate units": pheno_data['@units'],
                                          "fixed duration": pheno_data['rate']['@fixed_duration'].upper(),
