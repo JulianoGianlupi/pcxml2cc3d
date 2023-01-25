@@ -239,11 +239,10 @@ def get_cell_phenotypes(subdict, ppc=_physicell_phenotype_codes):
                     for rate_datum in rate_data:
                         fixed_duration = rate_datum['@fixed_duration'].upper()
                         if using_rates:
-                            phase_duration = 1 / float(pheno_data['rate']['#text']) if float(
-                                pheno_data['rate']['#text']) \
+                            phase_duration = 1 / float(rate_datum['#text']) if float(rate_datum['#text']) \
                                 else 9e99
                         else:
-                            phase_duration = float(pheno_data['rate']['#text']) if float(pheno_data['rate']['#text']) \
+                            phase_duration = float(rate_datum['#text']) if float(rate_datum['#text']) \
                                 else 9e99
                         duration_data = (fixed_duration, phase_duration)
                         phase_durations.append(duration_data)
