@@ -276,9 +276,38 @@ def get_cycle_phenotypes(phenotypes, subdict, ppc):
                                      "relative rupture volume": rel_rupture}
 
         else:
+            if 'phase_transition_rates' in subdict['phenotype']['cycle'].keys():
+                using_rates = True
+                pheno_data = subdict['phenotype']['cycle']['phase_transition_rates']
+            elif 'phase_durations' in subdict['phenotype']['cycle'].keys():
+                using_rates = False
+                pheno_data = subdict['phenotype']['cycle']['phase_durations']
+            if using_rates:
+                phase_duration = 1 / float(rate_data['#text']) if float(rate_data['#text']) \
+                    else 9e99
+            else:
+                phase_duration = float(rate_data['#text']) if float(rate_data['#text']) \
+                    else 9e99
+            fixed_duration = rate_data['@fixed_duration'].upper()
+            duration_data = (fixed_duration, phase_duration)
+            phase_durations = [duration_data]
+            fluid_change_rate = [None]
+            cytoplasmic_biomass_change_rate = [None]
+            nuclear_biomass_change_rate = [None]
+            calcification_rate = [None]
+            fluid_fraction = [None]
+            nuclear = [None]
+            calcified_fraction = [None]
             phenotypes[phenotype] = {"rate units": pheno_data['@units'],
-                                     "fixed duration": pheno_data['rate']['@fixed_duration'].upper(),
-                                     "phase transition rate": float(pheno_data['rate']['#text'])}
+                                     "phase durations": phase_durations,
+                                     "fluid fraction": fluid_fraction,
+                                     "fluid change rate": fluid_change_rate,
+                                     "nuclear volume": nuclear,
+                                     "cytoplasm biomass change rate": cytoplasmic_biomass_change_rate,
+                                     "nuclear biomass change rate": nuclear_biomass_change_rate,
+                                     "calcified fraction": calcified_fraction,
+                                     "calcification rate": calcification_rate,
+                                     "relative rupture volume": [None]}
     return phenotypes
 
 
