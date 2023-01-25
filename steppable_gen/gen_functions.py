@@ -77,7 +77,9 @@ def steppable_start():
 \tdef start(self):
 \t\t"""
 \t\tCalled before MCS=0 while building the initial simulation
-\t\t"""'''
+\t\t"""
+\t\tself.pixel_to_space = float(self.get_xml_element('pixel_to_space').cdata)  # pixel/[unit], see xml for units
+\t\tself.mcs_to_time = float(self.get_xml_element('mcs_to_time').cdata)  # MCS/[unit], see xml for units'''
 
 
 def steppable_step():
