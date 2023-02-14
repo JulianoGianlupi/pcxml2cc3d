@@ -198,6 +198,7 @@ def get_cycle_rate_data(rate_data, volume_datum, using_rates):
         nuclear = [float(volume_datum['nuclear']['#text'])]
         calcified_fraction = [float(volume_datum['calcified_fraction']['#text'])]
         rel_rupture = [None]
+        total = [float(volume_datum['total']['#text'])]
     else:
 
         phase_durations = []
@@ -210,7 +211,7 @@ def get_cycle_rate_data(rate_data, volume_datum, using_rates):
         nuclear = []
         calcified_fraction = []
         rel_rupture = []
-
+        total = []
         for rate_datum in rate_data:
             fixed_duration = rate_datum['@fixed_duration'].upper()
             if using_rates:
@@ -232,9 +233,10 @@ def get_cycle_rate_data(rate_data, volume_datum, using_rates):
             nuclear.append(float(volume_datum['nuclear']['#text']))
             calcified_fraction.append(float(volume_datum['calcified_fraction']['#text']))
             rel_rupture.append(None)
+            total.append(float(volume_datum['total']['#text']))
 
     return phase_durations, fluid_change_rate, cytoplasmic_biomass_change_rate, nuclear_biomass_change_rate, \
-           calcification_rate, fluid_fraction, nuclear, calcified_fraction, rel_rupture
+           calcification_rate, fluid_fraction, nuclear, calcified_fraction, rel_rupture, total
 
 
 def get_cycle_phenotypes(phenotypes, subdict, ppc):
@@ -261,7 +263,7 @@ def get_cycle_phenotypes(phenotypes, subdict, ppc):
         if 'volume' in subdict['phenotype'].keys():
             volume_datum = subdict['phenotype']['volume']
             phase_durations, fluid_change_rate, cytoplasmic_biomass_change_rate, nuclear_biomass_change_rate, \
-            calcification_rate, fluid_fraction, nuclear, calcified_fraction, rel_rupture = \
+            calcification_rate, fluid_fraction, nuclear, calcified_fraction, rel_rupture, total= \
                 get_cycle_rate_data(rate_data, volume_datum, using_rates)
 
             phenotypes[phenotype] = {"rate units": pheno_data['@units'],
@@ -273,7 +275,8 @@ def get_cycle_phenotypes(phenotypes, subdict, ppc):
                                      "nuclear biomass change rate": nuclear_biomass_change_rate,
                                      "calcified fraction": calcified_fraction,
                                      "calcification rate": calcification_rate,
-                                     "relative rupture volume": rel_rupture}
+                                     "relative rupture volume": rel_rupture,
+                                     "total": total}
 
         else:
             if 'phase_transition_rates' in subdict['phenotype']['cycle'].keys():
@@ -335,7 +338,7 @@ def get_death_phenotypes(phenotypes, subdict, ppc):
                     fixed = phase_durations['@fixed_duration'].upper()
                     duration = float(phase_durations['#text']) if float(phase_durations['#text']) else 9e99
                     duration_data.append((fixed, duration))
-                phenotypes[phenotype]["phase duration"] = duration_data
+                phenotypes[phenotype]["phase durations"] = duration_data
 
                 biomass_chage_rates = model['parameters']
                 if code_name == "100":  # apoptosis
@@ -385,7 +388,7 @@ def get_death_phenotypes(phenotypes, subdict, ppc):
                 fixed = phase_durations['@fixed_duration'].upper()
                 duration = float(phase_durations['#text'])
                 duration_data.append((fixed, duration))
-            phenotypes[phenotype]["phase duration"] = duration_data
+            phenotypes[phenotype]["phase durations"] = duration_data
 
             biomass_chage_rates = model['parameters']
             if code_name == "100":  # apoptosis
@@ -418,12 +421,13 @@ def get_death_phenotypes(phenotypes, subdict, ppc):
 def get_cell_phenotypes(subdict, ppc=_physicell_phenotype_codes):
     phenotypes = {}
     if 'phenotype' not in subdict.keys():
-        return None
+        return None, None
     if 'cycle' in subdict['phenotype'].keys():
         phenotypes = get_cycle_phenotypes(phenotypes, subdict, ppc)
     if 'death' in subdict['phenotype'].keys():
         phenotypes = get_death_phenotypes(phenotypes, subdict, ppc)
-    return phenotypes
+    pheno_names = list(phenotypes.keys())
+    return phenotypes, pheno_names
 
 
 def get_cell_constraints(pcdict, space_unit, minimum_volume=8):
@@ -458,7 +462,7 @@ def get_cell_constraints(pcdict, space_unit, minimum_volume=8):
                       f"lowest cell volume is {minimum_volume}"
             warnings.warn(message)
         constraints[ctype]["mechanics"] = get_cell_mechanics(child)
-        constraints[ctype]["phenotypes"] = get_cell_phenotypes(child)
+        constraints[ctype]["phenotypes"], constraints[ctype]["phenotypes_names"] = get_cell_phenotypes(child)
 
     return constraints, any_below, volumes, minimum_volume
 
