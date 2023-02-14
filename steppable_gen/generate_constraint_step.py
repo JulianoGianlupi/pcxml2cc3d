@@ -152,14 +152,14 @@ def generate_constraint_steppable(cell_types, cell_dicts, wall, first=True):
 
     loops = generate_constraint_loops(cell_types, cell_dicts)
     if not wall:
-        wall_str = ""
+        wall_str = "\t\tself.shared_steppable_vars['constraints'] = self"
     else:
-        wall_str = "\t\tself.build_wall(self.WALL)\n"
+        wall_str = "\t\tself.build_wall(self.WALL)\n\t\tself.shared_steppable_vars['constraints'] = self"
     pheno_init = initialize_phenotypes(cell_dicts[0])
     constraint_step = generate_steppable("Constraints", 1, False, minimal=True, already_imports=already_imports,
                                          additional_start=pheno_init+loops+wall_str)
     # constraint_step += initialize_phenotypes(cell_dicts[0])
-    constraint_step += "\t\tself.shared_steppable_vars['constraints'] = self"
+    # constraint_step += "\t\tself.shared_steppable_vars['constraints'] = self"
     return constraint_step
 
 

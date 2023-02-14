@@ -301,21 +301,25 @@ def reconvert_cc3d_dims(ccdims, ratio):
     return new_ccdims
 
 
-def reconvert_cell_volume_constraints(con_dict, ratio):
+def reconvert_cell_volume_constraints(con_dict, ratio, minimum_volume):
     new_con = {}
     for ctype, const in con_dict.items():
         new_con[ctype] = const
-        new_con[ctype]['volume']["volume (pixels)"] = ratio * const['volume']["volume (pixels)"]
+        if const['volume']["volume (pixels)"] is None:
+            new_con[ctype]['volume']["volume (pixels)"] = minimum_volume
+        else:
+            new_con[ctype]['volume']["volume (pixels)"] = ratio * const['volume']["volume (pixels)"]
     return new_con
 
 
 def reconvert_spatial_parameters_with_minimum_cell_volume(constraints, ccdims, pixel_volumes, minimum_volume):
-    minimum_converted_volume = min(pixel_volumes)
+    px_vols = [px for px in pixel_volumes if px is not None]
+    minimum_converted_volume = min(px_vols)
 
     reconvert_ratio = ceil(minimum_volume / minimum_converted_volume)
 
     ccdims = reconvert_cc3d_dims(ccdims, reconvert_ratio)
 
-    constraints = reconvert_cell_volume_constraints(constraints, reconvert_ratio)
+    constraints = reconvert_cell_volume_constraints(constraints, reconvert_ratio, minimum_volume)
 
     return ccdims, constraints
