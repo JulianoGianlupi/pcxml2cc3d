@@ -29,11 +29,27 @@ def generate_cell_type_loop(ctype, ntabs):
     return tab + f"for cell in self.cell_list_by_type(self.{ctype.upper()}):\n"
 
 
-def steppable_imports():
+def steppable_imports(phenocell_dir=False):
+    if not phenocell_dir:
+        phenocell_dir = "C:\\PhenoCellPy"
     imports = '''from cc3d.cpp.PlayerPython import *\nfrom cc3d import CompuCellSetup
 from cc3d.core.PySteppables import *\nimport numpy as np\n
 '''
-    return imports
+    phenocell = f'''import sys\n
+# IMPORTANT: PhysiCell has a concept of cell phenotype, PhenoCellPy (https://github.com/JulianoGianlupi/PhenoCellPy) 
+# has a similar implementation of phenotypes. You should install PhenoCellPy to translate the Phenotypes from PhysiCell.
+# Then change the default path used below with your PhenoCellPy's installation directory
+sys.path.extend(['{phenocell_dir}'])
+global pcp_imp
+pcp_imp = False
+try:
+\timport Phenotypes as pcp
+\tpcp_imp = True
+except:
+\tpass\n
+
+'''
+    return imports+phenocell
 
 
 def steppable_declaration(step_name, mitosis=False):
@@ -61,7 +77,9 @@ def steppable_start():
 \tdef start(self):
 \t\t"""
 \t\tCalled before MCS=0 while building the initial simulation
-\t\t"""'''
+\t\t"""
+\t\tself.pixel_to_space = float(self.get_xml_element('pixel_to_space').cdata)  # pixel/[unit], see xml for units
+\t\tself.mcs_to_time = float(self.get_xml_element('mcs_to_time').cdata)  # MCS/[unit], see xml for units'''
 
 
 def steppable_step():
@@ -96,10 +114,11 @@ def steppable_on_stop():
 '''
     return stop
 
-# todo: use frequency when generating the steppable.
+
 def generate_steppable(step_name, frequency, mitosis, minimal=False, already_imports=False, additional_init=None,
-                       additional_start=None, additional_step=None, additional_finish=None, additional_on_stop=None):
-    imports = steppable_imports()
+                       additional_start=None, additional_step=None, additional_finish=None, additional_on_stop=None,
+                       phenocell_dir=False):
+    imports = steppable_imports(phenocell_dir=phenocell_dir)
     declare = steppable_declaration(step_name, mitosis=mitosis)
     init = steppable_init(frequency, mitosis=mitosis)
     if additional_init is not None:

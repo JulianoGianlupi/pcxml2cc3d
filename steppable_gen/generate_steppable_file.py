@@ -9,7 +9,7 @@ def generate_steppable_file(path, steppable_fname, steppable_string):
         path.mkdir(parents=True)
 
     with open(join(path, steppable_fname), "w+") as f:
-        f.write(steppable_string)
+        f.write(steppable_string.replace("\t", "    "))
 
 
 if __name__ == "__main__":
