@@ -1,3 +1,4 @@
+import warnings
 from itertools import combinations
 from math import ceil
 
@@ -323,3 +324,18 @@ def reconvert_spatial_parameters_with_minimum_cell_volume(constraints, ccdims, p
     constraints = reconvert_cell_volume_constraints(constraints, reconvert_ratio, minimum_volume)
 
     return ccdims, constraints
+
+def decrease_domain(ccdims, max_volume=2**32):
+    old_dims = [ccdims[0], ccdims[1], ccdims[2]]
+    old_volume = ccdims[0]*ccdims[1]*ccdims[2]
+    if old_volume < max_volume:
+        return ccdims, False
+    vol_conversion = old_volume / max_volume
+    # new_dims = ccdims
+    new_dims = [int(d / vol_conversion) for d in old_dims]
+    new_dims.extend([ccdims[3], ccdims[4], ccdims[5]])
+    message = "WARNING: Converted dimensions of simulation domain totaled > 2^32 pixels. \nWe have truncated " \
+              f"the sides of the simulation.This may break the initial conditions as defined in " \
+              f"PhysiCell.\nOld dimensions:{ccdims[0:3]}\nNew dimensions:{new_dims[0:3]}"
+    warnings.warn(message)
+    return new_dims, True

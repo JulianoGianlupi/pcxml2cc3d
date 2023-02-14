@@ -13,7 +13,7 @@ import steppable_gen
 
 from cc3d_xml_gen.gen import make_potts, make_metadata, make_cell_type_plugin, make_cc3d_file, \
     make_contact_plugin, make_diffusion_plug, reconvert_spatial_parameters_with_minimum_cell_volume, make_secretion, \
-    reconvert_cell_volume_constraints
+    reconvert_cell_volume_constraints, decrease_domain
 
 from cc3d_xml_gen.get_physicell_data import get_cell_constraints, get_secretion, get_microenvironment, get_dims, \
     get_time
@@ -132,6 +132,9 @@ if __name__ == "__main__":
             reconvert_spatial_parameters_with_minimum_cell_volume(constraints, ccdims, pixel_volumes, minimum_volume)
     else:
         constraints = reconvert_cell_volume_constraints(constraints, 1, minimum_volume)
+
+    ccdims, was_above = decrease_domain(ccdims)
+
     print("Generating <Potts/>")
     potts_str = make_potts(pcdims, ccdims, pctime, cctime)
 
