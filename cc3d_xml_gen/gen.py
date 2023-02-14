@@ -325,9 +325,10 @@ def reconvert_spatial_parameters_with_minimum_cell_volume(constraints, ccdims, p
 
     return ccdims, constraints
 
-def decrease_domain(ccdims, max_volume=2**32):
+
+def decrease_domain(ccdims, max_volume=2 ** 32):
     old_dims = [ccdims[0], ccdims[1], ccdims[2]]
-    old_volume = ccdims[0]*ccdims[1]*ccdims[2]
+    old_volume = ccdims[0] * ccdims[1] * ccdims[2]
     if old_volume < max_volume:
         return ccdims, False
     vol_conversion = old_volume / max_volume
