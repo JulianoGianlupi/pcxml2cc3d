@@ -28,6 +28,8 @@ def apply_CC3D_constraint(cname, cdict):
         return _apply_surface_constraint(cdict)
     return ''
 
+# def apply_phenotype()
+
 
 def cell_type_constraint(ctype, this_type_dicts):
     if not this_type_dicts:
@@ -36,12 +38,20 @@ def cell_type_constraint(ctype, this_type_dicts):
     full = loop
     for cell_dict in this_type_dicts:
         for key, value in cell_dict.items():
-            if type(value) == str:
+            if key == "phenotypes":
+                line = "\t\t\tif pcp_imp:\n"
+                line += f"\t\t\t\tcell.dict['{key}']=self.phenotypes['{ctype}']\n"
+                line += f"\t\t\t\tcell.dict['current_phenotype'] = cell.dict['{key}']" \
+                        f"['{cell_dict['phenotypes_names'][0]}']\n"
+            elif type(value) == str:
                 line = f"\t\t\tcell.dict['{key}']='{value}'\n"
             else:
                 line = f"\t\t\tcell.dict['{key}']={value}\n"
             if key in ["volume", "surface"]:
                 line += apply_CC3D_constraint(key, value)
+
+                # line += apply_phenotype(key, value, cell_dict["phenotypes_names"][0])
+            # if key != "phenotypes":
             full += line
     return full + '\n\n'
 
@@ -62,6 +72,76 @@ def generate_constraint_loops(cell_types, cell_dicts):
         loops += loop
     return loops
 
+def initialize_phenotypes(constraint_dict):
+
+    pheno_str = "\n\t\tif pcp_imp:\n"
+    pheno_str += "\t\t\tself.phenotypes = {}\n"
+    for ctype, cdict in constraint_dict.items():
+        if "phenotypes" in cdict.keys():
+
+            pheno_str += f"\t\t\tdt = 1/self.mcs_to_time\n"
+            pheno_str += f"\t\t\tself.phenotypes['{ctype}']" + "= {}\n"
+            for phenotype, data in cdict["phenotypes"].items():
+                time_unit = "None"
+                if "rate units" in data.keys():
+                    time_unit = data["rate units"].split("/")[-1]
+                fixed = []
+                duration = []
+                for fix, dur in data["phase durations"]:
+                    duration.append(dur)
+                    if fix == "TRUE":
+                        ff = True
+                    else:
+                        ff = False
+                    fixed.append(ff)
+                nuclear_fluid = []
+                nuclear_solid = []
+                cyto_fluid = []
+                cyto_solid = []
+                cyto_to_nucl = []
+                if 'fluid fraction' not in data.keys():
+                    data['fluid fraction'] = [.75]*len(data["phase durations"])
+                # if 'fluid fraction' not in data.keys():
+                #     data['fluid fraction'] = [.75]*len(data["phase durations"])
+                if 'fluid fraction' in data.keys() and 'nuclear volume' in data.keys() and 'total' in data.keys():
+                    for fluid, nucl, total in zip(data['fluid fraction'], data['nuclear volume'], data['total']):
+                        nfl = fluid * nucl
+                        nuclear_fluid.append(nfl)
+                        nuclear_solid.append(nucl-nfl)
+                        cytt = total - nucl
+                        cytf = fluid * cytt
+                        cyts = cytt - cytf
+                        cyto_fluid.append(cytf)
+                        cyto_solid.append(cyts)
+                        cyto_to_nucl.append(cytt/(1e-16 + nucl))
+                else:
+                    nuclear_fluid = [None]*len(data["phase durations"])
+                    nuclear_solid = [None]*len(data["phase durations"])
+                    cyto_fluid = [None]*len(data["phase durations"])
+                    cyto_solid = [None]*len(data["phase durations"])
+                    cyto_to_nucl = [None]*len(data["phase durations"])
+                if 'calcified fraction' not in data.keys():
+                    data['calcified fraction'] = [0] * len(data["phase durations"])
+
+                pheno_str += f"\t\t\tphenotype = pcp.get_phenotype_by_name('{phenotype}')\n"
+                pheno_str += f"\t\t\tself.phenotypes['{ctype}']['{phenotype}'] = phenotype(dt=dt, \n\t\t\t\t" \
+                             f"time_unit='{time_unit}', \n\t\t\t\tfixed_durations={fixed},  " \
+                             f"\n\t\t\t\tphase_durations={duration}, \n\t\t\t\t" \
+                             f"cytoplasm_volume_change_rate={data['cytoplasm biomass change rate']}, \n\t\t\t\t" \
+                             f"nuclear_volume_change_rate={data['nuclear biomass change rate']}, \n\t\t\t\t" \
+                             f"calcification_rate={data['calcification rate']}, \n\t\t\t\t" \
+                             f"calcified_fraction={data['calcified fraction']}, \n\t\t\t\t" \
+                             f"target_fluid_fraction={data['fluid fraction']}, \n\t\t\t\t" \
+                             f"nuclear_fluid={nuclear_fluid}, \n\t\t\t\t" \
+                             f"nuclear_solid={nuclear_solid}, \n\t\t\t\t" \
+                             f"nuclear_solid_target={nuclear_solid}, \n\t\t\t\t" \
+                             f"cytoplasm_fluid={cyto_fluid}, \n\t\t\t\t" \
+                             f"cytoplasm_solid={cyto_solid}, \n\t\t\t\t" \
+                             f"cytoplasm_solid_target={cyto_solid}, \n\t\t\t\t" \
+                             f"target_cytoplasm_to_nuclear_ratio={cyto_to_nucl}, \n\t\t\t\t" \
+                             f"fluid_change_rate={data['fluid change rate']})\n"
+
+    return pheno_str
 
 def generate_constraint_steppable(cell_types, cell_dicts, wall, first=True):
     if first:
@@ -75,10 +155,11 @@ def generate_constraint_steppable(cell_types, cell_dicts, wall, first=True):
         wall_str = ""
     else:
         wall_str = "\t\tself.build_wall(self.WALL)\n"
-
+    pheno_init = initialize_phenotypes(cell_dicts[0])
     constraint_step = generate_steppable("Constraints", 1, False, minimal=True, already_imports=already_imports,
-                                         additional_start=loops+wall_str)
-
+                                         additional_start=pheno_init+loops+wall_str)
+    # constraint_step += initialize_phenotypes(cell_dicts[0])
+    constraint_step += "\t\tself.shared_steppable_vars['constraints'] = self"
     return constraint_step
 
 
