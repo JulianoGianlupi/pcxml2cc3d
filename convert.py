@@ -166,6 +166,10 @@ if __name__ == "__main__":
 
     secretion_plug = make_secretion(secretion_dict)
 
+    print("Generating phenotype steppable")
+    pheno_step = steppable_gen.generate_phenotype_steppable(cell_types, [constraints,
+                                                                               conv_sec])
+
     print("Generating CC3DML")
     cc3dml = "<CompuCell3D>\n"
     cc3dml += metadata_str + potts_str + ct_str + contact_plug + diffusion_string + secretion_plug + '\n' + extra + \
@@ -177,7 +181,7 @@ if __name__ == "__main__":
 
     print("Merging steppables")
 
-    all_step = constraint_step + "\n" + secretion_step
+    all_step = constraint_step + "\n" + secretion_step + "\n" + pheno_step
 
     step_names = steppable_gen.get_steppables_names(all_step)
 
