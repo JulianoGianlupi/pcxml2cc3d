@@ -13,6 +13,8 @@ import steppable_gen
 
 from autopep8 import fix_code
 
+from pathlib import Path
+
 from cc3d_xml_gen.gen import make_potts, make_metadata, make_cell_type_plugin, make_cc3d_file, \
     make_contact_plugin, make_diffusion_plug, reconvert_spatial_parameters_with_minimum_cell_volume, make_secretion, \
     reconvert_cell_volume_constraints, decrease_domain
@@ -86,13 +88,12 @@ def extra_for_testing(celltypes, xmax, ymax, zmax):
     return beg + box_min + box_max + gap + types + end
 
 
-if __name__ == "__main__":
-
+def main(path_to_xml, out_directory=None):
     read_before_run = "******************************************************************************************\n" \
                       "PLEASE READ BEFORE RUNNING:\n" \
                       "The translator program does a lot of the conversion process of a Physicell simulation into\n" \
                       "a CompuCell3D simulation. However, just as in CC3D, the user can define several custom " \
-                      "modules\n"\
+                      "modules\n" \
                       "functions, and initial conditions for their PhysiCell model. Translating custom c++ code is\n" \
                       "beyond what an automated program can do (AI-ML language models not withstanding). On top\n" \
                       "of that fact there are several PhysiCell concepts that do not exist in CC3D, and vice-versa.\n" \
@@ -106,32 +107,36 @@ if __name__ == "__main__":
                       "it is used in PhysiCell and define its use in the CC3D simulation\n" \
                       "******************************************************************************************\n"
 
-    print("Running test")
+    # finding file, making folders
+    path_to_xml = Path(path_to_xml)
 
-    print("Creating ./test")
-    out_folder = r"./test"
-    if not os.path.isdir(out_folder):
-        os.mkdir(out_folder)
+    xml_dir = path_to_xml.parent
 
-    print("Creating ./test/Simulation")
+    if out_directory is None:
+        out_directory = xml_dir.joinpath("CC3D_converted_sim")
+    else:
+        out_directory = Path(out_directory)
+    print(f"Creating {out_directory}")
+    if not out_directory.exists():
+        out_directory.mkdir(parents=True)
 
-    out_sim_f = os.path.join(out_folder, "Simulation")
-    if not os.path.isdir(out_sim_f):
-        os.mkdir(out_sim_f)
+    print(f"Creating {out_directory}/Simulation")
+    sim_dir = out_directory.joinpath("Simulation")
+    if not sim_dir.exists():
+        sim_dir.mkdir(parents=True)
 
-    print("Creating test/test.cc3d")
+    # getting simulation name
+    print("Finding simulation name")
+    name = path_to_xml.name.split(".")[0]
 
-    with open("test/test.cc3d", "w+") as f:
-        f.write(make_cc3d_file())
+    print(f"Creating {out_directory}/{name}.cc3d")
 
-    # todo: remember to extract the name of the original PC sim and use it for naming the cc3d sim
-    example_path = r"./example_pcxml/" + "annotated_cancer_immune3D_flat.xml"
-    # example_path = r"./example_pcxml/" + "virus_macrophage_flat.xml"
+    with open(f"{out_directory}/{name}.cc3d", "w+") as f:
+        f.write(make_cc3d_file(name=name))
 
-    print(f"Loading {example_path}")
-    with open(example_path, 'r') as f:
+    print(f"Loading {path_to_xml}")
+    with open(path_to_xml, 'r') as f:
         xml_raw = f.read()
-
 
     pcdict = x2d.parse(xml_raw)['PhysiCell_settings']
 
@@ -160,8 +165,10 @@ if __name__ == "__main__":
     print("Generating <Potts/>")
     potts_str = make_potts(pcdims, ccdims, pctime, cctime)
 
-    with open(os.path.join(out_sim_f, "extra_definitions.py"), 'w+') as f:
-        f.write("cell_constraints=" + str(constraints) + "\n")
+    with open(os.path.join(sim_dir, "extra_definitions.py"), 'w+') as f:
+
+        f.write(fix_code("cell_constraints=" + str(constraints) + "\n",
+                         options={"aggressive": 1}))
 
     print("Generating <Plugin Contact/>")
     contact_plug = make_contact_plugin(cell_types)
@@ -197,12 +204,11 @@ if __name__ == "__main__":
     print("Generating CC3DML")
     cc3dml = "<CompuCell3D>\n"
     cc3dml += "<!--\n" + read_before_run + "-->\n"
-    cc3dml += metadata_str + potts_str + ct_str + contact_plug + diffusion_string + secretion_plug + '\n' + test_extra \
-              + "\n\n" + extra + \
-              "\n</CompuCell3D>\n"
+    cc3dml += metadata_str + potts_str + ct_str + contact_plug + diffusion_string + secretion_plug + '\n' + \
+              test_extra + "\n\n" + extra + "\n</CompuCell3D>\n"
 
-    print(f"Creating {out_sim_f}/test.xml")
-    with open(os.path.join(out_sim_f, "test.xml"), "w+") as f:
+    print(f"Creating {out_directory}/Simulation/{name}.xml")
+    with open(os.path.join(out_directory, f"Simulation/{name}.xml"), "w+") as f:
         f.write(cc3dml)
 
     print("Merging steppables")
@@ -213,10 +219,16 @@ if __name__ == "__main__":
 
     print("Generating steppables file")
 
-    steppable_gen.generate_steppable_file(out_sim_f, "steppable_test.py", fix_code(all_step,
-                                                                                   options={"aggressive": 1}))
+    steppable_gen.generate_steppable_file(sim_dir, "steppable_test.py", fix_code(all_step,
+                                                                                 options={"aggressive": 1}))
 
     print("Generating steppable registration file")
-    steppable_gen.generate_main_python(out_sim_f, "main_test.py", "steppable_test.py", step_names, read_before_run)
+    steppable_gen.generate_main_python(sim_dir, "main_test.py", "steppable_test.py", step_names, read_before_run)
 
     print("______________\nDONE!!")
+
+
+if __name__ == "__main__":
+
+    main(r"./example_pcxml/" + "annotated_cancer_immune3D_flat.xml")
+
