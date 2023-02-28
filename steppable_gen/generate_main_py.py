@@ -1,6 +1,7 @@
 from pathlib import Path
 from os.path import join, isdir
 
+
 def _main_py_header():
     return "from cc3d import CompuCellSetup\n#------\n\n"
 
@@ -32,6 +33,7 @@ def _generate_main_py_string(step_file, step_names, read_before_run):
 
     return full
 
+
 def _write_main_py_file(path, filename, main_string):
     path = Path(path)
 
@@ -41,8 +43,8 @@ def _write_main_py_file(path, filename, main_string):
     with open(join(path, filename), "w+") as f:
         f.write(main_string.replace("\t", "    "))
 
-def generate_main_python(path, filename, step_file, step_names, read_before_run):
 
+def generate_main_python(path, filename, step_file, step_names, read_before_run):
     if ".py" in step_file:
         step_file = step_file.replace(".py", "")
 
@@ -52,7 +54,6 @@ def generate_main_python(path, filename, step_file, step_names, read_before_run)
 
 
 if __name__ == "__main__":
-
     steppables = ["steppableA", "steppableB"]
     read_before_run = ""
     generate_main_python("D:/test_pc2cc3d/Simulation", "main_test.py", "steppable_test.py", steppables, read_before_run)

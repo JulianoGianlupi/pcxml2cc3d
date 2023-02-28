@@ -100,7 +100,7 @@ if __name__ == "__main__":
                       "3. You are responsible for finding where <user_parameters> is used in the Physicell model,\n" \
                       "and using it in the CC3D model\n" \
                       "4. You are responsible for using chemical field data (e.g., chemotaxis)\n" \
-                      "5. You are responsible for defining the use of <custom_data> for each cell type. Find where \n" \
+                      "5. You are responsible for defining the use of custom_data for each cell type. Find where \n" \
                       "it is used in PhysiCell and define its use in the CC3D simulation\n" \
                       "******************************************************************************************\n"
 
@@ -205,7 +205,7 @@ if __name__ == "__main__":
 
     print("Merging steppables")
 
-    all_step = constraint_step + "\n" + secretion_step + "\n" + pheno_step
+    all_step = '"""\n' + read_before_run + '"""\n' + constraint_step + "\n" + secretion_step + "\n" + pheno_step
 
     step_names = steppable_gen.get_steppables_names(all_step)
 
