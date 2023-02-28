@@ -11,6 +11,8 @@ import os
 import xmltodict as x2d
 import steppable_gen
 
+from autopep8 import fix_code
+
 from cc3d_xml_gen.gen import make_potts, make_metadata, make_cell_type_plugin, make_cc3d_file, \
     make_contact_plugin, make_diffusion_plug, reconvert_spatial_parameters_with_minimum_cell_volume, make_secretion, \
     reconvert_cell_volume_constraints, decrease_domain
@@ -211,7 +213,10 @@ if __name__ == "__main__":
 
     print("Generating steppables file")
 
-    steppable_gen.generate_steppable_file(out_sim_f, "steppable_test.py", all_step)
+    steppable_gen.generate_steppable_file(out_sim_f, "steppable_test.py", fix_code(all_step,
+                                                                                   options={#"pep8_passes": 10,
+                                                                                            "verbose": 4,
+                                                                                   "aggressive": 2}))
 
     print("Generating steppable registration file")
     steppable_gen.generate_main_python(out_sim_f, "main_test.py", "steppable_test.py", step_names, read_before_run)
