@@ -15,6 +15,8 @@ from autopep8 import fix_code
 
 from pathlib import Path
 
+import argparse
+
 from cc3d_xml_gen.gen import make_potts, make_metadata, make_cell_type_plugin, make_cc3d_file, \
     make_contact_plugin, make_diffusion_plug, reconvert_spatial_parameters_with_minimum_cell_volume, make_secretion, \
     reconvert_cell_volume_constraints, decrease_domain
@@ -226,9 +228,14 @@ def main(path_to_xml, out_directory=None):
     steppable_gen.generate_main_python(sim_dir, "main_test.py", "steppable_test.py", step_names, read_before_run)
 
     print("______________\nDONE!!")
+    return
 
 
-if __name__ == "__main__":
-
-    main(r"./example_pcxml/" + "annotated_cancer_immune3D_flat.xml")
+parser = argparse.ArgumentParser(description="Converts a Physicell XML file into CompuCell3D .cc3d, .xml, main.py, and"
+                                             "steppables.py simulation configuration files.")
+parser.add_argument("input", type=str, help="Path to your input PhysiCell XML configuration file")
+parser.add_argument("-o", "--output", help="(optional) output path for the converted files",
+                    default=None)
+args = parser.parse_args()
+main(args.input, out_directory=args.output)
 
