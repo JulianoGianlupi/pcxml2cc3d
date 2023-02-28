@@ -52,6 +52,15 @@ def cell_type_constraint(ctype, this_type_dicts):
                        f"\n\t\t\tcell.dict['{key}']={value}\n"
             elif type(value) == str:
                 line = f"\t\t\tcell.dict['{key}']='{value}'\n"
+            elif type(value) == dict:
+                clean_value = value.copy()
+                to_pop = []
+                for subkey in value.keys():
+
+                    if "comment" in subkey:
+                        to_pop.append(subkey)
+                [clean_value.pop(p) for p in to_pop]
+                line = f"\t\t\tcell.dict['{key}']={clean_value}\n"
             else:
                 line = f"\t\t\tcell.dict['{key}']={value}\n"
             if key in ["volume", "surface"]:
