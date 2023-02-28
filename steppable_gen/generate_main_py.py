@@ -18,8 +18,9 @@ def _register_steppable(step_name):
     return f"CompuCellSetup.register_steppable(steppable={step_name}())\n\n"
 
 
-def _generate_main_py_string(step_file, step_names):
+def _generate_main_py_string(step_file, step_names, read_before_run):
     full = _main_py_header()
+    full += '"""\n' + read_before_run + '"""\n'
 
     for name in step_names:
         imp = _steppable_import(step_file, name)
@@ -40,12 +41,12 @@ def _write_main_py_file(path, filename, main_string):
     with open(join(path, filename), "w+") as f:
         f.write(main_string.replace("\t", "    "))
 
-def generate_main_python(path, filename, step_file, step_names):
+def generate_main_python(path, filename, step_file, step_names, read_before_run):
 
     if ".py" in step_file:
         step_file = step_file.replace(".py", "")
 
-    full_string = _generate_main_py_string(step_file, step_names)
+    full_string = _generate_main_py_string(step_file, step_names, read_before_run)
 
     _write_main_py_file(path, filename, full_string)
 
@@ -53,4 +54,5 @@ def generate_main_python(path, filename, step_file, step_names):
 if __name__ == "__main__":
 
     steppables = ["steppableA", "steppableB"]
-    generate_main_python("D:/test_pc2cc3d/Simulation", "main_test.py", "steppable_test.py", steppables)
+    read_before_run = ""
+    generate_main_python("D:/test_pc2cc3d/Simulation", "main_test.py", "steppable_test.py", steppables, read_before_run)
