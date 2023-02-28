@@ -33,6 +33,15 @@ except ImportError:
 
 
 def _fix_code(source, options=None, encoding=None, apply_config=False):
+    """
+    Function to keep the program working if the user doesn't have autopep8. It has the same signature as
+    `autopep8.fixcode` but simply returns the 1st argument
+    :param source: the string to (not) be converted
+    :param options:
+    :param encoding:
+    :param apply_config:
+    :return: source
+    """
     return source
 
 
