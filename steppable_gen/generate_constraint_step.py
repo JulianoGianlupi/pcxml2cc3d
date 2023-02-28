@@ -7,16 +7,22 @@ except:
 
 def _apply_volume_constraint(cdict):
     cstr = f'\t\t\tcell.targetVolume = {cdict["volume (pixels)"]}'
-    cstr += '\n\t\t\tcell.lambdaVolume = 8 # NOTE: PC does not ' \
-            f'have an equivalent parameter. You have to adjust it\n'
+    # cstr += '\n\t\t\tcell.lambdaVolume = 8 # NOTE: PC does not ' \
+    #         f'have an equivalent parameter. You have to adjust it\n'
+    cstr += '\n\t\t\t# NOTE: PC does not ' \
+            f'have an equivalent parameter, you have to adjust it:\n' \
+            f'\t\t\tcell.lambdaVolume = 8\n'
     # TODO: check if <custom_data><elastic_coefficient> shouldn't be lambdaVolume
     return cstr
 
 
 def _apply_surface_constraint(cdict):
     cstr = f'\t\t\tcell.targetSurface = {cdict["surface (pixels)"]}'
-    cstr += '\n\t\t\tcell.lambdaSurface = 8 # NOTE: PC does not ' \
-            'have an equivalent parameter. You have to adjust it\n'
+    # cstr += '\n\t\t\tcell.lambdaSurface = 8 # NOTE: PC does not ' \
+    #         'have an equivalent parameter. You have to adjust it\n'
+    cstr += '\n\t\t\t# NOTE: PC does not ' \
+            'have an equivalent parameter, you have to adjust it:'
+    cstr += '\n\t\t\tcell.lambdaSurface = 8\n'
     return cstr
 
 
