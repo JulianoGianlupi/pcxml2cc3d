@@ -20,6 +20,14 @@ _time_convs = {"millisecond": 1e-3 / 60,
 
 def convert_secretion_rate(rate, unit, time_conv, pctimeunit, time_convs=_time_convs):
     secretion_comment = ''
+    if unit is None:
+        mcs_rate = rate
+        message = f"WARNING: couldn't find units for this rate!\nAutomatic conversion" \
+                  f" of " \
+                  f"this rate is disabled."
+        secretion_comment += "\n#" + message.replace("\n", "\n#")
+        warnings.warn(message)
+        return mcs_rate, secretion_comment
     if pctimeunit in unit:  # if it's the same as the "main" time unit
         mcs_rate = rate / time_conv
         return mcs_rate, secretion_comment

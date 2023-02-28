@@ -145,6 +145,17 @@ def initialize_phenotypes(constraint_dict):
                 if 'calcified fraction' not in data.keys():
                     data['calcified fraction'] = [0] * len(data["phase durations"])
 
+                if 'cytoplasm biomass change rate' not in data.keys():
+                    data['cytoplasm biomass change rate'] = [None] * len(data["phase durations"])
+                if 'nuclear biomass change rate' not in data.keys():
+                    data['nuclear biomass change rate'] = [None] * len(data["phase durations"])
+                if 'calcification rate' not in data.keys():
+                    data['calcification rate'] = [None] * len(data["phase durations"])
+                if 'fluid change rate' not in data.keys():
+                    data['fluid change rate'] = [None] * len(data["phase durations"])
+
+
+
                 pheno_str += f"\t\t\tphenotype = pcp.get_phenotype_by_name('{phenotype}')\n"
                 pheno_str += f"\t\t\tself.phenotypes['{ctype}']['{phenotype}'] = phenotype(dt=dt, \n\t\t\t\t" \
                              f"time_unit='{time_unit}', \n\t\t\t\tfixed_durations={fixed},  " \

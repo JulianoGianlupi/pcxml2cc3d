@@ -379,44 +379,48 @@ def get_death_phenotypes(phenotypes, subdict, ppc):
         else:
             phenotype = ppc[code_name]
             phenotypes[phenotype] = {"rate units": model['death_rate']['@units']}
-            phase_durations = model['phase_durations']['duration']
-            duration_data = []
-            if type(phase_durations) == list:
-                for phasedur in phase_durations:
-                    fixed = phasedur['@fixed_duration'].upper()
-                    duration = float(phasedur['#text'])
+            if 'phase_durations' in model.keys():
+                phase_durations = model['phase_durations']['duration']
+                duration_data = []
+                if type(phase_durations) == list:
+                    for phasedur in phase_durations:
+                        fixed = phasedur['@fixed_duration'].upper()
+                        duration = float(phasedur['#text'])
+                        duration_data.append((fixed, duration))
+                else:
+                    fixed = phase_durations['@fixed_duration'].upper()
+                    duration = float(phase_durations['#text'])
                     duration_data.append((fixed, duration))
+                phenotypes[phenotype]["phase durations"] = duration_data
             else:
-                fixed = phase_durations['@fixed_duration'].upper()
-                duration = float(phase_durations['#text'])
-                duration_data.append((fixed, duration))
-            phenotypes[phenotype]["phase durations"] = duration_data
+                phenotypes[phenotype]["phase durations"] = [(None, None)]*len(phenotypes[phenotype]["rate units"])
 
-            biomass_chage_rates = model['parameters']
-            if code_name == "100":  # apoptosis
-                phenotypes[phenotype]["fluid change rate"] = \
-                    [float(biomass_chage_rates['unlysed_fluid_change_rate']['#text'])]
-                phenotypes[phenotype]["cytoplasm biomass change rate"] = \
-                    [float(biomass_chage_rates['cytoplasmic_biomass_change_rate']['#text'])]
-                phenotypes[phenotype]["nuclear biomass change rate"] = \
-                    [float(biomass_chage_rates['nuclear_biomass_change_rate']['#text'])]
-                phenotypes[phenotype]["calcification rate"] = \
-                    [float(biomass_chage_rates['calcification_rate']['#text'])]
-                phenotypes[phenotype]["relative rupture volume"] = [None]
-            elif code_name == "101":  # necrosis
-                phenotypes[phenotype]["fluid change rate"] = \
-                    [float(biomass_chage_rates['unlysed_fluid_change_rate']['#text']),
-                     float(biomass_chage_rates['lysed_fluid_change_rate']['#text'])]
-                phenotypes[phenotype]["cytoplasm biomass change rate"] = \
-                    [float(biomass_chage_rates['cytoplasmic_biomass_change_rate']['#text']),
-                     float(biomass_chage_rates['cytoplasmic_biomass_change_rate']['#text'])]
-                phenotypes[phenotype]["nuclear biomass change rate"] = \
-                    [float(biomass_chage_rates['nuclear_biomass_change_rate']['#text']),
-                     float(biomass_chage_rates['nuclear_biomass_change_rate']['#text'])]
-                phenotypes[phenotype]["calcification rate"] = \
-                    [float(biomass_chage_rates['calcification_rate']['#text']),
-                     float(biomass_chage_rates['calcification_rate']['#text'])]
-                phenotypes[phenotype]["relative rupture volume"] = [None, 2]
+            if 'parameters' in model.keys():
+                biomass_chage_rates = model['parameters']
+                if code_name == "100":  # apoptosis
+                    phenotypes[phenotype]["fluid change rate"] = \
+                        [float(biomass_chage_rates['unlysed_fluid_change_rate']['#text'])]
+                    phenotypes[phenotype]["cytoplasm biomass change rate"] = \
+                        [float(biomass_chage_rates['cytoplasmic_biomass_change_rate']['#text'])]
+                    phenotypes[phenotype]["nuclear biomass change rate"] = \
+                        [float(biomass_chage_rates['nuclear_biomass_change_rate']['#text'])]
+                    phenotypes[phenotype]["calcification rate"] = \
+                        [float(biomass_chage_rates['calcification_rate']['#text'])]
+                    phenotypes[phenotype]["relative rupture volume"] = [None]
+                elif code_name == "101":  # necrosis
+                    phenotypes[phenotype]["fluid change rate"] = \
+                        [float(biomass_chage_rates['unlysed_fluid_change_rate']['#text']),
+                         float(biomass_chage_rates['lysed_fluid_change_rate']['#text'])]
+                    phenotypes[phenotype]["cytoplasm biomass change rate"] = \
+                        [float(biomass_chage_rates['cytoplasmic_biomass_change_rate']['#text']),
+                         float(biomass_chage_rates['cytoplasmic_biomass_change_rate']['#text'])]
+                    phenotypes[phenotype]["nuclear biomass change rate"] = \
+                        [float(biomass_chage_rates['nuclear_biomass_change_rate']['#text']),
+                         float(biomass_chage_rates['nuclear_biomass_change_rate']['#text'])]
+                    phenotypes[phenotype]["calcification rate"] = \
+                        [float(biomass_chage_rates['calcification_rate']['#text']),
+                         float(biomass_chage_rates['calcification_rate']['#text'])]
+                    phenotypes[phenotype]["relative rupture volume"] = [None, 2]
     return phenotypes
 
 
@@ -497,16 +501,35 @@ def get_secretion(pcdict):
         ctype = child['@name'].replace(" ", "_")
         sec_data[ctype] = {}
         sec_list = child['phenotype']['secretion']['substrate']
-        for sec in sec_list:
+        if type(sec_list) == list:
+            for sec in sec_list:
+                substrate = sec["@name"].replace(" ", "_")
+                sec_data[ctype][substrate] = {}
+                sec_data[ctype][substrate]['secretion_rate'] = float(sec['secretion_rate']['#text']) if 'secretion_rate' in sec.keys() else 0
+                sec_data[ctype][substrate]['secretion_unit'] = sec['secretion_rate']['@units'] if 'secretion_rate' in sec.keys() else "None"
+                sec_data[ctype][substrate]['secretion_target'] = float(sec['secretion_target']['#text']) if 'secretion_target' in sec.keys() else 0
+                sec_data[ctype][substrate]['uptake_rate'] = float(sec['uptake_rate']['#text']) if 'uptake_rate' in sec.keys() else 0
+                sec_data[ctype][substrate]['uptake_unit'] = sec['uptake_rate']['@units'] if 'uptake_rate' in sec.keys() else "None"
+                sec_data[ctype][substrate]['net_export'] = float(sec['net_export_rate']['#text']) if 'net_export_rate' in sec.keys() else 0
+                sec_data[ctype][substrate]['net_export_unit'] = sec['net_export_rate']['@units'] if 'net_export_rate' in sec.keys() else "None"
+        else:
+            sec = sec_list
             substrate = sec["@name"].replace(" ", "_")
             sec_data[ctype][substrate] = {}
-            sec_data[ctype][substrate]['secretion_rate'] = float(sec['secretion_rate']['#text'])
-            sec_data[ctype][substrate]['secretion_unit'] = sec['secretion_rate']['@units']
-            sec_data[ctype][substrate]['secretion_target'] = float(sec['secretion_target']['#text'])
-            sec_data[ctype][substrate]['uptake_rate'] = float(sec['uptake_rate']['#text'])
-            sec_data[ctype][substrate]['uptake_unit'] = sec['uptake_rate']['@units']
-            sec_data[ctype][substrate]['net_export'] = float(sec['net_export_rate']['#text'])
-            sec_data[ctype][substrate]['net_export_unit'] = sec['net_export_rate']['@units']
+            sec_data[ctype][substrate]['secretion_rate'] = float(
+                sec['secretion_rate']['#text']) if 'secretion_rate' in sec.keys() else 0
+            sec_data[ctype][substrate]['secretion_unit'] = sec['secretion_rate'][
+                '@units'] if 'secretion_rate' in sec.keys() else "None"
+            sec_data[ctype][substrate]['secretion_target'] = float(
+                sec['secretion_target']['#text']) if 'secretion_target' in sec.keys() else 0
+            sec_data[ctype][substrate]['uptake_rate'] = float(
+                sec['uptake_rate']['#text']) if 'uptake_rate' in sec.keys() else 0
+            sec_data[ctype][substrate]['uptake_unit'] = sec['uptake_rate'][
+                '@units'] if 'uptake_rate' in sec.keys() else "None"
+            sec_data[ctype][substrate]['net_export'] = float(
+                sec['net_export_rate']['#text']) if 'net_export_rate' in sec.keys() else 0
+            sec_data[ctype][substrate]['net_export_unit'] = sec['net_export_rate'][
+                '@units'] if 'net_export_rate' in sec.keys() else "None"
     return sec_data
 
 
