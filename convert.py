@@ -216,7 +216,7 @@ if __name__ == "__main__":
     steppable_gen.generate_steppable_file(out_sim_f, "steppable_test.py", fix_code(all_step,
                                                                                    options={#"pep8_passes": 10,
                                                                                             "verbose": 4,
-                                                                                   "aggressive": 2}))
+                                                                                   "aggressive": 1}))
 
     print("Generating steppable registration file")
     steppable_gen.generate_main_python(out_sim_f, "main_test.py", "steppable_test.py", step_names, read_before_run)
