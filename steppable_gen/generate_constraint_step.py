@@ -7,16 +7,22 @@ except:
 
 def _apply_volume_constraint(cdict):
     cstr = f'\t\t\tcell.targetVolume = {cdict["volume (pixels)"]}'
-    cstr += '\n\t\t\tcell.lambdaVolume = 8 # NOTE: PC does not ' \
-            f'have an equivalent parameter. You have to adjust it\n'
+    # cstr += '\n\t\t\tcell.lambdaVolume = 8 # NOTE: PC does not ' \
+    #         f'have an equivalent parameter. You have to adjust it\n'
+    cstr += '\n\t\t\t# NOTE: PC does not ' \
+            f'have an equivalent parameter, you have to adjust it:\n' \
+            f'\t\t\tcell.lambdaVolume = 8\n'
     # TODO: check if <custom_data><elastic_coefficient> shouldn't be lambdaVolume
     return cstr
 
 
 def _apply_surface_constraint(cdict):
     cstr = f'\t\t\tcell.targetSurface = {cdict["surface (pixels)"]}'
-    cstr += '\n\t\t\tcell.lambdaSurface = 8 # NOTE: PC does not ' \
-            'have an equivalent parameter. You have to adjust it\n'
+    # cstr += '\n\t\t\tcell.lambdaSurface = 8 # NOTE: PC does not ' \
+    #         'have an equivalent parameter. You have to adjust it\n'
+    cstr += '\n\t\t\t# NOTE: PC does not ' \
+            'have an equivalent parameter, you have to adjust it:'
+    cstr += '\n\t\t\tcell.lambdaSurface = 8\n'
     return cstr
 
 
@@ -46,8 +52,21 @@ def cell_type_constraint(ctype, this_type_dicts):
                         f"['{cell_dict['phenotypes_names'][0]}'].copy()\n"
                 line += f"\t\t\t\tcell.dict['volume_conversion'] = cell.targetVolume / \\\n" \
                         f"\t\t\t\t\tcell.dict['current_phenotype'].volume.total\n"
+            elif key == "custom_data":
+                line = f"\t\t\t# NOTE: you are responsible for finding how this data" \
+                       f"is used in the original model\n\t\t\t# and re-implementing in CC3D" \
+                       f"\n\t\t\tcell.dict['{key}']={value}\n"
             elif type(value) == str:
                 line = f"\t\t\tcell.dict['{key}']='{value}'\n"
+            elif type(value) == dict:
+                clean_value = value.copy()
+                to_pop = []
+                for subkey in value.keys():
+
+                    if "comment" in subkey:
+                        to_pop.append(subkey)
+                [clean_value.pop(p) for p in to_pop]
+                line = f"\t\t\tcell.dict['{key}']={clean_value}\n"
             else:
                 line = f"\t\t\tcell.dict['{key}']={value}\n"
             if key in ["volume", "surface"]:

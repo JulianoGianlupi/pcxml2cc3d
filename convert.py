@@ -11,12 +11,14 @@ import os
 import xmltodict as x2d
 import steppable_gen
 
+from autopep8 import fix_code
+
 from cc3d_xml_gen.gen import make_potts, make_metadata, make_cell_type_plugin, make_cc3d_file, \
     make_contact_plugin, make_diffusion_plug, reconvert_spatial_parameters_with_minimum_cell_volume, make_secretion, \
     reconvert_cell_volume_constraints, decrease_domain
 
 from cc3d_xml_gen.get_physicell_data import get_cell_constraints, get_secretion, get_microenvironment, get_dims, \
-    get_time
+    get_time, get_user_parameters
 from conversions.secretion import convert_secretion_data
 
 # TODO:
@@ -86,6 +88,24 @@ def extra_for_testing(celltypes, xmax, ymax, zmax):
 
 if __name__ == "__main__":
 
+    read_before_run = "******************************************************************************************\n" \
+                      "PLEASE READ BEFORE RUNNING:\n" \
+                      "The translator program does a lot of the conversion process of a Physicell simulation into\n" \
+                      "a CompuCell3D simulation. However, just as in CC3D, the user can define several custom " \
+                      "modules\n"\
+                      "functions, and initial conditions for their PhysiCell model. Translating custom c++ code is\n" \
+                      "beyond what an automated program can do (AI-ML language models not withstanding). On top\n" \
+                      "of that fact there are several PhysiCell concepts that do not exist in CC3D, and vice-versa.\n" \
+                      "Therefore: 1. please read *all comments* the script has placed in the converted files.\n" \
+                      "2. You are responsible for creating the initial conditions. Some are defined in csv files\n" \
+                      "others are creating with c++.\n" \
+                      "3. You are responsible for finding where <user_parameters> is used in the Physicell model,\n" \
+                      "and using it in the CC3D model\n" \
+                      "4. You are responsible for using chemical field data (e.g., chemotaxis)\n" \
+                      "5. You are responsible for defining the use of custom_data for each cell type. Find where \n" \
+                      "it is used in PhysiCell and define its use in the CC3D simulation\n" \
+                      "******************************************************************************************\n"
+
     print("Running test")
 
     print("Creating ./test")
@@ -111,6 +131,8 @@ if __name__ == "__main__":
     print(f"Loading {example_path}")
     with open(example_path, 'r') as f:
         xml_raw = f.read()
+
+
     pcdict = x2d.parse(xml_raw)['PhysiCell_settings']
 
     print("Generating <Metadata/>")
@@ -144,7 +166,7 @@ if __name__ == "__main__":
     print("Generating <Plugin Contact/>")
     contact_plug = make_contact_plugin(cell_types)
 
-    extra = extra_for_testing(cell_types, ccdims[0], ccdims[1], ccdims[2])
+    test_extra = extra_for_testing(cell_types, ccdims[0], ccdims[1], ccdims[2])
 
     print("parsing micro environment")
     d_elements = get_microenvironment(pcdict, ccdims[4], pcdims[3], cctime[2], pctime[1])
@@ -168,11 +190,15 @@ if __name__ == "__main__":
 
     print("Generating phenotype steppable")
     pheno_step = steppable_gen.generate_phenotype_steppable(cell_types, [constraints,
-                                                                               conv_sec])
+                                                                         conv_sec])
 
+    print("Fetching extra data")
+    extra = get_user_parameters(xml_raw)
     print("Generating CC3DML")
     cc3dml = "<CompuCell3D>\n"
-    cc3dml += metadata_str + potts_str + ct_str + contact_plug + diffusion_string + secretion_plug + '\n' + extra + \
+    cc3dml += "<!--\n" + read_before_run + "-->\n"
+    cc3dml += metadata_str + potts_str + ct_str + contact_plug + diffusion_string + secretion_plug + '\n' + test_extra \
+              + "\n\n" + extra + \
               "\n</CompuCell3D>\n"
 
     print(f"Creating {out_sim_f}/test.xml")
@@ -181,15 +207,16 @@ if __name__ == "__main__":
 
     print("Merging steppables")
 
-    all_step = constraint_step + "\n" + secretion_step + "\n" + pheno_step
+    all_step = '"""\n' + read_before_run + '"""\n' + constraint_step + "\n" + secretion_step + "\n" + pheno_step
 
     step_names = steppable_gen.get_steppables_names(all_step)
 
     print("Generating steppables file")
 
-    steppable_gen.generate_steppable_file(out_sim_f, "steppable_test.py", all_step)
+    steppable_gen.generate_steppable_file(out_sim_f, "steppable_test.py", fix_code(all_step,
+                                                                                   options={"aggressive": 1}))
 
     print("Generating steppable registration file")
-    steppable_gen.generate_main_python(out_sim_f, "main_test.py", "steppable_test.py", step_names)
+    steppable_gen.generate_main_python(out_sim_f, "main_test.py", "steppable_test.py", step_names, read_before_run)
 
     print("______________\nDONE!!")

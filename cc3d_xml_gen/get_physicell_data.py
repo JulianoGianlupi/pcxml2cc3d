@@ -265,7 +265,7 @@ def get_cycle_phenotypes(phenotypes, subdict, ppc):
         if 'volume' in subdict['phenotype'].keys():
             volume_datum = subdict['phenotype']['volume']
             phase_durations, fluid_change_rate, cytoplasmic_biomass_change_rate, nuclear_biomass_change_rate, \
-            calcification_rate, fluid_fraction, nuclear, calcified_fraction, rel_rupture, total= \
+            calcification_rate, fluid_fraction, nuclear, calcified_fraction, rel_rupture, total = \
                 get_cycle_rate_data(rate_data, volume_datum, using_rates)
 
             phenotypes[phenotype] = {"rate units": pheno_data['@units'],
@@ -432,6 +432,14 @@ def get_cell_phenotypes(subdict, ppc=_physicell_phenotype_codes):
     return phenotypes, pheno_names
 
 
+def get_custom_data(subdict):
+
+    if "custom_data" in subdict.keys():
+        return subdict["custom_data"]
+
+    return None
+
+
 def get_cell_constraints(pcdict, space_unit, minimum_volume=8):
     constraints = {}
     any_below = False
@@ -467,6 +475,7 @@ def get_cell_constraints(pcdict, space_unit, minimum_volume=8):
                       f"lowest cell volume is {minimum_volume}"
             warnings.warn(message)
         constraints[ctype]["mechanics"] = get_cell_mechanics(child)
+        constraints[ctype]["custom_data"] = get_custom_data(child)
         constraints[ctype]["phenotypes"], constraints[ctype]["phenotypes_names"] = get_cell_phenotypes(child)
 
     return constraints, any_below, volumes, minimum_volume
@@ -586,3 +595,25 @@ def get_microenvironment(pcdict, space_factor, space_unit, time_factor, time_uni
         diffusing_elements[subel['@name']]["dirichlet_value"] = float(subel['Dirichlet_boundary_condition']['#text'])
 
     return diffusing_elements
+
+
+def get_user_parameters(xml_raw):
+    user_params = ""
+    lines = xml_raw.split("\n")
+    for i, line in enumerate(lines):
+        # print(line)
+        if "<user_parameters>" in line:
+            # print(line)
+            user_params = '<user_parameters id="user_parameters">\n<!-- see \n ' \
+                          'https://pythonscriptingmanual.readthedocs.io/en/latest' \
+                          '/steering_changing_cc3dml_parameters_on-the-fly.html \n for instruction on how to access ' \
+                          'this information from the steppables -->\n'
+            llines = lines[i+1:]
+            for lline in llines:
+                # print(lline)
+                user_params += lline + "\n"
+                if "</user_parameters>" in lline:
+                    break
+            break
+
+    return user_params
