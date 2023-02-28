@@ -43,7 +43,7 @@ def cell_type_constraint(ctype, this_type_dicts):
                 line = "\t\t\tif pcp_imp:\n"
                 line += f"\t\t\t\tcell.dict['{key}']=self.phenotypes['{ctype}']\n"
                 line += f"\t\t\t\tcell.dict['current_phenotype'] = cell.dict['{key}']" \
-                        f"['{cell_dict['phenotypes_names'][0]}']\n"
+                        f"['{cell_dict['phenotypes_names'][0]}'].copy()\n"
                 line += f"\t\t\t\tcell.dict['volume_conversion'] = cell.targetVolume / \\\n" \
                         f"\t\t\t\t\tcell.dict['current_phenotype'].volume.total\n"
             elif type(value) == str:
