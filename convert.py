@@ -11,8 +11,6 @@ import os
 import xmltodict as x2d
 import steppable_gen
 
-from autopep8 import fix_code
-
 from pathlib import Path
 
 import argparse
@@ -25,6 +23,14 @@ from cc3d_xml_gen.get_physicell_data import get_cell_constraints, get_secretion,
     get_time, get_user_parameters
 from conversions.secretion import convert_secretion_data
 
+try:
+    from autopep8 import fix_code
+
+    pep_auto = True
+except ImportError:
+    fix_code = None
+    pep_auto = False
+
 # TODO:
 #  - phenotypes
 #  - bash script
@@ -33,6 +39,12 @@ from conversions.secretion import convert_secretion_data
 #  - dynamic simulation name gen; custom sim name gen
 #  - cc3dml file has to always have the correct file names
 
+def _fix_code(source, options=None, encoding=None, apply_config=False):
+    return source
+
+
+if not pep_auto:
+    fix_code = _fix_code
 
 # defines conversion factors to meter
 _space_convs = {"micron": 1e-6,
@@ -238,4 +250,3 @@ parser.add_argument("-o", "--output", help="(optional) output path for the conve
                     default=None)
 args = parser.parse_args()
 main(args.input, out_directory=args.output)
-
