@@ -432,6 +432,14 @@ def get_cell_phenotypes(subdict, ppc=_physicell_phenotype_codes):
     return phenotypes, pheno_names
 
 
+def get_custom_data(subdict):
+
+    if "custom_data" in subdict.keys():
+        return subdict["custom_data"]
+
+    return None
+
+
 def get_cell_constraints(pcdict, space_unit, minimum_volume=8):
     constraints = {}
     any_below = False
@@ -467,6 +475,7 @@ def get_cell_constraints(pcdict, space_unit, minimum_volume=8):
                       f"lowest cell volume is {minimum_volume}"
             warnings.warn(message)
         constraints[ctype]["mechanics"] = get_cell_mechanics(child)
+        constraints[ctype]["custom_data"] = get_custom_data(child)
         constraints[ctype]["phenotypes"], constraints[ctype]["phenotypes_names"] = get_cell_phenotypes(child)
 
     return constraints, any_below, volumes, minimum_volume
