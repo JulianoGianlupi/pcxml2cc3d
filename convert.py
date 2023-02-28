@@ -31,13 +31,6 @@ except ImportError:
     fix_code = None
     pep_auto = False
 
-# TODO:
-#  - phenotypes
-#  - bash script
-#  - cell configuration
-#  - mechanics (e.g. elasticity)
-#  - dynamic simulation name gen; custom sim name gen
-#  - cc3dml file has to always have the correct file names
 
 def _fix_code(source, options=None, encoding=None, apply_config=False):
     return source
