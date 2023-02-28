@@ -325,17 +325,22 @@ def reconvert_spatial_parameters_with_minimum_cell_volume(constraints, ccdims, p
 
     return ccdims, constraints
 
-
-def decrease_domain(ccdims, max_volume=2 ** 32):
+def decrease_domain(ccdims, max_volume=500**3):
+    default_side = round(max_volume**(1/3))
     old_dims = [ccdims[0], ccdims[1], ccdims[2]]
     old_volume = ccdims[0] * ccdims[1] * ccdims[2]
     if old_volume < max_volume:
         return ccdims, False
     vol_conversion = old_volume / max_volume
     # new_dims = ccdims
-    new_dims = [int(d / vol_conversion) for d in old_dims]
+    if old_dims[0] == old_dims[1] == old_dims[2]:
+        new_dims = [default_side, default_side, default_side]
+    else:
+        med_s = sum(old_dims)/len(old_dims)
+        proportions = [d/med_s for d in old_dims]
+        new_dims = [int(default_side*p) for p in proportions]
     new_dims.extend([ccdims[3], ccdims[4], ccdims[5]])
-    message = "WARNING: Converted dimensions of simulation domain totaled > 2^32 pixels. \nWe have truncated " \
+    message = "WARNING: Converted dimensions of simulation domain totaled > 500**3 pixels. \nWe have truncated " \
               f"the sides of the simulation.This may break the initial conditions as defined in " \
               f"PhysiCell.\nOld dimensions:{ccdims[0:3]}\nNew dimensions:{new_dims[0:3]}"
     warnings.warn(message)
