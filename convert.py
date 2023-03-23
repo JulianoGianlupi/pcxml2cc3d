@@ -179,6 +179,12 @@ def main(path_to_xml, out_directory=None):
 
     ccdims, was_above = decrease_domain(ccdims)
 
+    # todo: put the microenvironment parsing here. then check that the diffusion constant is not huge, if it is huge
+    #   rescale time to take that into account. by placing the rescaling here the potts, phenotype, etc, will be
+    #   rescaled automatically
+
+    ########
+
     print("Generating <Potts/>")
     potts_str = make_potts(pcdims, ccdims, pctime, cctime)
 
@@ -236,7 +242,7 @@ def main(path_to_xml, out_directory=None):
     print("Generating steppables file")
 
     steppable_gen.generate_steppable_file(sim_dir, f"{steppables_py_name}", fix_code(all_step,
-                                                                                 options={"aggressive": 1}))
+                                                                                     options={"aggressive": 1}))
 
     print("Generating steppable registration file")
     steppable_gen.generate_main_python(sim_dir, f"{main_py_name}", f"{steppables_py_name}", step_names, read_before_run)
