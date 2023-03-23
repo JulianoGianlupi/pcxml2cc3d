@@ -20,7 +20,7 @@ from cc3d_xml_gen.gen import make_potts, make_metadata, make_cell_type_plugin, m
     reconvert_cell_volume_constraints, decrease_domain
 
 from cc3d_xml_gen.get_physicell_data import get_cell_constraints, get_secretion, get_microenvironment, get_dims, \
-    get_time, get_user_parameters
+    get_time
 from conversions.secretion import convert_secretion_data
 
 try:
@@ -205,7 +205,8 @@ def main(path_to_xml, out_directory=None):
 
     print("Generating constraint steppable")
     constraint_step = steppable_gen.generate_constraint_steppable(cell_types, [constraints,
-                                                                               conv_sec], wall)
+                                                                               conv_sec], wall,
+                                                                  user_data=pcdict["user_parameters"])
 
     print("Generating secretion steppable")
     secretion_step = steppable_gen.generate_secretion_step(cell_types, secretion_dict)
@@ -216,13 +217,11 @@ def main(path_to_xml, out_directory=None):
     pheno_step = steppable_gen.generate_phenotype_steppable(cell_types, [constraints,
                                                                          conv_sec])
 
-    print("Fetching extra data")
-    extra = get_user_parameters(xml_raw)
     print("Generating CC3DML")
     cc3dml = "<CompuCell3D>\n"
     cc3dml += "<!--\n" + read_before_run + "-->\n"
     cc3dml += metadata_str + potts_str + ct_str + contact_plug + diffusion_string + secretion_plug + '\n' + \
-              test_extra + "\n\n" + extra + "\n</CompuCell3D>\n"
+              test_extra + "\n\n" + "\n</CompuCell3D>\n"
 
     print(f"Creating {out_directory}/Simulation/{xml_name}")
     with open(os.path.join(out_directory, f"Simulation/{xml_name}"), "w+") as f:

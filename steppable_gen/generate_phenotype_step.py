@@ -48,6 +48,5 @@ def generate_phenotype_steppable(cell_types, cell_dicts, first=False):
         already_imports = True
     loops = generate_phenotypes_loops(cell_types, cell_dicts)
 
-    pheno_step = generate_steppable("Phenotype", 1, True, already_imports=already_imports,
-                                    additional_step=loops)
+    pheno_step = generate_steppable("Phenotype", 1, True, already_imports=already_imports, additional_step=loops)
     return pheno_step

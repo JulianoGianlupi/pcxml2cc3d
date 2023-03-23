@@ -619,24 +619,3 @@ def get_microenvironment(pcdict, space_factor, space_unit, time_factor, time_uni
 
     return diffusing_elements
 
-
-def get_user_parameters(xml_raw):
-    user_params = ""
-    lines = xml_raw.split("\n")
-    for i, line in enumerate(lines):
-        # print(line)
-        if "<user_parameters>" in line:
-            # print(line)
-            user_params = '<user_parameters id="user_parameters">\n<!-- see \n ' \
-                          'https://pythonscriptingmanual.readthedocs.io/en/latest' \
-                          '/steering_changing_cc3dml_parameters_on-the-fly.html \n for instruction on how to access ' \
-                          'this information from the steppables -->\n'
-            llines = lines[i+1:]
-            for lline in llines:
-                # print(lline)
-                user_params += lline + "\n"
-                if "</user_parameters>" in lline:
-                    break
-            break
-
-    return user_params
