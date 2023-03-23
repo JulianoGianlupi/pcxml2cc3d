@@ -109,24 +109,24 @@ def make_cell_type_tags(pcdict):
 
 
 def make_cc3d_file(name=None):
+
+
     if name is None:
-        cc3d = '''
-<Simulation version="4.3.0">
-   <XMLScript Type="XMLScript">Simulation/test.xml</XMLScript>
-    <PythonScript Type="PythonScript">Simulation/main_test.py</PythonScript> 
-    <Resource Type="Python">Simulation/steppable_test.py</Resource> 
-    <Resource Type="Python">Simulation/extra_definitions.py</Resource> 
-</Simulation>\n'''
-        return cc3d
+        xml_name = "test.xml"
+        main_py_name = "main_test.py"
+        steppables_py_name = "steppable_test.py"
     else:
-        cc3d = f'''
+        xml_name = f"{name}.xml"
+        main_py_name = f"{name}.py"
+        steppables_py_name = f"{name}Steppables.py"
+    cc3d = f'''
 <Simulation version="4.3.0">
-   <XMLScript Type="XMLScript">Simulation/{name}.xml</XMLScript>
-   <PythonScript Type="PythonScript">Simulation/{name}.py</PythonScript>
-   <Resource Type="Python">Simulation/{name}Steppables.py</Resource>
+   <XMLScript Type="XMLScript">Simulation/{xml_name}</XMLScript>
+   <PythonScript Type="PythonScript">Simulation/{main_py_name}</PythonScript>
+   <Resource Type="Python">Simulation/{steppables_py_name}</Resource>
    <Resource Type="Python">Simulation/extra_definitions.py</Resource> 
 </Simulation>\n'''
-        return cc3d
+    return cc3d, xml_name, main_py_name, steppables_py_name
 
 
 def make_contact_plugin(celltypes):

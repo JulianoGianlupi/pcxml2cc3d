@@ -148,7 +148,8 @@ def main(path_to_xml, out_directory=None):
     print(f"Creating {out_directory}/{name}.cc3d")
 
     with open(f"{out_directory}/{name}.cc3d", "w+") as f:
-        f.write(make_cc3d_file(name=name))
+        cc3d, xml_name, main_py_name, steppables_py_name = make_cc3d_file(name=name)
+        f.write(cc3d)
 
     print(f"Loading {path_to_xml}")
     with open(path_to_xml, 'r') as f:
@@ -223,8 +224,8 @@ def main(path_to_xml, out_directory=None):
     cc3dml += metadata_str + potts_str + ct_str + contact_plug + diffusion_string + secretion_plug + '\n' + \
               test_extra + "\n\n" + extra + "\n</CompuCell3D>\n"
 
-    print(f"Creating {out_directory}/Simulation/{name}.xml")
-    with open(os.path.join(out_directory, f"Simulation/{name}.xml"), "w+") as f:
+    print(f"Creating {out_directory}/Simulation/{xml_name}")
+    with open(os.path.join(out_directory, f"Simulation/{xml_name}"), "w+") as f:
         f.write(cc3dml)
 
     print("Merging steppables")
@@ -235,11 +236,11 @@ def main(path_to_xml, out_directory=None):
 
     print("Generating steppables file")
 
-    steppable_gen.generate_steppable_file(sim_dir, "steppable_test.py", fix_code(all_step,
+    steppable_gen.generate_steppable_file(sim_dir, f"{steppables_py_name}", fix_code(all_step,
                                                                                  options={"aggressive": 1}))
 
     print("Generating steppable registration file")
-    steppable_gen.generate_main_python(sim_dir, "main_test.py", "steppable_test.py", step_names, read_before_run)
+    steppable_gen.generate_main_python(sim_dir, f"{main_py_name}", f"{steppables_py_name}", step_names, read_before_run)
 
     print("______________\nDONE!!")
     return
