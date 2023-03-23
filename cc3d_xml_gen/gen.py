@@ -64,7 +64,7 @@ def make_metadata(pcdict, out=100):
     metadata = f'''
 <Metadata>
   <!-- Basic properties simulation -->
-  <NumberOfProcessors>{threads}</NumberOfProcessors>
+  <NumberOfProcessors>{1}</NumberOfProcessors>
   <DebugOutputFrequency>{out}</DebugOutputFrequency>
   <!-- <NonParallelModule Name="Potts"/> -->
 </Metadata>\n'''
