@@ -109,8 +109,6 @@ def make_cell_type_tags(pcdict):
 
 
 def make_cc3d_file(name=None):
-
-
     if name is None:
         xml_name = "test.xml"
         main_py_name = "main_test.py"
@@ -325,8 +323,9 @@ def reconvert_spatial_parameters_with_minimum_cell_volume(constraints, ccdims, p
 
     return ccdims, constraints
 
-def decrease_domain(ccdims, max_volume=500**3):
-    default_side = round(max_volume**(1/3))
+
+def decrease_domain(ccdims, max_volume=500 ** 3):
+    default_side = round(max_volume ** (1 / 3))
     old_dims = [ccdims[0], ccdims[1], ccdims[2]]
     old_volume = ccdims[0] * ccdims[1] * ccdims[2]
     if old_volume < max_volume:
@@ -336,12 +335,77 @@ def decrease_domain(ccdims, max_volume=500**3):
     if old_dims[0] == old_dims[1] == old_dims[2]:
         new_dims = [default_side, default_side, default_side]
     else:
-        med_s = sum(old_dims)/len(old_dims)
-        proportions = [d/med_s for d in old_dims]
-        new_dims = [int(default_side*p) for p in proportions]
+        med_s = sum(old_dims) / len(old_dims)
+        proportions = [d / med_s for d in old_dims]
+        new_dims = [int(default_side * p) for p in proportions]
     new_dims.extend([ccdims[3], ccdims[4], ccdims[5]])
     message = "WARNING: Converted dimensions of simulation domain totaled > 500**3 pixels. \nWe have truncated " \
               f"the sides of the simulation.This may break the initial conditions as defined in " \
               f"PhysiCell.\nOld dimensions:{ccdims[0:3]}\nNew dimensions:{new_dims[0:3]}"
     warnings.warn(message)
     return new_dims, True
+
+
+def get_diffusion_constants(d_elements):
+    Ds = []
+    for key, value in d_elements.items():
+        if not value["use_steady_state"]:
+            Ds.append(value["D"])
+    return Ds
+
+
+def reconvert_time_parameter(d_elements, cctime, max_D=50):
+    diffusion_constants = get_diffusion_constants(d_elements)
+
+    if len(diffusion_constants) == 0 or not max(diffusion_constants) > max_D:
+        return d_elements, cctime
+
+    message = "WARNING: the converted diffusion parameters were very high, using them as is would result in a very " \
+              "slow simulation. The translating software will reconvert the time unit in order to keep the diffusion" \
+              " parameters low."
+    warnings.warn(message)
+
+    max_old_D = max(diffusion_constants)
+
+    reduction_proportion = round(0.9 * max_D / max_old_D, 2)
+    # reduction_proportion = float(f"{max_D / max_old_D:.3f}")
+
+    new_cctime = [min(int(cctime[0] / reduction_proportion), 10 ** 9),
+                  f'1 MCS = {cctime[2] * reduction_proportion} {cctime[1].split(" ")[-1]}',
+                  cctime[2] * reduction_proportion,
+                  cctime[3]]
+    new_gammas = []
+    for key in d_elements.keys():
+        d_elements[key]["D"] *= reduction_proportion
+        d_elements[key]["D_conv_factor"] *= reduction_proportion
+        d_elements[key]["D_conv_factor_text"] = d_elements[key]["D_conv_factor_text"].split("=")[0] + " = " + \
+                                                f'{d_elements[key]["D_conv_factor"]} ' + \
+                                                d_elements[key]["D_conv_factor_text"].split(" ")[-1]
+
+        d_elements[key]["gamma"] /= reduction_proportion
+        d_elements[key]["gamma_conv_factor"] /= reduction_proportion
+        d_elements[key]["gamma_conv_factor_text"] = d_elements[key]["gamma_conv_factor_text"].split("=")[0] + " = " + \
+                                                    f'{d_elements[key]["gamma_conv_factor"]} ' + \
+                                                    d_elements[key]["gamma_conv_factor_text"].split(" ")[-1]
+
+        new_gammas.append(d_elements[key]["gamma"])
+
+    if max(new_gammas) < 1:
+        return d_elements, new_cctime
+
+    reduction_proportion = max(new_gammas)
+
+    for key in d_elements.keys():
+        d_elements[key]["D"] *= reduction_proportion
+        d_elements[key]["D_conv_factor"] *= reduction_proportion
+        d_elements[key]["D_conv_factor_text"] = d_elements[key]["D_conv_factor_text"].split("=")[0] + " = " + \
+                                                f'{d_elements[key]["D_conv_factor"]} ' + \
+                                                d_elements[key]["D_conv_factor_text"].split(" ")[-1]
+
+        d_elements[key]["gamma"] /= reduction_proportion
+        d_elements[key]["gamma_conv_factor"] /= reduction_proportion
+        d_elements[key]["gamma_conv_factor_text"] = d_elements[key]["gamma_conv_factor_text"].split("=")[0] + " = " + \
+                                                    f'{d_elements[key]["gamma_conv_factor"]} ' + \
+                                                    d_elements[key]["gamma_conv_factor_text"].split(" ")[-1]
+
+    return d_elements, new_cctime

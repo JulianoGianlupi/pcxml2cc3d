@@ -17,7 +17,7 @@ import argparse
 
 from cc3d_xml_gen.gen import make_potts, make_metadata, make_cell_type_plugin, make_cc3d_file, \
     make_contact_plugin, make_diffusion_plug, reconvert_spatial_parameters_with_minimum_cell_volume, make_secretion, \
-    reconvert_cell_volume_constraints, decrease_domain
+    reconvert_cell_volume_constraints, decrease_domain, reconvert_time_parameter
 
 from cc3d_xml_gen.get_physicell_data import get_cell_constraints, get_secretion, get_microenvironment, get_dims, \
     get_time
@@ -167,6 +167,7 @@ def main(path_to_xml, out_directory=None):
     print("Generating <Plugin CellType/>")
     ct_str, wall, cell_types, = make_cell_type_plugin(pcdict)
 
+    print("Detecting if the cells are too small or the simulation is too big")
     constraints, any_below, pixel_volumes, minimum_volume = \
         get_cell_constraints(pcdict, ccdims[4], minimum_volume=8)
     old_cons = constraints
@@ -179,11 +180,12 @@ def main(path_to_xml, out_directory=None):
 
     ccdims, was_above = decrease_domain(ccdims)
 
-    # todo: put the microenvironment parsing here. then check that the diffusion constant is not huge, if it is huge
-    #   rescale time to take that into account. by placing the rescaling here the potts, phenotype, etc, will be
-    #   rescaled automatically
 
-    ########
+    print("parsing micro environment")
+    d_elements = get_microenvironment(pcdict, ccdims[4], pcdims[3], cctime[2], pctime[1])
+
+    d_elements, cctime = reconvert_time_parameter(d_elements, cctime)
+    # todo: if a diffusion constant is very high set that diffusion solver to be the steady state
 
     print("Generating <Potts/>")
     potts_str = make_potts(pcdims, ccdims, pctime, cctime)
@@ -197,9 +199,6 @@ def main(path_to_xml, out_directory=None):
     contact_plug = make_contact_plugin(cell_types)
 
     test_extra = extra_for_testing(cell_types, ccdims[0], ccdims[1], ccdims[2])
-
-    print("parsing micro environment")
-    d_elements = get_microenvironment(pcdict, ccdims[4], pcdims[3], cctime[2], pctime[1])
 
     print("Generating diffusion plugin")
     diffusion_string = make_diffusion_plug(d_elements, cell_types, False)
@@ -251,10 +250,12 @@ def main(path_to_xml, out_directory=None):
     return
 
 
-parser = argparse.ArgumentParser(description="Converts a Physicell XML file into CompuCell3D .cc3d, .xml, main.py, and"
-                                             "steppables.py simulation configuration files.")
-parser.add_argument("input", type=str, help="Path to your input PhysiCell XML configuration file")
-parser.add_argument("-o", "--output", help="(optional) output path for the converted files",
-                    default=None)
-args = parser.parse_args()
-main(args.input, out_directory=args.output)
+# parser = argparse.ArgumentParser(description="Converts a Physicell XML file into CompuCell3D .cc3d, .xml, main.py, and"
+#                                              "steppables.py simulation configuration files.")
+# parser.add_argument("input", type=str, help="Path to your input PhysiCell XML configuration file")
+# parser.add_argument("-o", "--output", help="(optional) output path for the converted files",
+#                     default=None)
+# args = parser.parse_args()
+# main(args.input, out_directory=args.output)
+
+main("example_pcxml/annotated_cancer_immune3D_flat.xml")

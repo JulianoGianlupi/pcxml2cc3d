@@ -534,7 +534,8 @@ def get_secretion(pcdict):
 
 
 def get_microenvironment(pcdict, space_factor, space_unit, time_factor, time_unit, autoconvert_time=True,
-                         autoconvert_space=True, space_convs=_space_convs, time_convs=_time_convs):
+                         autoconvert_space=True, space_convs=_space_convs, time_convs=_time_convs,
+                         steady_state_threshold=1000):
     diffusing_elements = {}
     fields = pcdict['microenvironment_setup']['variable']
     for subel in fields:
@@ -543,6 +544,7 @@ def get_microenvironment(pcdict, space_factor, space_unit, time_factor, time_uni
         auto_t_this = autoconvert_time
 
         diffusing_elements[subel['@name']] = {}
+        diffusing_elements[subel['@name']]["use_steady_state"] = False
         diffusing_elements[subel['@name']]["concentration_units"] = subel["@units"]
         diffusing_elements[subel['@name']]["D_w_units"] = \
             float(subel['physical_parameter_set']['diffusion_coefficient']['#text'])
@@ -581,6 +583,8 @@ def get_microenvironment(pcdict, space_factor, space_unit, time_factor, time_uni
 
         D = diffusing_elements[subel['@name']]["D_w_units"] * space_conv_factor * space_conv_factor / time_conv_factor
         diffusing_elements[subel['@name']]["D"] = D
+        if D > steady_state_threshold:
+            diffusing_elements[subel['@name']]["use_steady_state"] = True
 
         # [cc3dds] = pixel/unit
         # [cc3dds] * unit = pixel -> pixel^2 = ([cc3dds] * unit)^2
@@ -590,7 +594,7 @@ def get_microenvironment(pcdict, space_factor, space_unit, time_factor, time_uni
         if auto_s_this and auto_t_this:
             diffusing_elements[subel['@name']]["D_conv_factor_text"] = f"1 pixel^2/MCS" \
                                                                        f" = {space_conv_factor * space_conv_factor / time_conv_factor}" \
-                                                                       f"{space_unit}^2/{time_unit}"
+                                                                       f" {space_unit}^2/{time_unit}"
             diffusing_elements[subel['@name']]["D_conv_factor"] = space_conv_factor * space_conv_factor / \
                                                                   time_conv_factor
             diffusing_elements[subel['@name']]["D_og_unit"] = f"{space_unit}^2/{time_unit}"
@@ -606,7 +610,7 @@ def get_microenvironment(pcdict, space_factor, space_unit, time_factor, time_uni
             diffusing_elements[subel['@name']][
                 "gamma_conv_factor_text"] = f"1/MCS = {1 / time_conv_factor} 1/{time_unit}"
             diffusing_elements[subel['@name']]["gamma_conv_factor"] = 1 / time_conv_factor
-            diffusing_elements[subel['@name']]["gamma_og_unit"] = f"1/{time_unit}"
+            diffusing_elements[subel['@name']]["gamma_og_unit"] = f" 1/{time_unit}"
         else:
             diffusing_elements[subel['@name']]["gamma_conv_factor_text"] = "disabled autoconversion"
             diffusing_elements[subel['@name']]["gamma_conv_factor"] = 1
