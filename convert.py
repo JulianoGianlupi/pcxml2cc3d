@@ -213,7 +213,6 @@ def main(path_to_xml, out_directory=None):
     d_elements = get_microenvironment(pcdict, ccdims[4], pcdims[3], cctime[2], pctime[1])
 
     d_elements, cctime = reconvert_time_parameter(d_elements, cctime)
-    # todo: if a diffusion constant is very high set that diffusion solver to be the steady state
 
     print("Generating <Potts/>")
     potts_str = make_potts(pcdims, ccdims, pctime, cctime)
