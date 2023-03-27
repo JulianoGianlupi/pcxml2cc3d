@@ -467,6 +467,35 @@ def get_cycle_phenotypes(phenotypes, subdict, ppc):
 
 
 def get_death_phenotypes(phenotypes, subdict, ppc):
+    """
+    Extracts information about cell death phenotypes from a PhysiCell configuration subdictionary.
+
+    The get_death_phenotypes function extracts information about cell death phenotypes from a PhysiCell configuration
+    file, and returns a dictionary containing the updated cell phenotypes, including information about cell death. It
+    takes in three arguments:
+
+    * phenotypes: A dictionary containing information about cell phenotypes.
+    * subdict: A sub-dictionary of the PhysiCell configuration file that contains information about the death models.
+    * ppc: A dictionary that maps PhysiCell phenotype codes to PhenoCellPy phenotype names.
+
+    The function returns a dictionary containing the updated cell phenotypes, including information about cell death.
+    The function does not raise any exceptions.
+
+    Parameters:
+    -----------
+        phenotypes : dict
+            A dictionary containing information about cell phenotypes.
+        subdict : dict
+            A sub-dictionary of the PhysiCell configuration file that contains information about the death models.
+        ppc : dict
+            A dictionary that maps PhysiCell phenotype codes to PhenoCellPy phenotype names.
+
+    Returns:
+    -----------
+        phenotypes : dict
+            A dictionary containing the updated cell phenotypes, including information about cell death.
+
+    """
     death_models = subdict['phenotype']['death']['model']
     if type(death_models) == list:
         for model in death_models:
