@@ -614,6 +614,18 @@ def reconvert_time_parameter(d_elements, cctime, max_D=50):
     """
     Converts the time parameter if the diffusion constants are too high.
 
+    This function takes in diffusion parameters and a time unit and checks if the converted diffusion parameters are
+    `>max_D`. If so, it issues a warning and reconverts the time unit to keep the diffusion parameters low. The new
+    time unit and diffusion parameters are returned.
+
+    The function first calls the get_diffusion_constants function to get the diffusion constants. If all diffusion
+    solvers are set to use the steady state solver or the maximum diffusion constant is not greater than `max_D`, the
+    original diffusion parameters and time unit are returned.
+
+    If the maximum gamma value of the new diffusion parameters is `>=1`, the function increases tge time unit back by a
+    proportion that keeps the maximum gamma value at 1 or below. Finally, the updated diffusion parameters and time
+    unit are returned.
+
     Parameters:
     -----------
     d_elements : dict
