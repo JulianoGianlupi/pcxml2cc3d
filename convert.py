@@ -120,6 +120,19 @@ def default_initial_cell_config(celltypes, xmax, ymax, zmax):
 
 
 def main(path_to_xml, out_directory=None):
+    """
+    Converts a PhysiCell simulation XML into a CompuCell3D simulation folder
+
+    This function is responsible for calling all the methods that will parse PhysiCell's XML and generate the relevant
+    CC3D simulation files (steppable file, XML, and main python file). It creates the output folder if one is given and
+    places the converted simulation there, if no output path is given the converted simulation will be placed in the
+    same directory as the original PhysiCell XML.
+
+    :param path_to_xml: string for the path to the PhysiCell XML simulation file
+    :param out_directory: string path to the output folder
+    :return: None
+    """
+
     read_before_run = "******************************************************************************************\n" \
                       "PLEASE READ BEFORE RUNNING:\n" \
                       "The translator program does a lot of the conversion process of a Physicell simulation into\n" \
