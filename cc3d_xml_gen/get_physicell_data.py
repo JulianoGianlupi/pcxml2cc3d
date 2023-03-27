@@ -741,6 +741,19 @@ def get_cell_constraints(pcdict, space_unit, minimum_volume=8):
 
 
 def get_space_time_from_diffusion(unit):
+    """
+    This function takes a unit of measurement string in the format of 'spaceunit/timeunit', where spaceunit may contain
+    an exponent, and returns a tuple with the extracted space unit and time unit as separate strings.
+
+    Parameters:
+    ----------
+        unit (string): The unit of measurement in the format 'spaceunit/timeunit', where spaceunit may contain an
+        exponent.
+
+    Returns:
+    -------
+        A tuple containing two strings: the extracted space unit (without the exponent) and the time unit.
+    """
     parts = unit.split("/")
     timeunit = parts[-1]
     spaceunit = parts[0].split("^")[0]
