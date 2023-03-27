@@ -496,6 +496,33 @@ def get_death_phenotypes(phenotypes, subdict, ppc):
 
 
 def get_cell_phenotypes(subdict, ppc=_physicell_phenotype_codes):
+    """
+    Extracts the cell phenotypes for a given cell from a pcdict['cell_definitions']['cell_definition'] subdictionary.
+
+    Parameters:
+    -----------
+    subdict : dict
+        A dictionary containing information about the cell.
+    ppc : dict, optional
+        A dictionary of PhysiCell phenotype codes, where the keys are the codes and the values are the corresponding
+        phenotype names. The default is _physicell_phenotype_codes.
+
+    Returns:
+    --------
+    phenotypes : dict or None
+        A dictionary containing the cell phenotypes and their values. Returns None if the given subdictionary does not
+        contain any phenotypes.
+    pheno_names : list or None
+        A list of the names of the cell phenotypes. Returns None if the given subdictionary does not contain any
+        phenotypes.
+
+    Notes:
+    ------
+    The phenotypes are extracted based on the keys 'cycle' and 'death' in the subdictionary. If a key is present, the
+    corresponding phenotype values are extracted using the helper functions `get_cycle_phenotypes()` and
+    `get_death_phenotypes()`.
+
+    """
     phenotypes = {}
     if 'phenotype' not in subdict.keys():
         return None, None
