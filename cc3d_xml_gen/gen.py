@@ -59,6 +59,7 @@ def make_potts(pcdims, ccdims, pctime, cctime):
 
 
 def make_metadata(pcdict, out=100):
+    """Generates the metadata CC3D XML block"""
     threads = get_parallel(pcdict)
 
     metadata = f'''
