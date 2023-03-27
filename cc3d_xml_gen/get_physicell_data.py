@@ -201,6 +201,24 @@ def get_cell_mechanics(subdict):
 
 
 def check_below_minimum_volume(volume, minimum=8):
+    """
+        Checks if the given volume falls below the given minimum volume threshold.
+
+        Parameters:
+        -----------
+        volume : float or None
+            The volume to check. If None, returns False and the given minimum.
+        minimum : float, optional
+            The minimum volume threshold. If the given volume falls below this threshold, returns True and this value.
+            Defaults to 8.
+
+        Returns:
+        --------
+        below : bool
+            A boolean indicating whether the given volume falls below the minimum volume threshold.
+        minimum : float
+            Returns the minimum volume.
+    """
     if volume is None:
         return False, minimum
     return volume < minimum, minimum
@@ -482,6 +500,42 @@ def get_custom_data(subdict):
 
 
 def get_cell_constraints(pcdict, space_unit, minimum_volume=8):
+    """
+    Extracts cell constraints from the given PhysiCell pcdict.
+
+    Parameters:
+    -----------
+    pcdict : dict
+        Dictionary created from parsing PhysiCell XML. Must contain a "cell_definitions" key that maps
+        to a dictionary with a "cell_definition" key. This key should contain a list of dictionaries, each of which
+        represents a Cell Type.
+    space_unit : float
+        A scaling factor for the simulation's spatial units. All volumes extracted from pcdict will be multiplied by
+        this factor raised to the power of the dimensionality of the simulation space.
+    minimum_volume : float, optional
+        The minimum volume allowed for any cell in pixels. If a cell's volume falls below this threshold after scaling,
+        the translator will reconvert space so that the minimum cell volume is  equal to this threshold. Defaults to 8.
+
+    Returns:
+    --------
+    constraints : dict
+        A dictionary containing the constraints for each Cell Type found in pcdict. Each key is a Cell Type name
+        (converted to an underscore-delimited string), and each value is a dictionary containing information about
+        that Cell Type's volume, mechanics, custom data, and phenotypes.
+    any_below : bool
+        A boolean indicating whether any cells had volumes that fell below minimum_volume after scaling.
+    volumes : list
+        A list containing the scaled volumes of each Cell Type found in pcdict.
+    minimum_volume : float
+        The minimum volume allowed for any cell, after scaling.
+
+    Raises:
+    -------
+    UserWarning
+        If a Cell Type's volume is missing a unit or value in pcdict, or if the scaled volume falls below
+        minimum_volume.
+    """
+
     constraints = {}
     any_below = False
     volumes = []
