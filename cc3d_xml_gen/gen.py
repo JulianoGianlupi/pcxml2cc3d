@@ -461,6 +461,36 @@ def reconvert_cell_volume_constraints(con_dict, ratio, minimum_volume):
 
 
 def reconvert_spatial_parameters_with_minimum_cell_volume(constraints, ccdims, pixel_volumes, minimum_volume):
+    """
+    Convert spatial parameters `ccdims` and `constraints` based on a minimum cell volume.
+
+    The reconvert_spatial_parameters_with_minimum_cell_volume function takes in four arguments: constraints, ccdims,
+    pixel_volumes, and minimum_volume. It returns a tuple containing the converted ccdims and constraints.
+
+    The function first filters out any None values from the pixel_volumes list and determines the minimum volume from
+    the remaining values. It then calculates a reconvert_ratio by dividing the minimum_volume by the
+    minimum_converted_volume and taking the ceiling of the result.
+
+    The ccdims argument is then converted using the reconvert_cc3d_dims function with the reconvert_ratio. The
+    constraints argument is also converted using the reconvert_cell_volume_constraints function with the
+    reconvert_ratio and minimum_volume as arguments.
+
+    The converted ccdims and constraints are then returned as a tuple.
+
+    Parameters:
+    -----------
+        constraints : dict
+            The previously converted dictionary of cell constraints
+        ccdims : tupple
+            A tuple of the previously converted cc3d space parameters
+        pixel_volumes : list
+            A list of volumes of cells in pixels
+        minimum_volume : int
+            The minimum volume required for the cell in pixels
+
+    Returns:
+        - Tuple[Tuple, Dict]: A tuple containing the converted `ccdims` and `constraints`.
+    """
     px_vols = [px for px in pixel_volumes if px is not None]
     minimum_converted_volume = min(px_vols)
 
