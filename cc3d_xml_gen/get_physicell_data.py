@@ -32,7 +32,7 @@ _time_convs = {"millisecond": 1e-3 / 60,
 
 def get_dims(pcdict, space_convs=_space_convs):
     """
-    Parses PhysiCell data and generates CC3D dimensions and unit conversions
+    Parses PhysiCell data and generates CC3D space dimensions and unit conversions
 
     This function looks for the value of the maximum and minimum of all coordinates in PhysiCell (
     pcdict['domain']['x_min'], pcdict['domain']['x_max'], etc) and saves them to variables. It also looks for the
@@ -103,6 +103,19 @@ def get_dims(pcdict, space_convs=_space_convs):
 
 
 def get_time(pcdict, time_convs=_time_convs):
+    """
+    Parses PhysiCell data and generates CC3D time dimensions and unit conversions
+
+    This function fetches the maximum time set in PhysiCell (pcdict['overall']['max_time']['#text']) and the time
+    discretization (pcdict['overall']['dt_mechanics']['#text']) to set the max time for the CC3D simulation and what is
+    MCS/unit factor in CC3D
+
+    :param pcdict: Dictionary created from parsing PhysiCell XML
+    :param time_convs: Dictionary of predefined space units
+    :return pctime, cctime: Two tuples representing the dimension data from PhysiCell and in CC3D.
+        (mt, time_unit, mechdt), and (steps, cc3dtimeunitstr, cc3ddt, autoconvert_time)
+    """
+
     mt = float(pcdict['overall']['max_time']['#text']) if "max_time" in pcdict['overall'].keys() and \
                                                           '#text' in pcdict['overall']['max_time'].keys() else 100000
 
@@ -136,8 +149,9 @@ def get_time(pcdict, time_convs=_time_convs):
     cc3dtimeunitstr = f"1 MCS = {cc3ddt} {time_unit}"
 
     # timeconvfact = 1/cc3ddt
+    pctime, cctime = (mt, time_unit, mechdt), (steps, cc3dtimeunitstr, cc3ddt, autoconvert_time)
 
-    return (mt, time_unit, mechdt), (steps, cc3dtimeunitstr, cc3ddt, autoconvert_time)
+    return pctime, cctime
 
 
 def get_parallel(pcdict):
