@@ -544,13 +544,49 @@ def reconvert_spatial_parameters_with_minimum_cell_volume(constraints, ccdims, p
 
 
 def decrease_domain(ccdims, max_volume=500 ** 3):
-# def decrease_domain(ccdims, max_volume=50 ** 3):
+    """
+    Decrease the size of a 3D domain if its volume exceeds a maximum value.
+
+    This function calculates the volume of the domain based on its current dimensions,
+    and compares it to a maximum volume value. If the volume exceeds the maximum, the
+    function decreases the size of the domain by scaling the dimensions proportionally
+    to the original dimensions. If the original dimensions are not uniform, the scaling
+    is applied to the default side length (the cubic root of the maximum volume) times
+    the proportions of the original dimensions. If the original dimensions are uniform,
+    the scaling is applied to all dimensions uniformly. The new dimensions are returned
+    along with a boolean indicating whether the domain was truncated. If the domain was
+    truncated, a warning message is issued, indicating that the initial conditions defined
+    in PhysiCell may be affected.
+
+    Parameters:
+    -----------
+        ccdims : tuple
+            tuple of 6 elements containing information about the 3D domain,
+            including the number of pixels in each dimension and the conversion factors
+            between pixels and real units. The first 3 elements are integers
+            representing the number of pixels in the x, y, and z dimensions, respectively.
+            The 4th element is a string representing the conversion factor, e.g. '10 microns/pixel'.
+            The 5th element is a float representing the pixel-to-unit conversion factor, e.g. 10.0.
+            The 6th element is a string representing the units, e.g. 'microns'.
+        max_volume : int
+            maximum allowed volume of the domain in pixels. Default is 500^3 pixels.
+
+    Returns:
+        new_dims: tuple
+            typle of 6 elements containing the new dimensions of the domain,
+            after decreasing its size if necessary. The first 3 elements are integers
+            representing the number of pixels in the x, y, and z dimensions, respectively.
+            The 4th element is a string representing the conversion factor, e.g. '10 microns/pixel'.
+            The 5th element is a float representing the pixel-to-unit conversion factor, e.g. 10.0.
+            The 6th element is a string representing the units, e.g. 'microns'.
+        truncated : bool
+            indicates whether the domain was truncated. If True, a warning message is issued.
+    """
     default_side = round(max_volume ** (1 / 3))
     old_dims = [ccdims[0], ccdims[1], ccdims[2]]
     old_volume = ccdims[0] * ccdims[1] * ccdims[2]
     if old_volume < max_volume:
         return ccdims, False
-    vol_conversion = old_volume / max_volume
     # new_dims = ccdims
     if old_dims[0] == old_dims[1] == old_dims[2]:
         new_dims = [default_side, default_side, default_side]
