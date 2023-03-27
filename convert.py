@@ -78,12 +78,16 @@ _time_convs = {"millisecond": 1e-3 / 60,
                "min": 1}
 
 
-def extra_for_testing(celltypes, xmax, ymax, zmax):
+def default_initial_cell_config(celltypes, xmax, ymax, zmax):
     beg = '''<Steppable Type="UniformInitializer">
 \t<!-- Initial layout of cells in the form of rectangular slab -->
+\t<!-- PhysiCell has many complex ways of defining the initial arangement -->
+\t<!-- of cells. By default the translator uses a simple configuration, -->
+\t<!-- you are responsible for analysing the initialization of the original -->
+\t<!-- model and reimplement it accordingly -->
 \t<Region>\n'''
 
-    box_min = f'\t\t<BoxMin x="{max(1, xmax - 50)}" y="{max(1, ymax - 50)}" z="{max(1, xmax - 50)}"/>\n'
+    box_min = f'\t\t<BoxMin x="{10}" y="{10}" z="{10}"/>\n'
     box_max = f'\t\t<BoxMax x="{xmax - 10}" y="{ymax - 10}" z="{zmax - 10}"/>\n'
 
     gap = "\t\t<Gap>0</Gap>\n\t\t<Width>7</Width>\n"
@@ -198,7 +202,7 @@ def main(path_to_xml, out_directory=None):
     print("Generating <Plugin Contact/>")
     contact_plug = make_contact_plugin(cell_types)
 
-    test_extra = extra_for_testing(cell_types, ccdims[0], ccdims[1], ccdims[2])
+    intializer_step = default_initial_cell_config(cell_types, ccdims[0], ccdims[1], ccdims[2])
 
     print("Generating diffusion plugin")
     diffusion_string = make_diffusion_plug(d_elements, cell_types, False)
@@ -226,7 +230,7 @@ def main(path_to_xml, out_directory=None):
     cc3dml = "<CompuCell3D>\n"
     cc3dml += "<!--\n" + read_before_run + "-->\n"
     cc3dml += metadata_str + potts_str + ct_str + contact_plug + diffusion_string + secretion_plug + '\n' + \
-              test_extra + "\n\n" + "\n</CompuCell3D>\n"
+              intializer_step + "\n\n" + "\n</CompuCell3D>\n"
 
     print(f"Creating {out_directory}/Simulation/{xml_name}")
     with open(os.path.join(out_directory, f"Simulation/{xml_name}"), "w+") as f:
