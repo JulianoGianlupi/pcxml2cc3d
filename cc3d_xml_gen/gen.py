@@ -611,6 +611,25 @@ def get_diffusion_constants(d_elements):
 
 
 def reconvert_time_parameter(d_elements, cctime, max_D=50):
+    """
+    Converts the time parameter if the diffusion constants are too high.
+
+    Parameters:
+    -----------
+    d_elements : dict
+        a dictionary of diffusion elements.
+    cctime : tuple
+        The previously converted time unit parameters
+    max_D : float, optional
+        Maximum diffusion constant allowed. Default 50
+
+    Returns:
+    -------
+        d_elements : dict
+            the reconverted dictionary of diffusion elements.
+        new_cctime : tuple
+            the reconverted tuple of cc3d time parameters
+    """
     diffusion_constants = get_diffusion_constants(d_elements)
 
     if len(diffusion_constants) == 0 or not max(diffusion_constants) > max_D:
