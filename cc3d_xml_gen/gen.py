@@ -467,6 +467,29 @@ def reconvert_cc3d_dims(ccdims, ratio):
 
 
 def reconvert_cell_volume_constraints(con_dict, ratio, minimum_volume):
+    """
+    Converts the volume constraints in `con_dict` to the new voxel size
+    given by `ratio`, and replaces any None values with the `minimum_volume`.
+
+    Parameters
+    ----------
+    con_dict : dict
+       Dictionary of constraints to be converted.
+       Each key in the dictionary corresponds to a type of constraint,
+       and its value is a dictionary with keys like 'volume', 'surface', etc.
+    ratio : int
+       The ratio between the old voxel size and the new voxel size.
+       All volume constraints are multiplied by this factor.
+    minimum_volume : int
+       The minimum value to replace any None values in the 'volume' key.
+
+    Returns
+    -------
+    dict
+       A new dictionary of constraints, where the 'volume' key values
+       have been converted to the new voxel size, and any None values
+       have been replaced with the `minimum_volume`.
+    """
     new_con = {}
     for ctype, const in con_dict.items():
         new_con[ctype] = const
