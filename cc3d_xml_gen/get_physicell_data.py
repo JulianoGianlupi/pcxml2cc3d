@@ -31,6 +31,21 @@ _time_convs = {"millisecond": 1e-3 / 60,
 
 
 def get_dims(pcdict, space_convs=_space_convs):
+    """
+    Parses PhysiCell data and generates CC3D dimensions and unit conversions
+
+    This function looks for the value of the maximum and minimum of all coordinates in PhysiCell (
+    pcdict['domain']['x_min'], pcdict['domain']['x_max'], etc) and saves them to variables. It also looks for the
+    discretization variables from PhysiCell (pcdict['domain']['dx'], etc) and saves them to variables. Using the size of
+    the domain and the discretization it defines what will be the number of pixels in CompuCell3D's domain.
+    It also looks for the unit used in PhysiCell to determine what will be the pixel/unit factor in CC3D.
+
+    :param pcdict: Dictionary created from parsing PhysiCell XML
+    :param space_convs: Dictionary of predefined space units
+    :return pcdims, ccdims: Two tuples representing the dimension data from PhysiCell and in CC3D.
+          ((xmin, xmax), (ymin, ymax), (zmin, zmax), units), and
+          (cc3dx, cc3dy, cc3dz, cc3dspaceunitstr, cc3dds, autoconvert_space)
+    """
     xmin = float(pcdict['domain']['x_min']) if "x_min" in pcdict['domain'].keys() else None
     xmax = float(pcdict['domain']['x_max']) if "x_max" in pcdict['domain'].keys() else None
 
@@ -81,8 +96,10 @@ def get_dims(pcdict, space_convs=_space_convs):
 
     cc3dspaceunitstr = f"1 pixel = {cc3dds} {units}"
 
-    return ((xmin, xmax), (ymin, ymax), (zmin, zmax), units), \
-           (cc3dx, cc3dy, cc3dz, cc3dspaceunitstr, cc3dds, autoconvert_space)
+    pcdims, ccdims = ((xmin, xmax), (ymin, ymax), (zmin, zmax), units), \
+                     (cc3dx, cc3dy, cc3dz, cc3dspaceunitstr, cc3dds, autoconvert_space)
+
+    return pcdims, ccdims
 
 
 def get_time(pcdict, time_convs=_time_convs):
@@ -393,7 +410,7 @@ def get_death_phenotypes(phenotypes, subdict, ppc):
                     duration_data.append((fixed, duration))
                 phenotypes[phenotype]["phase durations"] = duration_data
             else:
-                phenotypes[phenotype]["phase durations"] = [(None, None)]*len(phenotypes[phenotype]["rate units"])
+                phenotypes[phenotype]["phase durations"] = [(None, None)] * len(phenotypes[phenotype]["rate units"])
 
             if 'parameters' in model.keys():
                 biomass_chage_rates = model['parameters']
@@ -437,7 +454,6 @@ def get_cell_phenotypes(subdict, ppc=_physicell_phenotype_codes):
 
 
 def get_custom_data(subdict):
-
     if "custom_data" in subdict.keys():
         return subdict["custom_data"]
 
@@ -505,13 +521,20 @@ def get_secretion(pcdict):
             for sec in sec_list:
                 substrate = sec["@name"].replace(" ", "_")
                 sec_data[ctype][substrate] = {}
-                sec_data[ctype][substrate]['secretion_rate'] = float(sec['secretion_rate']['#text']) if 'secretion_rate' in sec.keys() else 0
-                sec_data[ctype][substrate]['secretion_unit'] = sec['secretion_rate']['@units'] if 'secretion_rate' in sec.keys() else "None"
-                sec_data[ctype][substrate]['secretion_target'] = float(sec['secretion_target']['#text']) if 'secretion_target' in sec.keys() else 0
-                sec_data[ctype][substrate]['uptake_rate'] = float(sec['uptake_rate']['#text']) if 'uptake_rate' in sec.keys() else 0
-                sec_data[ctype][substrate]['uptake_unit'] = sec['uptake_rate']['@units'] if 'uptake_rate' in sec.keys() else "None"
-                sec_data[ctype][substrate]['net_export'] = float(sec['net_export_rate']['#text']) if 'net_export_rate' in sec.keys() else 0
-                sec_data[ctype][substrate]['net_export_unit'] = sec['net_export_rate']['@units'] if 'net_export_rate' in sec.keys() else "None"
+                sec_data[ctype][substrate]['secretion_rate'] = float(
+                    sec['secretion_rate']['#text']) if 'secretion_rate' in sec.keys() else 0
+                sec_data[ctype][substrate]['secretion_unit'] = sec['secretion_rate'][
+                    '@units'] if 'secretion_rate' in sec.keys() else "None"
+                sec_data[ctype][substrate]['secretion_target'] = float(
+                    sec['secretion_target']['#text']) if 'secretion_target' in sec.keys() else 0
+                sec_data[ctype][substrate]['uptake_rate'] = float(
+                    sec['uptake_rate']['#text']) if 'uptake_rate' in sec.keys() else 0
+                sec_data[ctype][substrate]['uptake_unit'] = sec['uptake_rate'][
+                    '@units'] if 'uptake_rate' in sec.keys() else "None"
+                sec_data[ctype][substrate]['net_export'] = float(
+                    sec['net_export_rate']['#text']) if 'net_export_rate' in sec.keys() else 0
+                sec_data[ctype][substrate]['net_export_unit'] = sec['net_export_rate'][
+                    '@units'] if 'net_export_rate' in sec.keys() else "None"
         else:
             sec = sec_list
             substrate = sec["@name"].replace(" ", "_")
@@ -622,4 +645,3 @@ def get_microenvironment(pcdict, space_factor, space_unit, time_factor, time_uni
         diffusing_elements[subel['@name']]["dirichlet_value"] = float(subel['Dirichlet_boundary_condition']['#text'])
 
     return diffusing_elements
-
