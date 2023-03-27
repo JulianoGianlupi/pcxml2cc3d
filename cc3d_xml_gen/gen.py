@@ -94,6 +94,14 @@ def make_cell_type_plugin(pcdict):
 
 
 def make_cell_type_tags(pcdict):
+    """
+    Parses the PhysiCell dictionary to fetch the cell type names, generates the internal part of the cell type plugin
+
+
+    :param pcdict: Dictionary created from parsing PhysiCell XML
+    :return s, create_wall, cell_types: string for the cell type plugin, bool for the existance of a wall cell type,
+    list of cell type names
+    """
     s = ''
     cell_types = []
     idx = 1
