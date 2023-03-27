@@ -188,6 +188,21 @@ def get_cell_volume(subdict):
 
 
 def get_cell_mechanics(subdict):
+    """
+    Extracts the mechanics data for a given cell from a pcdict['cell_definitions']['cell_definition'] subdictionary.
+
+    Parameters:
+    -----------
+    subdict : dict
+        A dictionary containing information about the cell.
+
+    Returns:
+    --------
+    mechanics : dict or None
+        A dictionary containing the mechanics data for the given cell, with keys representing the different mechanical
+        properties (e.g. "cell_cell_adhesion_strength") and values representing the corresponding
+        numerical values and units. Returns None if the given subdictionary does not contain mechanics data.
+    """
     if 'phenotype' in subdict.keys() and 'mechanics' in subdict['phenotype'].keys():
         d = {}
         for key, item in subdict['phenotype']['mechanics'].items():
