@@ -798,6 +798,48 @@ def get_secretion(pcdict):
 def get_microenvironment(pcdict, space_factor, space_unit, time_factor, time_unit, autoconvert_time=True,
                          autoconvert_space=True, space_convs=_space_convs, time_convs=_time_convs,
                          steady_state_threshold=1000):
+    """
+    Gets data from diffusing elements defined in PhysiCell and converts it into CompuCell3D ready values
+
+    Given a dictionary with the simulation setup `pcdict`, the `space_factor` and `time_factor` to use for unit
+    conversion, the desired `space_unit` and `time_unit` in which to express the diffusion and decay coefficients
+    respectively, the function retrieves the microenvironment from `pcdict` and returns a dictionary with the diffusion
+    and decay coefficient values converted to CC3D units.
+
+    If automatic unit conversion is not possible, a warning message will be printed to the console and automatic unit
+    conversion will be disabled for that variable.
+
+    Parameters:
+    -----------
+        pcdict : dict
+            The dictionary containing the PhysiCell simulation setup.
+        space_factor : float
+            The factor to use for space unit conversion.
+        space_unit : str
+            The unit used in PhysiCell for space
+        time_factor : float
+            The factor to use for time unit conversion.
+        time_unit : str
+            The unit used in PhysiCell for time
+        autoconvert_time : bool, optional
+            Whether to automatically convert time units into CC3D time units. Default is True.
+        autoconvert_space : bool, optional
+            Whether to automatically convert space units into CC3D space units. Default is True
+        space_convs : dict, optional
+            A dictionary of known space unit conversions. Default is _space_convs.
+        time_convs : dict, optional
+            A dictionary of known time unit conversions. Default is _time_convs.
+        steady_state_threshold : float, optional
+            The steady state threshold value above which the translator will set the diffusion solver  for that chemical
+            to be the steady state solver. Default is 1000.
+
+    Returns:
+        dict: A dictionary containing the diffusion and decay coefficients, initial condition, and boundary
+            conditions for each diffusing element in the microenvironment.
+
+    Raises:
+        ValueError: If the given space unit or time unit is not recognized or not convertible.
+    """
     diffusing_elements = {}
     fields = pcdict['microenvironment_setup']['variable']
     for subel in fields:
