@@ -432,6 +432,23 @@ def make_cell_dict(cell_types, secretion_dict):
 
 
 def reconvert_cc3d_dims(ccdims, ratio):
+    """
+    Convert the number of pixels in each dimension of a 3D image based on a given ratio.
+
+    Parameters:
+    -----------
+        ccdims : tuple
+            A tuple containing the number of pixels in each dimension of a 3D image, the pixel -- real unit relationship,
+            and the pixel -- real unit ratio.
+
+        ratio : int
+            The ratio to multiply the number of pixels in each dimension by.
+
+    Returns:
+    --------
+        tuple: A new tuple containing the updated number of pixels in each dimension,
+              the updated pixel -- real unit relationship, and the updated pixel -- real unit ratio.
+    """
     # ccdims is a tupple of: int x pixels, int y pixels, int z pixels,
     # string showing the pixel -- real unit relationship, the pixel -- real unit ratio
 
