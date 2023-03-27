@@ -251,6 +251,63 @@ _physicell_phenotype_codes = {
 
 
 def get_cycle_rate_data(rate_data, volume_datum, using_rates):
+    """
+    Returns a tuple of 10 lists containing data related to cycle rates, given input data.
+
+    The get_cycle_rate_data function takes in three arguments: rate_data, volume_datum, and using_rates. The function
+    returns a tuple of ten lists, which contain data related to cycle rates.
+
+    The rate_data argument can be either a list of dictionaries or a dictionary. If it is a dictionary, the function
+    calculates the phase duration using the value of the '#text' key and stores it in a variable phase_duration. If
+    using_rates is True, phase_duration is calculated as the reciprocal of the '#text' value. Otherwise, phase_duration
+    is calculated as the float value of the '#text' key. If '#text' is not present or if its value is 0, 9e99 is stored
+    as the phase_duration.
+
+    The fixed_duration key in the rate_data dictionary is used to store the fixed duration of the phase. The tuple
+    (fixed_duration, phase_duration) is then stored in a list called phase_durations. Other relevant data from the
+    volume_datum dictionary is also stored in separate lists.
+
+    If rate_data is a list of dictionaries, the function iterates over each dictionary in the list and performs the
+    same operations as above for each dictionary. The resulting data is then stored in separate lists.
+
+    The function returns a tuple of ten lists: phase_durations, fluid_change_rate, cytoplasmic_biomass_change_rate,
+    nuclear_biomass_change_rate, calcification_rate, fluid_fraction, nuclear, calcified_fraction, rel_rupture, and
+    total. The docstring lists the data type and content of each list.
+
+    Parameters:
+    -----------
+        rate_data : list/dict
+            a list of dictionaries, or a dictionary, containing rate data.
+        volume_datum : dict
+            a dictionary containing volume data.
+        using_rates : bool
+            a boolean indicating whether rate data is being used.
+
+    Returns:
+    --------
+    A tuple of 10 lists:
+
+        phase_durations : list
+            a list of tuples containing phase duration data
+        fluid_change_rate : list
+            a list of floats containing fluid change rate data.
+        cytoplasmic_biomass_change_rate : list
+            a list of floats containing cytoplasmic biomass change rate data.
+        nuclear_biomass_change_rate : list
+            a list of floats containing nuclear biomass change rate data.
+        calcification_rate : list
+            a list of floats containing calcification rate data.
+        fluid_fraction : list
+            a list of floats containing fluid fraction data.
+        nuclear : list
+            a list of floats containing nuclear data.
+        calcified_fraction : list
+            a list of floats containing calcified fraction data.
+        rel_rupture : list
+            a list of None values.
+        total : list
+            a list of floats containing total volume data.
+    """
     if type(rate_data) != list:
 
         if using_rates:
@@ -313,6 +370,28 @@ def get_cycle_rate_data(rate_data, volume_datum, using_rates):
 
 
 def get_cycle_phenotypes(phenotypes, subdict, ppc):
+    """
+    The get_cycle_phenotypes function takes in three arguments: phenotypes, a dictionary of phenotype information
+    already extracted,
+    subdict, a sub-dictionary of the PhysiCell XML file that contains information about the current cell phenotype,
+    and ppc, a dictionary of PhenoCellPy phenotype codes. This function extracts and processes cycle-specific phenotype
+    data from the subdict and updates the phenotypes dictionary with the extracted data. If the cycle phenotype code is
+    not in the ppc dictionary, the function sets the phenotype to the default "Simple Live" phenotype and issues a
+    warning.
+
+    The function extracts the duration and rate information for each cycle phase and stores it in the phenotypes
+    dictionary, along with information about volume, fluid fraction, and calcification rate, if available. If volume
+    information is not available, the function calculates phase durations based on rate information, or sets default
+    values if rate information is not available.
+
+    The function returns the updated phenotypes dictionary. If an error occurs during the extraction process, a
+    ValueError is raised.
+
+    :param phenotypes: dictionary with information about the phenotype models
+    :param subdict: pcdict['cell_definitions']['cell_definition']
+    :param ppc: codes of phenotypes
+    :return: updated phenotypes dictionary
+    """
     if subdict['phenotype']['cycle']['@code'] not in ppc.keys():
         message = f"WARNING: PhysiCell phenotype of code {subdict['phenotype']['cycle']['@code']}\n" \
                   f"not among PhenoCellPy's phenotypes. Falling back on Simple Live phenotype"
