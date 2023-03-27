@@ -161,13 +161,19 @@ def make_contact_plugin(celltypes):
     return contact_plug
 
 
-def make_diffusion_plug(diffusing_elements, celltypes, flag_2d):
-    header = f'\n\n\t<Steppable Type="DiffusionSolverFE">\t<!-- The conversion uses DiffusionSolverFE by default. You may ' \
+def make_diffusion_FE(diffusing_elements, celltypes, flag_2d):
+    header = f'\n\n\t<Steppable Type="DiffusionSolverFE">\n\t\t<!-- The conversion uses DiffusionSolverFE and' \
+             f' SteadyStateDiffusionSolver ' \
+             f'by default. You may ' \
              f'wish to use another diffusion solver-->'
 
     full_str = header
 
     for key, item in diffusing_elements.items():
+
+        if item["use_steady_state"]:
+            continue
+
         name = key.replace(" ", "_")
 
         # diffusion data
@@ -262,6 +268,122 @@ def make_diffusion_plug(diffusing_elements, celltypes, flag_2d):
     return full_str
 
 
+def make_diffusion_steady(diffusing_elements, celltypes, flag_2d):
+    if flag_2d:
+        header = f'\n\n\t<Steppable Type="SteadyStateDiffusionSolver2D">\n\t\t<!-- The conversion uses ' \
+                 f'DiffusionSolverFE and' \
+                 f' SteadyStateDiffusionSolver ' \
+                 f'by default. You may ' \
+                 f'wish to use another diffusion solver-->'
+    else:
+        header = f'\n\n\t<Steppable Type="SteadyStateDiffusionSolver">\n\t\t<!-- The conversion uses ' \
+                 f'DiffusionSolverFE and' \
+                 f' SteadyStateDiffusionSolver ' \
+                 f'by default. You may ' \
+                 f'wish to use another diffusion solver-->'
+
+    full_str = header
+
+    for key, item in diffusing_elements.items():
+        if not item["use_steady_state"]:
+            continue
+
+        name = key.replace(" ", "_")
+
+        df_str = f'\t\t<DiffusionField Name="{name}">\n\t\t\t<DiffusionData>\n\t\t\t\t<FieldName>{name}</FieldName>\n'
+        conc_units = f'\t\t\t\t<Concentration_units>{item["concentration_units"]}</Concentration_units>\n'
+        og_D = f'\t\t\t\t<Original_diffusion_constant D="{item["D_w_units"]}" units= "{item["D_og_unit"]}"/>\n'
+
+        D_str = f'\t\t\t\t<DiffusionConstant>{item["D"]}</DiffusionConstant>\n'
+        og_g = f'\t\t\t\t<Original_decay_constant gamma="{item["gamma_w_units"]}" units= "{item["gamma_og_unit"]}"/>\n'
+        g_str = f'\t\t\t\t<DecayConstant>{item["gamma"]}</DecayConstant>\n'
+
+        init_cond_warn = '\t\t\t\t<!-- CC3D allows for diffusing fields initial conditions, if one was detected it ' \
+                         'will -->\n' \
+                         '\t\t\t\t<!-- be used here. For several reasons it may not work, if something looks wrong with' \
+                         ' -->\n' \
+                         '\t\t\t\t<!-- your diffusing field at the start of the simulation this may be the reason.' \
+                         ' -->\n' \
+                         '\t\t\t\t<!-- CC3D also allows the diffusing field initial condition to be set by a file. ' \
+                         'Conversion of a -->\n' \
+                         '\t\t\t\t<!-- PhysiCell diffusing field initial condition file into a CC3D compliant one is ' \
+                         'left as -->\n' \
+                         '\t\t\t\t<!-- an exercise to the reader. -->\n'
+
+        init_cond = f'\t\t\t\t <InitialConcentrationExpression>{item["initial_condition"]}<' \
+                    f'/InitialConcentrationExpression>' \
+                    '\n\t\t\t\t<!-- <ConcentrationFileName>INITIAL CONCENTRATION FIELD - typically a file with ' \
+                    'path Simulation/NAME_OF_THE_FILE.txt</ConcentrationFileName> -->'
+
+        close_diff_data = "\t\t\t</DiffusionData>\n"
+
+        # boundary conditions
+
+        bc_head = '\t\t\t<BoundaryConditions>\n\t\t\t\t<!-- PhysiCell has either Dirichlet boundary conditions (i.e. ' \
+                  'constant ' \
+                  'value) -->\n\t\t\t\t<!-- or "free floating" boundary conditions (i.e., constant flux = 0). -->' \
+                  '\n\t\t\t\t<!-- CC3D ' \
+                  'allows ' \
+                  'for more control of boundary conditions, you may want to revisit the issue. -->\n'
+        if item['dirichlet']:
+            bc_body = f'\t\t\t\t<Plane Axis="X">\n\t\t\t\t\t<ConstantValue PlanePosition="Min" Value=' \
+                      f'"{item["dirichlet_value"]}"/>\n\t\t\t\t\t<ConstantValue PlanePosition="Max" Value=' \
+                      f'"{item["dirichlet_value"]}"/>\n\t\t\t\t\t<!-- Other options are (examples): -->\n\t\t\t\t\t' \
+                      f'<!--<ConstantDerivative PlanePosition="Min" Value="10.0"/> -->\n\t\t\t\t\t<!--' \
+                      f'<ConstantDerivative PlanePosition="Max" Value="10.0"/> -->\n\t\t\t\t\t<!--<Periodic/>-->' \
+                      '\t\t\t\t</Plane>\n' \
+                      f'\t\t\t\t<Plane Axis="Y">\n\t\t\t\t\t<ConstantValue PlanePosition="Min" Value=' \
+                      f'"{item["dirichlet_value"]}"/>\n\t\t\t\t\t<ConstantValue PlanePosition="Max" Value=' \
+                      f'"{item["dirichlet_value"]}"/>\n\t\t\t\t\t<!-- Other options are (examples): -->\n\t\t\t\t\t' \
+                      f'<!--<ConstantDerivative PlanePosition="Min" Value="10.0"/> -->\n\t\t\t\t\t<!--' \
+                      f'<ConstantDerivative PlanePosition="Max" Value="10.0"/> -->\n\t\t\t\t\t<!--<Periodic/>-->' \
+                      '\n\t\t\t\t</Plane>\n'
+            if not flag_2d:
+                bc_body += f'\t\t\t\t<Plane Axis="Z">\n\t\t\t\t\t<ConstantValue PlanePosition="Min" Value=' \
+                           f'"{item["dirichlet_value"]}"/>\n\t\t\t\t\t<ConstantValue PlanePosition="Max" Value=' \
+                           f'"{item["dirichlet_value"]}"/>\n\t\t\t\t\t<!-- Other options are (examples): -->\n\t\t\t\t\t' \
+                           f'<!--<ConstantDerivative PlanePosition="Min" Value="10.0"/> -->\n\t\t\t\t\t<!--' \
+                           f'<ConstantDerivative PlanePosition="Max" Value="10.0"/> -->\n\t\t\t\t\t<!--<Periodic/>-->' \
+                           '\n\t\t\t\t</Plane>\n'
+        else:
+            bc_body = f'\t\t\t\t<Plane Axis="X">\n\t\t\t\t\t<ConstantDerivative PlanePosition="Min" Value=' \
+                      f'"0"/>\n\t\t\t\t\t<ConstantDerivative PlanePosition="Max" Value=' \
+                      f'"0"/>\n\t\t\t\t\t<!-- Other options are (examples): -->\n\t\t\t\t\t' \
+                      f'<!--<ConstantValue PlanePosition="Min" Value="10.0"/> -->\n\t\t\t\t\t<!--' \
+                      f'<ConstantValue PlanePosition="Max" Value="10.0"/> -->\n\t\t\t\t\t<!--<Periodic/>-->' \
+                      '\t\t\t\t</Plane>\n' \
+                      f'\t\t\t\t<Plane Axis="Y">\n\t\t\t\t\t<ConstantDerivative PlanePosition="Min" Value=' \
+                      f'"0"/>\n\t\t\t\t\t<ConstantDerivative PlanePosition="Max" Value=' \
+                      f'"0"/>\n\t\t\t\t\t<!-- Other options are (examples): -->\n\t\t\t\t\t' \
+                      f'<!--<ConstantValue PlanePosition="Min" Value="10.0"/> -->\n\t\t\t\t\t<!--' \
+                      f'<ConstantValue PlanePosition="Max" Value="10.0"/> -->\n\t\t\t\t\t<!--<Periodic/>-->' \
+                      '\t\t\t\t</Plane>\n'
+            if not flag_2d:
+                bc_body += f'\t\t\t\t<Plane Axis="Z">\n\t\t\t\t\t<ConstantDerivative PlanePosition="Min" Value=' \
+                           f'"0"/>\n\t\t\t\t\t<ConstantDerivative PlanePosition="Max" Value=' \
+                           f'"0"/>\n\t\t\t\t\t<!-- Other options are (examples): -->\n\t\t\t\t\t' \
+                           f'<!--<ConstantDerivative PlanePosition="Min" Value="10.0"/> -->\n\t\t\t\t\t<!--' \
+                           f'<ConstantDerivative PlanePosition="Max" Value="10.0"/> -->\n\t\t\t\t\t<!--<Periodic/>-->' \
+                           '\t\t\t\t</Plane>\n'
+        close_bc = "</BoundaryConditions>\n"
+        close_field = "</DiffusionField>\n"
+
+        full_field_def = df_str + conc_units + og_D + D_str + og_g + g_str + init_cond_warn + init_cond + \
+                         close_diff_data + bc_head + bc_body + close_bc + close_field
+        full_str += full_field_def
+
+    full_str += "</Steppable>\n"
+    return full_str
+
+
+def make_diffusion_plug(diffusing_elements, celltypes, flag_2d):
+    FE_solver = make_diffusion_FE(diffusing_elements, celltypes, flag_2d)
+
+    steady_state_solver = make_diffusion_steady(diffusing_elements, celltypes, flag_2d)
+
+    return FE_solver + steady_state_solver
+
+
 def make_secretion(secretion_dict):
     if bool(secretion_dict):
         return '\n<Plugin Name="Secretion"/>\n'
@@ -325,6 +447,7 @@ def reconvert_spatial_parameters_with_minimum_cell_volume(constraints, ccdims, p
 
 
 def decrease_domain(ccdims, max_volume=500 ** 3):
+# def decrease_domain(ccdims, max_volume=50 ** 3):
     default_side = round(max_volume ** (1 / 3))
     old_dims = [ccdims[0], ccdims[1], ccdims[2]]
     old_volume = ccdims[0] * ccdims[1] * ccdims[2]
