@@ -109,6 +109,15 @@ def make_cell_type_tags(pcdict):
 
 
 def make_cc3d_file(name=None):
+    """
+    Generates the string for the .cc3d file and returns the names of the simulation files
+
+    Based on the name parameter, this function generates the XML for the .cc3d file and the file
+    names for all the simulation files
+
+    :param name: string, simulation name
+    :return: string for .cc3d file, name of the xml file, name of the main python file, name of the steppables file
+    """
     if name is None:
         xml_name = "test.xml"
         main_py_name = "main_test.py"
