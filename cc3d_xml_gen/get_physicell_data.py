@@ -160,15 +160,22 @@ def get_parallel(pcdict):
 
 
 def get_boundary_wall(pcdict):
+    """
+    Looks for the existance of a wall around the PhysiCell simulation and returns a flag saying if it does or not
+    :param pcdict: Dictionary created from parsing PhysiCell XML
+    :return wall_exists: bool for the existance of the boundary wall
+    """
+    wall_exists = False
     if "options" in pcdict.keys() and "virtual_wall_at_domain_edge" in pcdict['options'].keys():
         wall = pcdict["options"]["virtual_wall_at_domain_edge"].upper()
         if wall == "TRUE":
-            return True
+            wall_exists = True
+            return wall_exists
         else:
-            return False
+            return wall_exists
     else:
-        return False
-    return False
+        return wall_exists
+    return wall_exists
 
 
 def get_cell_volume(subdict):
