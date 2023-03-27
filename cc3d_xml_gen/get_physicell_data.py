@@ -508,6 +508,20 @@ def get_cell_phenotypes(subdict, ppc=_physicell_phenotype_codes):
 
 
 def get_custom_data(subdict):
+    """
+    Extracts the custom data for a given cell from a pcdict['cell_definitions']['cell_definition'] subdictionary.
+
+    Parameters:
+    -----------
+    subdict : dict
+        A dictionary containing information about the cell.
+
+    Returns:
+    --------
+    custom_data : dict or None
+        A dictionary containing the custom data for the given cell. Returns None if the given subdictionary does not
+        contain custom data.
+    """
     if "custom_data" in subdict.keys():
         return subdict["custom_data"]
 
