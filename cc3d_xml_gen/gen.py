@@ -74,6 +74,15 @@ def make_metadata(pcdict, out=100):
 
 
 def make_cell_type_plugin(pcdict):
+    """
+    Makes the cell type plugin for CC3D
+
+    Passes pcdict to make_cell_type_tags to generate the cell types and returns the results
+
+    :param pcdict: Dictionary created from parsing PhysiCell XML
+    :return ct_str, wall, cell_types: string setting the cell type plugin for cc3d's XML, bool for the presence of a
+    wall cell type, list of cell types
+    """
     ct_str = '\n<Plugin Name="CellType">\n\t' \
              '<CellType TypeId="0" TypeName="Medium"/>\n'
     typesstr, wall, cell_types = make_cell_type_tags(pcdict)
