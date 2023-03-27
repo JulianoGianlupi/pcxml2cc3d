@@ -79,6 +79,17 @@ _time_convs = {"millisecond": 1e-3 / 60,
 
 
 def default_initial_cell_config(celltypes, xmax, ymax, zmax):
+    """
+    Returns the default UniformInitializer steppable
+
+    Uses the cell types strings and size of the simulation to configure the XML for the Uniform Initializer
+
+    :param celltypes: list of cell types
+    :param xmax: maximum x dimention of the simulation
+    :param ymax: maximum y dimention of the simulation
+    :param zmax: maximum z dimention of the simulation
+    :return steppable_string: configured XML string
+    """
     beg = '''<Steppable Type="UniformInitializer">
 \t<!-- Initial layout of cells in the form of rectangular slab -->
 \t<!-- PhysiCell has many complex ways of defining the initial arangement -->
@@ -104,8 +115,8 @@ def default_initial_cell_config(celltypes, xmax, ymax, zmax):
 
     end = '''\t</Region>
 </Steppable>'''
-
-    return beg + box_min + box_max + gap + types + end
+    steppable_string = beg + box_min + box_max + gap + types + end
+    return steppable_string
 
 
 def main(path_to_xml, out_directory=None):
