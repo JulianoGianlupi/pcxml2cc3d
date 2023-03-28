@@ -449,6 +449,24 @@ def make_diffusion_steady(diffusing_elements, celltypes, flag_2d):
 
 
 def make_diffusion_plug(diffusing_elements, celltypes, flag_2d):
+    """
+    Generates the XML for the diffusion steppables in CC3D a diffusion plug, combining the finite element (FE) solver
+    and the steady-state solver.
+
+    Parameters
+    ----------
+    diffusing_elements : dict
+        Dictionary of diffusing elements and their parameters
+    celltypes : list
+        List of cell types
+    flag_2d : bool
+        Whether the simulation is in 2D
+
+    Returns
+    -------
+    str
+        The combined string of the FE and steady-state solvers
+    """
     FE_solver = make_diffusion_FE(diffusing_elements, celltypes, flag_2d)
 
     steady_state_solver = make_diffusion_steady(diffusing_elements, celltypes, flag_2d)
