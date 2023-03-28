@@ -765,6 +765,30 @@ def get_secretion(pcdict):
     Extracts secretion data from the input pcdict (PhysiCell XML parsed into a dictionary) and returns the extracted
     data as a dictionary.
 
+    get_secretion takes a single argument, pcdict, which is a Python dictionary created from converting a PhysiCell XML
+    into a dictionary.
+
+    The function initializes an empty dictionary sec_data, which will store the parsed secretion data. The code loops
+    through the children of pcdict['cell_definitions']['cell_definition'] and checks if the child has the key
+    'secretion' in its 'phenotype' dictionary. If not, the loop goes to the next child.
+
+    For each child that has the 'secretion' key, the code extracts the child cell type as ctype. It then initializes a
+    dictionary sec_data[ctype] to store secretion data for this cell type.
+
+    The code then extracts a list of substrates and their secretion data for the given cell type and diffusing element.
+    It stores this data in `sec_list` (`sec_list = child['phenotype']['secretion']['substrate']`).
+    The code handles two cases: either `sec_list` is a list of multiple substrates (diffusing elements), or it is a
+    single dictionary representing a single substrate.
+
+    For each substrate, the code extracts its name, and then extracts various secretion data for that
+    substrate, such as secretion_rate, uptake_rate, and net_export, if they exist. These values are all converted to
+    floats if they exist, and default to 0 if they do not. The code also extracts the units for each of these values,
+    which are stored as strings.
+
+    All of this data is then stored in the sec_data dictionary for the given child type and substrate.
+
+    Once all children with 'secretion' keys have been processed, the sec_data dictionary is returned.
+
     Parameters
     ----------
     pcdict : dict
