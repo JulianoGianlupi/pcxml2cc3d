@@ -109,6 +109,37 @@ def convert_uptake_rate(rate, unit, time_conv, pctimeunit, time_convs=_time_conv
 
 
 def convert_net_secretion(rate, unit, time_conv, pctimeunit, time_convs=_time_convs):
+    """
+    Convert a net secretion rate from a given time unit to 1/MCS.
+
+    If the unit of the rate is not expressed in `pctimeunit`, the function attempts to convert it automatically using
+    the `time_convs` dictionary. If the time unit of the rate is not found in `time_convs` a warning message is
+    generated and no conversion is performed. If the time unit is found but
+    is not the same as the main PhysiCell time unit, a warning message is generated and conversion is performed.
+    The warning message is returned as part of the `net_comment` string.
+
+    Parameters
+    ----------
+    rate : float
+        The net secretion rate in the given time unit.
+    unit : str
+        The unit of the rate, expressed as a string (e.g., "1/min", "1/hour", etc.).
+    time_conv : float
+        The conversion factor from the given time unit to 1/MCS
+    pctimeunit : str
+        The main PhysiCell time unit, expressed as a string (e.g., "min").
+    time_convs : dict, optional
+        A dictionary containing conversion factors for different time units. The keys are time units expressed as
+        strings (e.g., "min", "hour", etc.), and the values are the corresponding conversion factors to minutes.
+
+    Returns
+    -------
+    mcs_rate : float
+        The net secretion rate converted to 1/MCS
+    net_comment : str
+        A warning message (if any) about the conversion, expressed as a string with comment marks ('#') at the
+        beginning of each line.
+    """
     net_comment = ''
     if pctimeunit in unit:
         mcs_rate = rate / time_conv
