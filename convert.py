@@ -80,15 +80,32 @@ _time_convs = {"millisecond": 1e-3 / 60,
 
 def default_initial_cell_config(celltypes, xmax, ymax, zmax):
     """
-    Returns the default UniformInitializer steppable
+    Returns the default UniformInitializer steppable.
 
-    Uses the cell types strings and size of the simulation to configure the XML for the Uniform Initializer
+    The default_initial_cell_config function returns an XML string with a configuration for
+    the UniformInitializer steppable in CompuCell3D. The configuration is based on the input parameters of celltypes,
+    xmax, ymax, and zmax.
 
-    :param celltypes: list of cell types
-    :param xmax: maximum x dimention of the simulation
-    :param ymax: maximum y dimention of the simulation
-    :param zmax: maximum z dimention of the simulation
-    :return steppable_string: configured XML string
+    The UniformInitializer steppable is responsible for initializing the initial configuration of cells in the
+    simulation. This function sets up a rectangular slab of cells with a specified width and gap size, and restricts
+    the cell types to those specified in the celltypes list. The WALL cell type is excluded from the initialization
+    process.
+
+    Parameters
+    ----------
+    celltypes : list of str
+        List of cell types.
+    xmax : int
+        Maximum x dimension of the simulation.
+    ymax : int
+        Maximum y dimension of the simulation.
+    zmax : int
+        Maximum z dimension of the simulation.
+
+    Returns
+    -------
+    str
+        Configured XML string.
     """
     beg = '''<Steppable Type="UniformInitializer">
 \t<!-- Initial layout of cells in the form of rectangular slab -->
