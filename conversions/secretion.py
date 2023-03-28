@@ -104,6 +104,32 @@ def convert_net_secretion(rate, unit, time_conv, pctimeunit, time_convs=_time_co
 
 
 def convert_secretion_data(sec_dict, time_conv, pctimeunit):
+    """
+    Convert secretion data from PhysiCell to CompuCell3D format.
+
+    This function converts the secretion data parsed from PhysiCell to CompuCell3D python commands to perform
+    secretion. It also adds comment to indicate any potential discrepancies between the two formats, such as
+    differences in the handling of target secretion or uptake bounds. The resulting dictionary is returned.
+
+    Parameters
+    ----------
+    sec_dict : dict
+        Dictionary containing parsed secretion data from PhysiCell.
+    time_conv : float
+        Conversion factor for time units.
+    pctimeunit : str
+        PhysiCell time unit.
+
+    Returns
+    -------
+    dict
+        Dictionary containing CompuCell3D secretion python commands.
+
+    Notes
+    -----
+
+
+    """
     if not sec_dict:
         return {}
 
