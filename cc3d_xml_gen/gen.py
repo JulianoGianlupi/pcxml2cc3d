@@ -35,6 +35,26 @@ _time_convs = {"millisecond": 1e-3 / 60,
 
 
 def make_potts(pcdims, ccdims, pctime, cctime):
+    """
+    Generate a Potts CC3D XML string with the given parameters.
+
+    Parameters
+    ----------
+    pcdims : tuple
+        Tuple of integers representing the dimensions of space in PhysiCell
+    ccdims : tuple
+        Tuple of integers representing the dimensions of space in CC3D
+    pctime : tuple
+        Tuple with the time unit from PhysiCell
+    cctime : tuple
+        Tuple with the time parameters for CC3D
+
+    Returns
+    -------
+    str
+        Potts XML string with the given parameters.
+
+    """
     potts_str = f""" 
 <Potts>
    <!-- Basic properties of CPM (GGH) algorithm -->
