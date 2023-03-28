@@ -761,11 +761,25 @@ def get_space_time_from_diffusion(unit):
 
 
 def get_secretion(pcdict):
-    # will have to be done in python
+    """
+    Extracts secretion data from the input pcdict (PhysiCell XML parsed into a dictionary) and returns the extracted
+    data as a dictionary.
+
+    Parameters
+    ----------
+    pcdict : dict
+        A dictionary representing a PhysiCell simulation.
+
+    Returns
+    -------
+    dict
+        A dictionary containing secretion data for each cell type and substrate.
+    """
+
     sec_data = {}
     for child in pcdict['cell_definitions']['cell_definition']:
         if 'secretion' not in child['phenotype'].keys():
-            break
+            continue
         ctype = child['@name'].replace(" ", "_")
         sec_data[ctype] = {}
         sec_list = child['phenotype']['secretion']['substrate']
