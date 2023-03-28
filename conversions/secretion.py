@@ -19,6 +19,36 @@ _time_convs = {"millisecond": 1e-3 / 60,
 
 
 def convert_secretion_rate(rate, unit, time_conv, pctimeunit, time_convs=_time_convs):
+    """
+    Converts a secretion rate from its original units to MCS units.
+
+    If the original units cannot be determined, no conversion is performed and a warning message is displayed.
+    If the original units are the same as the main PhysiCell time unit, the conversion factor is simply the
+    simulation time conversion factor.
+    If the original units are different from the main PhysiCell time unit, a conversion factor is determined from
+    the 'time_convs' dictionary and used to convert the secretion rate to minutes. The converted rate is then
+    converted to the main PhysiCell time unit, and finally to MCS units using the simulation time conversion factor.
+
+    Parameters
+    ----------
+    rate : float
+       The secretion rate value to be converted.
+    unit : str
+       The original units of the secretion rate value.
+    time_conv : float
+       Conversion factor from original simulation time units to minutes.
+    pctimeunit : str
+       The main PhysiCell time unit used in the simulation.
+    time_convs : dict, optional
+       Dictionary of conversion factors from other time units to minutes, by default _time_convs.
+
+    Returns
+    -------
+    float
+       The converted secretion rate value in MCS units.
+    str
+       A warning message with additional information about the conversion process.
+    """
     secretion_comment = ''
     if unit is None:
         mcs_rate = rate
