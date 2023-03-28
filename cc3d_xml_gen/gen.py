@@ -175,6 +175,31 @@ def make_cc3d_file(name=None):
 
 
 def make_contact_plugin(celltypes):
+    """
+    Create a contact plugin configuration XML for CompuCell3D simulations.
+
+    The function generates the configuration XML for the contact plugin used in a CompuCell3D simulation. The plugin
+    defines the energy associated with different types of cell-cell interactions (defaulted to 10) and with the
+    interaction between cells and the surrounding medium (defaulted to 10). The configuration XML is returned as a
+    string.
+
+    The function first creates all combinations of the given cell types using the combinations function from the
+    itertools module, and then appends the self-interactions (cell-cell interactions of the same type) to the list of
+    combinations. The list is then reversed, so that the self-interactions appear first.
+
+    The function then creates the configuration XML as a string, with 10 as the placeholder energy. The NeighborOrder
+    parameter is set to 3.
+
+    Parameters:
+    ----------
+        celltypes : list
+            A list of strings representing the cell types in the simulation.
+
+    Returns:
+    -------
+        contact_plug : str
+            A string containing the configuration for the contact plugin.
+    """
     # todo: replace ASAP with contact flex
 
     combs = list(combinations(celltypes, 2))
