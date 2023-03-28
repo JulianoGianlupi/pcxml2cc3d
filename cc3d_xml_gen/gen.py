@@ -234,6 +234,36 @@ def make_contact_plugin(celltypes):
 
 
 def make_diffusion_FE(diffusing_elements, celltypes, flag_2d):
+    """
+    Converts a dictionary of diffusion properties into a CC3D DiffusionSolverFE XML configuration string. T
+
+    This function generates an XML string that can be used to configure CC3D's DiffusionSolverFE. It takes three
+    arguments: diffusing_elements, celltypes, and flag_2d. diffusing_elements is a dictionary of the diffusing
+    elements, where each key is the name of the diffusing element and the corresponding value is another dictionary
+    containing the properties of that element, such as the diffusion constant and initial concentration. celltypes is a
+    list of the cell types, and flag_2d is a boolean indicating whether the simulation is in two dimensions or not.
+
+    The function loops through each diffusing element in the dictionary and generates a string with information about
+    the diffusion field, including its name, diffusion data (such as diffusion and decay constants), initial
+    concentration, and boundary conditions. It then concatenates these strings together to create the full XML string.
+
+    Parameters
+    ----------
+    diffusing_elements : dict
+        A dictionary of diffusion properties. Each key represents a diffusing element and contains a nested dictionary
+        with keys "D", "gamma", "concentration_units", "D_w_units", "D_og_unit", "gamma_w_units", "gamma_og_unit",
+        "use_steady_state", "initial_condition", "dirichlet", "dirichlet_value"
+    celltypes : list
+        A list of cell types.
+    flag_2d : bool
+        A boolean value indicating whether the simulation is in 2D or 3D.
+
+    Returns
+    -------
+    str
+        A string representation of the DiffusionSolverFE XML configuration file.
+
+    """
     header = f'\n\n\t<Steppable Type="DiffusionSolverFE">\n\t\t<!-- The conversion uses DiffusionSolverFE and' \
              f' SteadyStateDiffusionSolver ' \
              f'by default. You may ' \
