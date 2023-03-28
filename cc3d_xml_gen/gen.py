@@ -370,7 +370,36 @@ def make_diffusion_FE(diffusing_elements, celltypes, flag_2d):
     return full_str
 
 
-def make_diffusion_steady(diffusing_elements, celltypes, flag_2d):
+def make_diffusion_steady(diffusing_elements, flag_2d):
+    """
+    Creates a steady-state diffusion solver configuration for CC3D simulations based on the given diffusing elements.
+
+    This function generates an XML string that can be used to configure CC3D's steady state diffusion solver. It takes
+    two arguments: diffusing_elements and flag_2d. diffusing_elements is a dictionary of the diffusing
+    elements, where each key is the name of the diffusing element and the corresponding value is another dictionary
+    containing the properties of that element, such as the diffusion constant and initial concentration. flag_2d is a
+    boolean indicating whether the simulation is in two dimensions or not.
+
+    The function loops through each diffusing element in the dictionary and generates a string with information about
+    the diffusion field, including its name, diffusion data (such as diffusion and decay constants), initial
+    concentration, and boundary conditions. It then concatenates these strings together to create the full XML string.
+
+    Parameters
+    ----------
+    diffusing_elements : dict
+        diffusing_elements : dict
+        A dictionary of diffusion properties. Each key represents a diffusing element and contains a nested dictionary
+        with keys "D", "gamma", "concentration_units", "D_w_units", "D_og_unit", "gamma_w_units", "gamma_og_unit",
+        "use_steady_state", "initial_condition", "dirichlet", "dirichlet_value"
+
+    flag_2d : bool
+        A boolean indicating whether to use 2D or 3D solver.
+
+    Returns
+    -------
+    str
+        A string containing the configuration for the steady-state diffusion solver in CC3D simulations.
+    """
     if flag_2d:
         header = f'\n\n\t<Steppable Type="SteadyStateDiffusionSolver2D">\n\t\t<!-- The conversion uses ' \
                  f'DiffusionSolverFE and' \
@@ -487,6 +516,29 @@ def make_diffusion_plug(diffusing_elements, celltypes, flag_2d):
     ----------
     diffusing_elements : dict
         Dictionary of diffusing elements and their parameters
+        Each key in the dictionary represents a diffusing element and its value is a dictionary with the following keys:
+        - use_steady_state : bool
+            Whether or not to use steady-state diffusion solver for this element.
+        - concentration_units : str
+            The concentration units of this element.
+        - D_w_units : float
+            The diffusion constant with units of concentration^2/time.
+        - D_og_unit : str
+            The original unit of the diffusion constant.
+        - D : float
+            The diffusion constant without units.
+        - gamma_w_units : float
+            The decay constant with units of 1/time.
+        - gamma_og_unit : str
+            The original unit of the decay constant.
+        - gamma : float
+            The decay constant without units.
+        - initial_condition : str
+            The initial concentration expression for this element.
+        - dirichlet : bool
+            Whether or not to use Dirichlet boundary conditions for this element.
+        - dirichlet_value : float
+            The value of Dirichlet boundary condition for this element.
     celltypes : list
         List of cell types
     flag_2d : bool
@@ -499,7 +551,7 @@ def make_diffusion_plug(diffusing_elements, celltypes, flag_2d):
     """
     FE_solver = make_diffusion_FE(diffusing_elements, celltypes, flag_2d)
 
-    steady_state_solver = make_diffusion_steady(diffusing_elements, celltypes, flag_2d)
+    steady_state_solver = make_diffusion_steady(diffusing_elements, flag_2d)
 
     return FE_solver + steady_state_solver
 
