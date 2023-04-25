@@ -105,9 +105,6 @@ def make_cell_type_tags(pcdict):
     s = ''
     cell_types = []
     idx = 1
-
-    # volumes = {}
-
     for child in pcdict['cell_definitions']['cell_definition']:
         # print(child.tag, child.attrib, child.text)
         name = child['@name'].replace(" ", "_")
@@ -543,7 +540,7 @@ def reconvert_spatial_parameters_with_minimum_cell_volume(constraints, ccdims, p
     return ccdims, constraints
 
 
-def decrease_domain(ccdims, max_volume=500 ** 3):
+def decrease_domain(ccdims, max_volume=150 ** 3):
     """
     Decrease the size of a 3D domain if its volume exceeds a maximum value.
 

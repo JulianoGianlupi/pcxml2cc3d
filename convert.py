@@ -277,12 +277,12 @@ def main(path_to_xml, out_directory=None):
     return
 
 
-parser = argparse.ArgumentParser(description="Converts a Physicell XML file into CompuCell3D .cc3d, .xml, main.py, and"
-                                             "steppables.py simulation configuration files.")
-parser.add_argument("input", type=str, help="Path to your input PhysiCell XML configuration file")
-parser.add_argument("-o", "--output", help="(optional) output path for the converted files",
-                    default=None)
-args = parser.parse_args()
-main(args.input, out_directory=args.output)
+# parser = argparse.ArgumentParser(description="Converts a Physicell XML file into CompuCell3D .cc3d, .xml, main.py, and"
+#                                              "steppables.py simulation configuration files.")
+# parser.add_argument("input", type=str, help="Path to your input PhysiCell XML configuration file")
+# parser.add_argument("-o", "--output", help="(optional) output path for the converted files",
+#                     default=None)
+# args = parser.parse_args()
+# main(args.input, out_directory=args.output)
 
-# main("example_pcxml/annotated_cancer_immune3D_flat.xml")
+main("example_pcxml/annotated_cancer_immune3D_flat.xml")
