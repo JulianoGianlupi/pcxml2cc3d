@@ -136,7 +136,7 @@ def default_initial_cell_config(celltypes, xmax, ymax, zmax):
     return steppable_string
 
 
-def main(path_to_xml, out_directory=None):
+def main(path_to_xml, out_directory=None, minimum_volume=8, max_volume=150 ** 3):
     """
     Converts a PhysiCell simulation XML into a CompuCell3D simulation folder
 
@@ -145,10 +145,20 @@ def main(path_to_xml, out_directory=None):
     places the converted simulation there, if no output path is given the converted simulation will be placed in the
     same directory as the original PhysiCell XML.
 
+    :param max_volume:
+    :type max_volume:
+    :param minimum_volume:
+    :type minimum_volume:
     :param path_to_xml: string for the path to the PhysiCell XML simulation file
     :param out_directory: string path to the output folder
     :return: None
     """
+
+    if minimum_volume is None:
+        minimum_volume = 8
+
+    if max_volume is None:
+        max_volume = 150 ** 3
 
     read_before_run = "******************************************************************************************\n" \
                       "PLEASE READ BEFORE RUNNING:\n" \
@@ -214,7 +224,7 @@ def main(path_to_xml, out_directory=None):
 
     print("Detecting if the cells are too small or the simulation is too big")
     constraints, any_below, pixel_volumes, minimum_volume = \
-        get_cell_constraints(pcdict, ccdims[4], minimum_volume=8)
+        get_cell_constraints(pcdict, ccdims[4], minimum_volume=minimum_volume)
     old_cons = constraints
     old_ccdims = ccdims
     if any_below:
@@ -223,7 +233,7 @@ def main(path_to_xml, out_directory=None):
     else:
         constraints = reconvert_cell_volume_constraints(constraints, 1, minimum_volume)
 
-    ccdims, was_above = decrease_domain(ccdims)
+    ccdims, was_above = decrease_domain(ccdims, max_volume=max_volume)
 
 
     print("parsing micro environment")
@@ -297,9 +307,13 @@ def main(path_to_xml, out_directory=None):
 parser = argparse.ArgumentParser(description="Converts a Physicell XML file into CompuCell3D .cc3d, .xml, main.py, and"
                                              "steppables.py simulation configuration files.")
 parser.add_argument("input", type=str, help="Path to your input PhysiCell XML configuration file")
+parser.add_argument("-c", "--cellvolume", type=int, help="(optional) minimum volume the converted cells are allowed to "
+                                                         "have (in pixels)", default=None)
+parser.add_argument("-v", "--simulationvolume", type=int, help="(optional) maximum volume the CC3D simulation can have",
+                    default=None)
 parser.add_argument("-o", "--output", help="(optional) output path for the converted files",
                     default=None)
 args = parser.parse_args()
-main(args.input, out_directory=args.output)
+main(args.input, out_directory=args.output, minimum_volume=args.cellvolume, max_volume=args.simulationvolume)
 
 # main("example_pcxml/annotated_cancer_immune3D_flat.xml")
