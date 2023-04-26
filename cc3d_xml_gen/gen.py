@@ -575,12 +575,13 @@ def make_cell_dict(cell_types, secretion_dict):
 
 def reconvert_cc3d_dims(ccdims, ratio):
     """
-    Convert the number of pixels in each dimension of a 3D image based on a given ratio.
+    Convert the number of pixels in each dimension of a 3D domain based on a given ratio.
 
     Parameters:
     -----------
         ccdims : tuple
-            A tuple containing the number of pixels in each dimension of a 3D image, the pixel -- real unit relationship,
+            A tuple containing the number of pixels in each dimension of a 3D domain, the pixel --
+            real unit relationship,
             and the pixel -- real unit ratio.
 
         ratio : int
@@ -610,9 +611,6 @@ def reconvert_cc3d_dims(ccdims, ratio):
 
 def reconvert_cell_volume_constraints(con_dict, ratio, minimum_volume):
     """
-    Converts the volume constraints in `con_dict` to the new voxel size
-    given by `ratio`, and replaces any None values with the `minimum_volume`.
-
     Parameters
     ----------
     con_dict : dict
@@ -737,7 +735,8 @@ def decrease_domain(ccdims, max_volume=150 ** 3):
         proportions = [d / med_s for d in old_dims]
         new_dims = [int(default_side * p) for p in proportions]
     new_dims.extend([ccdims[3], ccdims[4], ccdims[5]])
-    message = "WARNING: Converted dimensions of simulation domain totaled > 500**3 pixels. \nWe have truncated " \
+    message = f"WARNING: Converted dimensions of simulation domain totaled > {default_side}**3 pixels. \nWe have " \
+              f"truncated " \
               f"the sides of the simulation.This may break the initial conditions as defined in " \
               f"PhysiCell.\nOld dimensions:{ccdims[0:3]}\nNew dimensions:{new_dims[0:3]}"
     warnings.warn(message)
