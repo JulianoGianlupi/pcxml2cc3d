@@ -810,8 +810,8 @@ def reconvert_time_parameter(d_elements, cctime, max_D=50):
                                                 f'{d_elements[key]["D_conv_factor"]} ' + \
                                                 d_elements[key]["D_conv_factor_text"].split(" ")[-1]
 
-        d_elements[key]["gamma"] /= reduction_proportion
-        d_elements[key]["gamma_conv_factor"] /= reduction_proportion
+        d_elements[key]["gamma"] *= reduction_proportion
+        d_elements[key]["gamma_conv_factor"] *= reduction_proportion
         d_elements[key]["gamma_conv_factor_text"] = d_elements[key]["gamma_conv_factor_text"].split("=")[0] + " = " + \
                                                     f'{d_elements[key]["gamma_conv_factor"]} ' + \
                                                     d_elements[key]["gamma_conv_factor_text"].split(" ")[-1]
@@ -824,8 +824,8 @@ def reconvert_time_parameter(d_elements, cctime, max_D=50):
     reduction_proportion = max(new_gammas)
 
     for key in d_elements.keys():
-        d_elements[key]["D"] *= reduction_proportion
-        d_elements[key]["D_conv_factor"] *= reduction_proportion
+        d_elements[key]["D"] /= reduction_proportion
+        d_elements[key]["D_conv_factor"] /= reduction_proportion
         d_elements[key]["D_conv_factor_text"] = d_elements[key]["D_conv_factor_text"].split("=")[0] + " = " + \
                                                 f'{d_elements[key]["D_conv_factor"]} ' + \
                                                 d_elements[key]["D_conv_factor_text"].split(" ")[-1]
