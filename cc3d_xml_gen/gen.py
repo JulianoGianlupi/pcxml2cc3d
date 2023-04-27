@@ -798,10 +798,10 @@ def reconvert_time_parameter(d_elements, cctime, max_D=50):
     reduction_proportion = round(0.9 * max_D / max_old_D, 2)
     # reduction_proportion = float(f"{max_D / max_old_D:.3f}")
 
-    new_cctime = [min(int(cctime[0] / reduction_proportion), 10 ** 9),
-                  f'1 MCS = {cctime[2] * reduction_proportion} {cctime[1].split(" ")[-1]}',
-                  cctime[2] * reduction_proportion,
-                  cctime[3]]
+    # new_cctime = [min(int(cctime[0] / reduction_proportion), 10 ** 9),
+    #               f'1 MCS = {cctime[2] * reduction_proportion} {cctime[1].split(" ")[-1]}',
+    #               cctime[2] * reduction_proportion,
+    #               cctime[3]]
     new_gammas = []
     for key in d_elements.keys():
         d_elements[key]["D"] *= reduction_proportion
@@ -819,8 +819,13 @@ def reconvert_time_parameter(d_elements, cctime, max_D=50):
         new_gammas.append(d_elements[key]["gamma"])
 
     if max(new_gammas) < 1:
+        new_cctime = [min(int(cctime[0] / reduction_proportion), 10 ** 9),
+                      f'1 MCS = {cctime[2] * reduction_proportion} {cctime[1].split(" ")[-1]}',
+                      cctime[2] * reduction_proportion,
+                      cctime[3]]
         return d_elements, new_cctime
 
+    old_reduction_proportion = reduction_proportion
     reduction_proportion = max(new_gammas)
 
     for key in d_elements.keys():
@@ -835,5 +840,10 @@ def reconvert_time_parameter(d_elements, cctime, max_D=50):
         d_elements[key]["gamma_conv_factor_text"] = d_elements[key]["gamma_conv_factor_text"].split("=")[0] + " = " + \
                                                     f'{d_elements[key]["gamma_conv_factor"]} ' + \
                                                     d_elements[key]["gamma_conv_factor_text"].split(" ")[-1]
+
+    new_cctime = [min(int(cctime[0] * reduction_proportion / old_reduction_proportion), 10 ** 9),
+                  f'1 MCS = {cctime[2] * old_reduction_proportion / reduction_proportion} {cctime[1].split(" ")[-1]}',
+                  cctime[2] * reduction_proportion,
+                  cctime[3]]
 
     return d_elements, new_cctime
