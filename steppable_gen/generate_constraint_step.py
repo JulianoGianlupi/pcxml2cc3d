@@ -45,7 +45,7 @@ def cell_type_constraint(ctype, this_type_dicts):
     full = loop
     for cell_dict in this_type_dicts:
         for key, value in cell_dict.items():
-            if key == "phenotypes":
+            if key == "phenotypes" and bool(cell_dict["phenotypes"]):
                 line = "\t\t\tif pcp_imp:\n"
                 line += f"\t\t\t\tcell.dict['{key}']=self.phenotypes['{ctype}']\n"
                 line += f"\t\t\t\tcell.dict['current_phenotype'] = cell.dict['{key}']" \
