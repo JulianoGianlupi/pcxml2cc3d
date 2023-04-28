@@ -114,9 +114,12 @@ def default_initial_cell_config(celltypes, xmax, ymax, zmax):
 \t<!-- you are responsible for analysing the initialization of the original -->
 \t<!-- model and reimplement it accordingly -->
 \t<Region>\n'''
-
-    box_min = f'\t\t<BoxMin x="{10}" y="{10}" z="{10}"/>\n'
-    box_max = f'\t\t<BoxMax x="{xmax - 10}" y="{ymax - 10}" z="{zmax - 10}"/>\n'
+    if zmax != 1 and zmax != 0:
+        box_min = f'\t\t<BoxMin x="{10}" y="{10}" z="{10}"/>\n'
+        box_max = f'\t\t<BoxMax x="{xmax - 10}" y="{ymax - 10}" z="{zmax - 10}"/>\n'
+    else:
+        box_min = f'\t\t<BoxMin x="{10}" y="{10}" z="{0}"/>\n'
+        box_max = f'\t\t<BoxMax x="{xmax - 10}" y="{ymax - 10}" z="{1}"/>\n'
 
     gap = "\t\t<Gap>0</Gap>\n\t\t<Width>7</Width>\n"
 
