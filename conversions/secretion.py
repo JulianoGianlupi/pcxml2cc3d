@@ -164,7 +164,7 @@ def convert_net_secretion(rate, unit, time_conv, pctimeunit, time_convs=_time_co
             return mcs_rate, net_comment
 
 
-def convert_secretion_data(sec_dict, time_conv, pctimeunit):
+def convert_secretion_uptake_data(sec_dict, time_conv, pctimeunit):
     """
     Convert secretion data from PhysiCell to CompuCell3D format.
 
@@ -202,18 +202,29 @@ def convert_secretion_data(sec_dict, time_conv, pctimeunit):
                      ' that would be uptaken is larger than the value at that pixel,\n# the uptake will be a set ratio ' \
                      'of the amount available.\n# The conversion program uses 1 as the ratio,\n# you may want to ' \
                      'revisit this.'
+
+    # secretion in physicell is
+    # secretion rate * (target amount - amount at cell) + net secretion
+    # looking at units that is correct:
+    # < secretion_rate units = "1/min" > 0 < / secretion_rate >
+    # < secretion_target units = "substrate density" > 1 < / secretion_target >
+    # < uptake_rate units = "1/min" > 0 < / uptake_rate >
+    # < net_export_rate units = "total substrate/min" > 0 < / net_export_rate >
+
     for ctype in sec_dict.keys():
         type_sec = sec_dict[ctype]
         new_type_sec = type_sec
         for field, data in type_sec.items():
-            unit = data['secretion_unit']
+            unit = data['secretion_unit'] if 'secretion_unit' in data.keys() else None
 
             mcs_secretion_rate, extra_sec_comment = convert_secretion_rate(data['secretion_rate'], unit, time_conv,
                                                                            pctimeunit)
             data['secretion_rate_MCS'] = mcs_secretion_rate
             data['secretion_comment'] = secretion_comment + extra_sec_comment
 
-            unit = data['net_export_unit']
+            # data["secretion_target"] = get_secretion_target()
+
+            unit = data['net_export_unit'] if 'net_export_unit' in data.keys() else None
 
             mcs_net_secretion_rate, extra_net_sec_comment = convert_net_secretion(data['net_export'], unit, time_conv,
                                                                                   pctimeunit)
@@ -225,7 +236,10 @@ def convert_secretion_data(sec_dict, time_conv, pctimeunit):
 
             data['uptake_rate_MCS'] = mcs_uptake_rate
             data['uptake_comment'] = uptake_comment + extra_up_comment
-
+            if "secretion_target" not in data.keys():
+                data["secretion_target"] = 0
             new_type_sec[field] = data
+
         new_sec_dict[ctype] = new_type_sec
+
     return new_sec_dict

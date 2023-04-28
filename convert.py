@@ -19,9 +19,9 @@ from cc3d_xml_gen.gen import make_potts, make_metadata, make_cell_type_plugin, m
     make_contact_plugin, make_diffusion_plug, reconvert_spatial_parameters_with_minimum_cell_volume, make_secretion, \
     reconvert_cell_volume_constraints, decrease_domain, reconvert_time_parameter
 
-from cc3d_xml_gen.get_physicell_data import get_cell_constraints, get_secretion, get_microenvironment, get_dims, \
+from cc3d_xml_gen.get_physicell_data import get_cell_constraints, get_secretion_uptake, get_microenvironment, get_dims, \
     get_time
-from conversions.secretion import convert_secretion_data
+from conversions.secretion import convert_secretion_uptake_data
 
 try:
     from autopep8 import fix_code
@@ -258,9 +258,9 @@ def main(path_to_xml, out_directory=None, minimum_volume=8, max_volume=150 ** 3)
     diffusion_string = make_diffusion_plug(d_elements, cell_types, False)
 
     print("Parsing secretion data")
-    secretion_dict = get_secretion(pcdict)
+    secretion_uptake_dict = get_secretion_uptake(pcdict)
 
-    conv_sec = convert_secretion_data(secretion_dict, cctime[2], pctime[1])
+    conv_sec = convert_secretion_uptake_data(secretion_uptake_dict, cctime[2], pctime[1])
 
     print("Generating constraint steppable")
     constraint_step = steppable_gen.generate_constraint_steppable(cell_types, [constraints,
@@ -268,9 +268,9 @@ def main(path_to_xml, out_directory=None, minimum_volume=8, max_volume=150 ** 3)
                                                                   user_data=pcdict["user_parameters"])
 
     print("Generating secretion steppable")
-    secretion_step = steppable_gen.generate_secretion_step(cell_types, secretion_dict)
+    secretion_step = steppable_gen.generate_secretion_uptake_step(cell_types, secretion_uptake_dict)
 
-    secretion_plug = make_secretion(secretion_dict)
+    secretion_plug = make_secretion(secretion_uptake_dict)
 
     print("Generating phenotype steppable")
     pheno_step = steppable_gen.generate_phenotype_steppable(cell_types, [constraints,
@@ -304,16 +304,18 @@ def main(path_to_xml, out_directory=None, minimum_volume=8, max_volume=150 ** 3)
     return
 
 
-parser = argparse.ArgumentParser(description="Converts a Physicell XML file into CompuCell3D .cc3d, .xml, main.py, and"
-                                             "steppables.py simulation configuration files.")
-parser.add_argument("input", type=str, help="Path to your input PhysiCell XML configuration file")
-parser.add_argument("-c", "--cellvolume", type=int, help="(optional) minimum volume the converted cells are allowed to "
-                                                         "have (in pixels)", default=None)
-parser.add_argument("-v", "--simulationvolume", type=int, help="(optional) maximum volume the CC3D simulation can have",
-                    default=None)
-parser.add_argument("-o", "--output", help="(optional) output path for the converted files",
-                    default=None)
-args = parser.parse_args()
-main(args.input, out_directory=args.output, minimum_volume=args.cellvolume, max_volume=args.simulationvolume)
+# parser = argparse.ArgumentParser(description="Converts a Physicell XML file into CompuCell3D .cc3d, .xml, main.py, and"
+#                                              "steppables.py simulation configuration files.")
+# parser.add_argument("input", type=str, help="Path to your input PhysiCell XML configuration file")
+# parser.add_argument("-c", "--cellvolume", type=int, help="(optional) minimum volume the converted cells are allowed to "
+#                                                          "have (in pixels)", default=None)
+# parser.add_argument("-v", "--simulationvolume", type=int, help="(optional) maximum volume the CC3D simulation can have",
+#                     default=None)
+# parser.add_argument("-o", "--output", help="(optional) output path for the converted files",
+#                     default=None)
+# args = parser.parse_args()
+# main(args.input, out_directory=args.output, minimum_volume=args.cellvolume, max_volume=args.simulationvolume)
 
 # main("example_pcxml/annotated_cancer_immune3D_flat.xml")
+# main(r"C:\github\pcxml2cc3d\PhysiCell\sample_projects\biorobots\config\PhysiCell_settings.xml")
+main(r"example_pcxml/biorobots_flat.xml")
