@@ -760,7 +760,7 @@ def get_space_time_from_diffusion(unit):
     return spaceunit, timeunit
 
 
-def get_secretion(pcdict):
+def get_secretion_uptake(pcdict):
     """
     Extracts secretion data from the input pcdict (PhysiCell XML parsed into a dictionary) and returns the extracted
     data as a dictionary.
@@ -768,12 +768,12 @@ def get_secretion(pcdict):
     get_secretion takes a single argument, pcdict, which is a Python dictionary created from converting a PhysiCell XML
     into a dictionary.
 
-    The function initializes an empty dictionary sec_data, which will store the parsed secretion data. The code loops
+    The function initializes an empty dictionary sec_up_data, which will store the parsed secretion data. The code loops
     through the children of pcdict['cell_definitions']['cell_definition'] and checks if the child has the key
     'secretion' in its 'phenotype' dictionary. If not, the loop goes to the next child.
 
     For each child that has the 'secretion' key, the code extracts the child cell type as ctype. It then initializes a
-    dictionary sec_data[ctype] to store secretion data for this cell type.
+    dictionary sec_up_data[ctype] to store secretion data for this cell type.
 
     The code then extracts a list of substrates and their secretion data for the given cell type and diffusing element.
     It stores this data in `sec_list` (`sec_list = child['phenotype']['secretion']['substrate']`).
@@ -785,9 +785,9 @@ def get_secretion(pcdict):
     floats if they exist, and default to 0 if they do not. The code also extracts the units for each of these values,
     which are stored as strings.
 
-    All of this data is then stored in the sec_data dictionary for the given child type and substrate.
+    All of this data is then stored in the sec_up_data dictionary for the given child type and substrate.
 
-    Once all children with 'secretion' keys have been processed, the sec_data dictionary is returned.
+    Once all children with 'secretion' keys have been processed, the sec_up_data dictionary is returned.
 
     Parameters
     ----------
@@ -800,50 +800,50 @@ def get_secretion(pcdict):
         A dictionary containing secretion data for each cell type and substrate.
     """
 
-    sec_data = {}
+    sec_up_data = {}
     for child in pcdict['cell_definitions']['cell_definition']:
         if 'secretion' not in child['phenotype'].keys():
             continue
         ctype = child['@name'].replace(" ", "_")
-        sec_data[ctype] = {}
+        sec_up_data[ctype] = {}
         sec_list = child['phenotype']['secretion']['substrate']
         if type(sec_list) == list:
             for sec in sec_list:
                 substrate = sec["@name"].replace(" ", "_")
-                sec_data[ctype][substrate] = {}
-                sec_data[ctype][substrate]['secretion_rate'] = float(
+                sec_up_data[ctype][substrate] = {}
+                sec_up_data[ctype][substrate]['secretion_rate'] = float(
                     sec['secretion_rate']['#text']) if 'secretion_rate' in sec.keys() else 0
-                sec_data[ctype][substrate]['secretion_unit'] = sec['secretion_rate'][
+                sec_up_data[ctype][substrate]['secretion_unit'] = sec['secretion_rate'][
                     '@units'] if 'secretion_rate' in sec.keys() else "None"
-                sec_data[ctype][substrate]['secretion_target'] = float(
+                sec_up_data[ctype][substrate]['secretion_target'] = float(
                     sec['secretion_target']['#text']) if 'secretion_target' in sec.keys() else 0
-                sec_data[ctype][substrate]['uptake_rate'] = float(
+                sec_up_data[ctype][substrate]['uptake_rate'] = float(
                     sec['uptake_rate']['#text']) if 'uptake_rate' in sec.keys() else 0
-                sec_data[ctype][substrate]['uptake_unit'] = sec['uptake_rate'][
+                sec_up_data[ctype][substrate]['uptake_unit'] = sec['uptake_rate'][
                     '@units'] if 'uptake_rate' in sec.keys() else "None"
-                sec_data[ctype][substrate]['net_export'] = float(
+                sec_up_data[ctype][substrate]['net_export'] = float(
                     sec['net_export_rate']['#text']) if 'net_export_rate' in sec.keys() else 0
-                sec_data[ctype][substrate]['net_export_unit'] = sec['net_export_rate'][
+                sec_up_data[ctype][substrate]['net_export_unit'] = sec['net_export_rate'][
                     '@units'] if 'net_export_rate' in sec.keys() else "None"
         else:
             sec = sec_list
             substrate = sec["@name"].replace(" ", "_")
-            sec_data[ctype][substrate] = {}
-            sec_data[ctype][substrate]['secretion_rate'] = float(
+            sec_up_data[ctype][substrate] = {}
+            sec_up_data[ctype][substrate]['secretion_rate'] = float(
                 sec['secretion_rate']['#text']) if 'secretion_rate' in sec.keys() else 0
-            sec_data[ctype][substrate]['secretion_unit'] = sec['secretion_rate'][
+            sec_up_data[ctype][substrate]['secretion_unit'] = sec['secretion_rate'][
                 '@units'] if 'secretion_rate' in sec.keys() else "None"
-            sec_data[ctype][substrate]['secretion_target'] = float(
+            sec_up_data[ctype][substrate]['secretion_target'] = float(
                 sec['secretion_target']['#text']) if 'secretion_target' in sec.keys() else 0
-            sec_data[ctype][substrate]['uptake_rate'] = float(
+            sec_up_data[ctype][substrate]['uptake_rate'] = float(
                 sec['uptake_rate']['#text']) if 'uptake_rate' in sec.keys() else 0
-            sec_data[ctype][substrate]['uptake_unit'] = sec['uptake_rate'][
+            sec_up_data[ctype][substrate]['uptake_unit'] = sec['uptake_rate'][
                 '@units'] if 'uptake_rate' in sec.keys() else "None"
-            sec_data[ctype][substrate]['net_export'] = float(
+            sec_up_data[ctype][substrate]['net_export'] = float(
                 sec['net_export_rate']['#text']) if 'net_export_rate' in sec.keys() else 0
-            sec_data[ctype][substrate]['net_export_unit'] = sec['net_export_rate'][
+            sec_up_data[ctype][substrate]['net_export_unit'] = sec['net_export_rate'][
                 '@units'] if 'net_export_rate' in sec.keys() else "None"
-    return sec_data
+    return sec_up_data
 
 
 def get_microenvironment(pcdict, space_factor, space_unit, time_factor, time_unit, autoconvert_time=True,

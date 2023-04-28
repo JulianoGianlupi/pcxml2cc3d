@@ -48,10 +48,13 @@ def make_secretion_loop(ctype, comment):
                     "at the surface. You should explore the options\n"
     secrete = "\t\t\t\t\tsecretor.secreteInsideCell(cell, net_secretion)\n"
 
-    return loop + check_field + seen + comment + secrete_rate + where_secrete + secrete
+    uptake = "\t\t\t\t\tsecretor.uptakeInsideCell(cell, 1e10, data['uptake_rate'])\n"
+    #secretor.uptakeInsideCell(cell, 2.0, 0.2)
+
+    return loop + check_field + seen + comment + secrete_rate + where_secrete + secrete + uptake
 
 
-def make_secretion_loops(cell_types, sec_dict, secretors, field_names):
+def make_secretion_uptake_loops(cell_types, sec_dict, secretors, field_names):
     secretor_loop = "\t\tfor field_name, secretor in self.secretors.items():\n"
 
     loops = ""
@@ -63,7 +66,7 @@ def make_secretion_loops(cell_types, sec_dict, secretors, field_names):
     return secretor_loop + loops
 
 
-def generate_secretion_step(cell_types, sec_dict, secretion_dt=None, first=False):
+def generate_secretion_uptake_step(cell_types, sec_dict, secretion_dt=None, first=False):
     if not sec_dict:
         message = "WARNING: no secretion data found\n"
         warnings.warn(message)
@@ -85,7 +88,7 @@ def generate_secretion_step(cell_types, sec_dict, secretion_dt=None, first=False
 
     secretors = make_secretors(field_names)
 
-    loops = make_secretion_loops(cell_types, sec_dict, secretors, field_names)
+    loops = make_secretion_uptake_loops(cell_types, sec_dict, secretors, field_names)
 
     sec_step = generate_steppable("Secretion", secretion_dt, False, already_imports=already_imports,
                                   additional_start=secretors, additional_step=loops)
@@ -124,7 +127,7 @@ if __name__ == "__main__":
                                          'uptake_rate_MCS': 0.0,
                                          'uptake_comment': '#WARNING: To avoid negative concentrations, in CompuCell3D uptake is "bounded." \n# If the amount that would be uptaken is larger than the value at that pixel,\n# the uptake will be a set ratio of the amount available.\n# The conversion program uses 1 as the ratio,\n# you may want to revisit this.'}}}
 
-    sec_step = generate_secretion_step(['cancer_cell', 'immune_cell'], sdict, first=True)
+    sec_step = generate_secretion_uptake_step(['cancer_cell', 'immune_cell'], sdict, first=True)
 
     # fields = get_field_names(sdict)
     # secretors = make_secretors(fields)

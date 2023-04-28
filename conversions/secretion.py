@@ -164,7 +164,7 @@ def convert_net_secretion(rate, unit, time_conv, pctimeunit, time_convs=_time_co
             return mcs_rate, net_comment
 
 
-def convert_secretion_data(sec_dict, time_conv, pctimeunit):
+def convert_secretion_uptake_data(sec_dict, time_conv, pctimeunit):
     """
     Convert secretion data from PhysiCell to CompuCell3D format.
 
