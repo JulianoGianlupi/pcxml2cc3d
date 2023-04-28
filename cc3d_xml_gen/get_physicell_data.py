@@ -44,8 +44,9 @@ def get_dims(pcdict, space_convs=_space_convs):
     :param space_convs: Dictionary of predefined space units
     :return pcdims, ccdims: Two tuples representing the dimension data from PhysiCell and in CC3D.
           ((xmin, xmax), (ymin, ymax), (zmin, zmax), units), and
-          (cc3dx, cc3dy, cc3dz, cc3dspaceunitstr, cc3dds, autoconvert_space)
+          (cc3dx, cc3dy, cc3dz, cc3dspaceunitstr, cc3dds, autoconvert_space, is_2D)
     """
+    is_2D = True if pcdict['domain']['use_2D'].upper() == 'TRUE' else False
     xmin = float(pcdict['domain']['x_min']) if "x_min" in pcdict['domain'].keys() else None
     xmax = float(pcdict['domain']['x_max']) if "x_max" in pcdict['domain'].keys() else None
 
@@ -87,7 +88,7 @@ def get_dims(pcdict, space_convs=_space_convs):
 
     cc3dx = round(diffx / ds)
     cc3dy = round(diffy / ds)
-    cc3dz = round(diffz / ds)
+    cc3dz = round(diffz / ds) if not is_2D else 1
 
     cc3dds = cc3dx / diffx  # pixel/unit
 
@@ -97,7 +98,7 @@ def get_dims(pcdict, space_convs=_space_convs):
     cc3dspaceunitstr = f"1 pixel = {cc3dds} {units}"
 
     pcdims, ccdims = ((xmin, xmax), (ymin, ymax), (zmin, zmax), units), \
-                     (cc3dx, cc3dy, cc3dz, cc3dspaceunitstr, cc3dds, autoconvert_space)
+                     (cc3dx, cc3dy, cc3dz, cc3dspaceunitstr, cc3dds, autoconvert_space, is_2D)
 
     return pcdims, ccdims
 

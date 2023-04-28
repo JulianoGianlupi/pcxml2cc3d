@@ -573,7 +573,7 @@ def make_cell_dict(cell_types, secretion_dict):
             type_sec = None
 
 
-def reconvert_cc3d_dims(ccdims, ratio):
+def reconvert_cc3d_dims(ccdims, ratio, is_2D):
     """
     Convert the number of pixels in each dimension of a 3D domain based on a given ratio.
 
@@ -591,21 +591,27 @@ def reconvert_cc3d_dims(ccdims, ratio):
     --------
         tuple: A new tuple containing the updated number of pixels in each dimension,
               the updated pixel -- real unit relationship, and the updated pixel -- real unit ratio.
+              :param is_2D:
+              :type is_2D:
     """
     # ccdims is a tupple of: int x pixels, int y pixels, int z pixels,
     # string showing the pixel -- real unit relationship, the pixel -- real unit ratio
 
     ccdims = list(ccdims)
 
-    number_pixels = [ratio * ccdims[0], ratio * ccdims[1], ratio * ccdims[2]]
+    if not is_2D:
+        number_pixels = [ratio * ccdims[0], ratio * ccdims[1], ratio * ccdims[2]]
+    else:
+        number_pixels = [ratio * ccdims[0], ratio * ccdims[1], 1]
 
-    old_pixel_unit_ratio = ccdims[-2]
+    old_pixel_unit_ratio = ccdims[4]
 
     # pixel` = ratio*pixel = ratio * conv * unit
     new_pixel_unit_ratio = ratio * old_pixel_unit_ratio
 
     new_string = ccdims[3].replace(str(old_pixel_unit_ratio), str(new_pixel_unit_ratio))
-    new_ccdims = (number_pixels[0], number_pixels[1], number_pixels[2], new_string, new_pixel_unit_ratio, ccdims[-1])
+    new_ccdims = (number_pixels[0], number_pixels[1], number_pixels[2], new_string, new_pixel_unit_ratio, ccdims[-1],
+                  is_2D)
     return new_ccdims
 
 
@@ -671,12 +677,13 @@ def reconvert_spatial_parameters_with_minimum_cell_volume(constraints, ccdims, p
     Returns:
         - Tuple[Tuple, Dict]: A tuple containing the converted `ccdims` and `constraints`.
     """
+    is_2D = ccdims[6]
     px_vols = [px for px in pixel_volumes if px is not None]
     minimum_converted_volume = min(px_vols)
 
     reconvert_ratio = ceil(minimum_volume / minimum_converted_volume)
 
-    ccdims = reconvert_cc3d_dims(ccdims, reconvert_ratio)
+    ccdims = reconvert_cc3d_dims(ccdims, reconvert_ratio, is_2D)
 
     constraints = reconvert_cell_volume_constraints(constraints, reconvert_ratio, minimum_volume)
 
@@ -722,20 +729,29 @@ def decrease_domain(ccdims, max_volume=150 ** 3):
         truncated : bool
             indicates whether the domain was truncated. If True, a warning message is issued.
     """
-    default_side = round(max_volume ** (1 / 3))
+    is_2D = ccdims[6]
+    default_side = round(max_volume ** (1 / 3)) if not is_2D else round(max_volume ** (1 / 2))
     old_dims = [ccdims[0], ccdims[1], ccdims[2]]
     old_volume = ccdims[0] * ccdims[1] * ccdims[2]
     if old_volume < max_volume:
         return ccdims, False
     # new_dims = ccdims
-    if old_dims[0] == old_dims[1] == old_dims[2]:
+    if is_2D and old_dims[0] == old_dims[1]:
+        new_dims = [default_side, default_side, 1]
+    elif old_dims[0] == old_dims[1] == old_dims[2]:
         new_dims = [default_side, default_side, default_side]
     else:
         med_s = sum(old_dims) / len(old_dims)
-        proportions = [d / med_s for d in old_dims]
-        new_dims = [int(default_side * p) for p in proportions]
-    new_dims.extend([ccdims[3], ccdims[4], ccdims[5]])
-    message = f"WARNING: Converted dimensions of simulation domain totaled > {default_side}**3 pixels. \nWe have " \
+        if not is_2D:
+            proportions = [d / med_s for d in old_dims]
+            new_dims = [int(default_side * p) for p in proportions]
+        else:
+            proportions = [d / med_s for d in old_dims[:-1]]
+            new_dims = [int(default_side * p) for p in proportions]
+            new_dims.append(1)
+    new_dims.extend([ccdims[3], ccdims[4], ccdims[5], ccdims[6]])
+    message = f"WARNING: Converted dimensions of simulation domain totaled > {round(max_volume ** (1 / 3))}**3 pixels." \
+              f" \nWe have " \
               f"truncated " \
               f"the sides of the simulation.This may break the initial conditions as defined in " \
               f"PhysiCell.\nOld dimensions:{ccdims[0:3]}\nNew dimensions:{new_dims[0:3]}"
