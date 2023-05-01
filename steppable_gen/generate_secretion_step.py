@@ -90,7 +90,7 @@ def generate_secretion_uptake_step(cell_types, sec_dict, secretion_dt=None, firs
 
     loops = make_secretion_uptake_loops(cell_types, sec_dict, secretors, field_names)
 
-    sec_step = generate_steppable("Secretion", secretion_dt, False, already_imports=already_imports,
+    sec_step = generate_steppable("SecretionUptake", secretion_dt, False, already_imports=already_imports,
                                   additional_start=secretors, additional_step=loops)
 
     return sec_step
