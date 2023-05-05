@@ -355,7 +355,7 @@ def make_diffusion_FE(diffusing_elements, celltypes, flag_2d):
                            f'"0"/>\n\t\t\t\t\t<ConstantDerivative PlanePosition="Max" Value=' \
                            f'"0"/>\n\t\t\t\t\t<!-- Other options are (examples): -->\n\t\t\t\t\t' \
                            f'<!--<ConstantDerivative PlanePosition="Min" Value="10.0"/> -->\n\t\t\t\t\t<!--' \
-                           f'<ConstantDerivative PlanePosition="Max" Value="10.0"/> -->\n\t\t\t\t\t<!--<Periodic/>-->' \
+                           f'<ConstantDerivative PlanePosition="Max" Value="0.0"/> -->\n\t\t\t\t\t<!--<Periodic/>-->' \
                            '\t\t\t\t</Plane>\n'
         close_bc = "</BoundaryConditions>\n"
         close_field = "</DiffusionField>\n"
