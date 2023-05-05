@@ -261,7 +261,7 @@ def main(path_to_xml, out_directory=None, minimum_volume=8, max_volume=150 ** 3)
     intializer_step = default_initial_cell_config(cell_types, ccdims[0], ccdims[1], ccdims[2])
 
     print("Generating diffusion plugin")
-    diffusion_string = make_diffusion_plug(d_elements, cell_types, False)
+    diffusion_string = make_diffusion_plug(d_elements, cell_types, ccdims[6])
 
     print("Parsing secretion data")
     secretion_uptake_dict = get_secretion_uptake(pcdict)
