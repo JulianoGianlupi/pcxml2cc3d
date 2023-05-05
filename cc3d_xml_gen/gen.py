@@ -508,8 +508,10 @@ def determine_diffusion_existence(diffusing_elements):
     steadys = []
     for _, item in diffusing_elements.items():
         steadys.append(item["use_steady_state"])
+    if not bool(len(steadys)):
+        return False, False
     steady = any(steadys)
-    regular = any([not el for el in steadys]) and bool(len(steadys))
+    regular = any([not el for el in steadys])
     return regular, steady
 
 
