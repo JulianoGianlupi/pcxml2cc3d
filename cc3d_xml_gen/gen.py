@@ -264,7 +264,7 @@ def make_diffusion_FE(diffusing_elements, celltypes, flag_2d):
     header = f'\n\n\t<Steppable Type="DiffusionSolverFE">\n\t\t<!-- The conversion uses DiffusionSolverFE and' \
              f' SteadyStateDiffusionSolver ' \
              f'by default. You may ' \
-             f'wish to use another diffusion solver-->'
+             f'wish to use another diffusion solver-->\n'
 
     full_str = header
 
@@ -402,13 +402,13 @@ def make_diffusion_steady(diffusing_elements, flag_2d):
                  f'DiffusionSolverFE and' \
                  f' SteadyStateDiffusionSolver ' \
                  f'by default. You may ' \
-                 f'wish to use another diffusion solver-->'
+                 f'wish to use another diffusion solver-->\n'
     else:
         header = f'\n\n\t<Steppable Type="SteadyStateDiffusionSolver">\n\t\t<!-- The conversion uses ' \
                  f'DiffusionSolverFE and' \
                  f' SteadyStateDiffusionSolver ' \
                  f'by default. You may ' \
-                 f'wish to use another diffusion solver-->'
+                 f'wish to use another diffusion solver-->\n'
 
     full_str = header
 
@@ -504,6 +504,15 @@ def make_diffusion_steady(diffusing_elements, flag_2d):
     return full_str
 
 
+def determine_diffusion_existence(diffusing_elements):
+    steadys = []
+    for _, item in diffusing_elements.items():
+        steadys.append(item["use_steady_state"])
+    steady = any(steadys)
+    regular = any([not el for el in steadys]) and bool(len(steadys))
+    return regular, steady
+
+
 def make_diffusion_plug(diffusing_elements, celltypes, flag_2d):
     """
     Generates the XML for the diffusion steppables in CC3D a diffusion plug, combining the finite element (FE) solver
@@ -546,9 +555,17 @@ def make_diffusion_plug(diffusing_elements, celltypes, flag_2d):
     str
         The combined string of the FE and steady-state solvers
     """
-    FE_solver = make_diffusion_FE(diffusing_elements, celltypes, flag_2d)
 
-    steady_state_solver = make_diffusion_steady(diffusing_elements, flag_2d)
+    use_regular, use_steady = determine_diffusion_existence(diffusing_elements)
+
+    if use_regular:
+        FE_solver = make_diffusion_FE(diffusing_elements, celltypes, flag_2d)
+    else:
+        FE_solver = ""
+    if use_steady:
+        steady_state_solver = make_diffusion_steady(diffusing_elements, flag_2d)
+    else:
+        steady_state_solver = ""
 
     return FE_solver + steady_state_solver
 
