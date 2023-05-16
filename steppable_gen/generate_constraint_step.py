@@ -71,9 +71,6 @@ def cell_type_constraint(ctype, this_type_dicts):
                 line = f"\t\t\tcell.dict['{key}']={value}\n"
             if key in ["volume", "surface"]:
                 line += apply_CC3D_constraint(key, value)
-
-                # line += apply_phenotype(key, value, cell_dict["phenotypes_names"][0])
-            # if key != "phenotypes":
             full += line
     return full + '\n\n'
 
