@@ -30,7 +30,7 @@ def make_secretors(field_names):
     return sec_dict
 
 
-def make_secretion_loop(ctype, comment):
+def make_secretion_uptake_loop(ctype, comment):
     # secretion in physicell is
     # secretion rate * (target amount - amount at cell) + net secretion
     # looking at units that is correct:
@@ -49,12 +49,10 @@ def make_secretion_loop(ctype, comment):
     secrete = "\t\t\t\t\tsecretor.secreteInsideCell(cell, net_secretion)\n"
 
     uptake = "\t\t\t\t\tsecretor.uptakeInsideCell(cell, 1e10, data['uptake_rate'])\n"
-    #secretor.uptakeInsideCell(cell, 2.0, 0.2)
-
     return loop + check_field + seen + comment + secrete_rate + where_secrete + secrete + uptake
 
 
-def make_secretion_uptake_loops(cell_types, sec_dict, secretors, field_names):
+def make_secretion_uptake_loops(cell_types, sec_dict):
     secretor_loop = "\t\tfor field_name, secretor in self.secretors.items():\n"
 
     loops = ""
@@ -62,7 +60,7 @@ def make_secretion_uptake_loops(cell_types, sec_dict, secretors, field_names):
         if ctype in sec_dict.keys():
 
             comment = sec_dict[ctype][list(sec_dict[ctype].keys())[0]]['secretion_comment'] + '\n'
-            loops += make_secretion_loop(ctype, comment)
+            loops += make_secretion_uptake_loop(ctype, comment)
     return secretor_loop + loops
 
 
@@ -81,7 +79,7 @@ def generate_secretion_uptake_step(cell_types, sec_dict, secretion_dt=None, firs
 
     secretors = make_secretors(field_names)
 
-    loops = make_secretion_uptake_loops(cell_types, sec_dict, secretors, field_names)
+    loops = make_secretion_uptake_loops(cell_types, sec_dict)
 
     sec_step = generate_steppable("SecretionUptake", secretion_dt, False, already_imports=already_imports,
                                   additional_start=secretors, additional_step=loops)
