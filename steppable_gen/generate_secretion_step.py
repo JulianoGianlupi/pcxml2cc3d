@@ -75,9 +75,6 @@ def generate_secretion_uptake_step(cell_types, sec_dict, secretion_dt=None, firs
     if secretion_dt is None:
         secretion_dt = 1
 
-    if not sec_dict:
-        return ''
-
     already_imports = not first
 
     field_names = get_field_names(sec_dict)
