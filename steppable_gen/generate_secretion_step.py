@@ -22,12 +22,12 @@ def get_field_names(sec_dict):
 
 
 def make_secretors(field_names):
-    sec_list = "\t\tself.secretors = {"
+    sec_dict = "\t\tself.secretors = {"
     for name in field_names:
-        sec_list += f"'{name}': self.get_field_secretor('{name}'),"
-    sec_list = sec_list[:-1]
-    sec_list += "}\n"
-    return sec_list
+        sec_dict += f"'{name}': self.get_field_secretor('{name}'),"
+    sec_dict = sec_dict[:-1]
+    sec_dict += "}\n"
+    return sec_dict
 
 
 def make_secretion_loop(ctype, comment):
