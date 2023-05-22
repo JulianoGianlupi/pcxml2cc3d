@@ -1,5 +1,4 @@
 
-
 def _add_to_function(function, extra):
     return function+'\n'+extra+'\n'
 
@@ -114,6 +113,13 @@ def steppable_on_stop():
 '''
     return stop
 
+def mitosis_update_attribute():
+    update = '''
+\tdef update_attributes(self):
+\t\tself.parent_cell.targetVolume /= 2.0
+\t\tself.clone_parent_2_child()
+'''
+    return update
 
 def generate_steppable(step_name, frequency, mitosis, minimal=False, already_imports=False, additional_init=None,
                        additional_start=None, additional_step=None, additional_finish=None, additional_on_stop=None,
@@ -146,13 +152,15 @@ def generate_steppable(step_name, frequency, mitosis, minimal=False, already_imp
     if additional_on_stop is not None:
         on_stop = add_to_on_stop(on_stop, additional_on_stop)
 
+    mitosis_update = mitosis_update_attribute() if mitosis else ''
+
     if minimal and already_imports:
         return declare+init+start+"\n"
     elif minimal:
         return imports + declare + init + start + "\n"
     elif not already_imports:
-        return imports + declare + init + start + step + finish + on_stop + "\n"
-    return declare+init+start+step+finish+on_stop+"\n"
+        return imports + declare + init + start + step + mitosis_update + finish + on_stop + "\n"
+    return declare+init+start+step+ mitosis_update + finish+on_stop+"\n"
 
 
 if __name__ == "__main__":
