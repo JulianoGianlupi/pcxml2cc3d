@@ -6,10 +6,10 @@ except:
 
 
 def _apply_volume_constraint(cdict):
-    cstr = f'\t\t\tcell.targetVolume = {cdict["volume (pixels)"]}'
+    cstr = f'\t\t\tcell.targetVolume = {round(cdict["volume (pixels)"])}'
     cstr += '\n\t\t\t# NOTE: PC does not ' \
             f'have an equivalent parameter, you have to adjust it:\n' \
-            f'\t\t\tcell.lambdaVolume = 8\n'
+            f'\t\t\tcell.lambdaVolume = 16\n'
     return cstr
 
 
