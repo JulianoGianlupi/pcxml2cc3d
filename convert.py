@@ -17,10 +17,10 @@ import argparse
 
 from cc3d_xml_gen.gen import make_potts, make_metadata, make_cell_type_plugin, make_cc3d_file, \
     make_contact_plugin, make_diffusion_plug, reconvert_spatial_parameters_with_minimum_cell_volume, make_secretion, \
-    reconvert_cell_volume_constraints, decrease_domain, reconvert_time_parameter
+    reconvert_cell_volume_constraints, decrease_domain, reconvert_time_parameter, make_volume
 
-from cc3d_xml_gen.get_physicell_data import get_cell_constraints, get_secretion_uptake, get_microenvironment, get_dims, \
-    get_time
+from cc3d_xml_gen.get_physicell_data import get_cell_constraints, get_secretion_uptake, get_microenvironment, \
+    get_dims, get_time
 from conversions.secretion import convert_secretion_uptake_data
 
 try:
@@ -287,7 +287,8 @@ def main(path_to_xml, out_directory=None, minimum_volume=8, max_volume=150 ** 3)
     print("Generating CC3DML")
     cc3dml = "<CompuCell3D>\n"
     cc3dml += "<!--\n" + read_before_run + "-->\n"
-    cc3dml += metadata_str + potts_str + ct_str + contact_plug + diffusion_string + secretion_plug + '\n' + \
+    cc3dml += metadata_str + potts_str + ct_str + make_volume() + contact_plug + diffusion_string + secretion_plug + \
+              '\n' + \
               intializer_step + "\n\n" + "\n</CompuCell3D>\n"
 
     print(f"Creating {out_directory}/Simulation/{xml_name}")
