@@ -46,9 +46,10 @@ def make_secretion_uptake_loop(ctype, comment):
                     "\n\t\t\t\t\t# CC3D allows several different secretion locations: over the whole cell (what the " \
                     "translator uses),\n\t\t\t\t\t# just inside the cell surface, just outside the surface, " \
                     "at the surface. You should explore the options\n"
-    secrete = "\t\t\t\t\tsecretor.secreteInsideCell(cell, net_secretion)\n"
+    secrete = "\t\t\t\t\tif net_secretion:\n\t\t\t\t\t\tsecretor.secreteInsideCell(cell, net_secretion)\n"
 
-    uptake = "\t\t\t\t\tsecretor.uptakeInsideCell(cell, 1e10, data['uptake_rate'])\n"
+    uptake = "\t\t\t\t\tif data['uptake_rate']:\n\t\t\t\t\t\t" \
+             "secretor.uptakeInsideCell(cell, 1e10, data['uptake_rate'])\n"
     return loop + check_field + seen + comment + secrete_rate + where_secrete + secrete + uptake
 
 
