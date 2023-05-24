@@ -218,13 +218,13 @@ def make_contact_plugin(celltypes):
     # 1 make the medium contact energies
     me = ""
     for t in celltypes:
-        me += f'\t<Energy Type1="Medium" Type2="{t}">10.0</Energy>\n'
+        me += f'\t<Energy Type1="Medium" Type2="{t}">5.0</Energy>\n'
 
     # 2 make the combination energies
 
     ce = ""
     for t1, t2 in combs:
-        ce += f'\t<Energy Type1="{t1}" Type2="{t2}">10.0</Energy>\n'
+        ce += f'\t<Energy Type1="{t1}" Type2="{t2}">5.0</Energy>\n'
 
     contact_plug += me + ce + "\t<NeighborOrder>3</NeighborOrder>\n</Plugin>"
     return contact_plug
@@ -577,6 +577,10 @@ def make_secretion(secretion_dict):
         return '\n<Plugin Name="Secretion"/>\n'
     else:
         return ""
+
+
+def make_volume():
+    return '\n<Plugin Name="Volume"/>\n'
 
 
 def make_cell_loop(cell_type):
