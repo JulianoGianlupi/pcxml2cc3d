@@ -189,8 +189,10 @@ def main(path_to_xml, out_directory=None, minimum_volume=8, max_volume=150 ** 3)
 
     xml_dir = path_to_xml.parent
 
+    sim_name = path_to_xml.name.split(".")[0]
+
     if out_directory is None:
-        out_directory = xml_dir.joinpath("CC3D_converted_sim")
+        out_directory = xml_dir.joinpath("CC3D_converted_sim", sim_name)
     else:
         out_directory = Path(out_directory)
     print(f"Creating {out_directory}")
@@ -322,6 +324,6 @@ def main(path_to_xml, out_directory=None, minimum_volume=8, max_volume=150 ** 3)
 # args = parser.parse_args()
 # main(args.input, out_directory=args.output, minimum_volume=args.cellvolume, max_volume=args.simulationvolume)
 
-main("example_pcxml/annotated_cancer_immune3D_flat.xml")
+# main("example_pcxml/annotated_cancer_immune3D_flat.xml")
 # # main(r"C:\github\pcxml2cc3d\PhysiCell\sample_projects\biorobots\config\PhysiCell_settings.xml")
-# main(r"example_pcxml/biorobots_flat.xml")
+main(r"example_pcxml/biorobots_flat.xml")

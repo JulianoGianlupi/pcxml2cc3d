@@ -317,7 +317,7 @@ def make_diffusion_FE(diffusing_elements, celltypes, flag_2d):
                   '\n\t\t\t\t<!-- CC3D ' \
                   'allows ' \
                   'for more control of boundary conditions, you may want to revisit the issue. -->\n'
-        if item['dirichlet']:
+        if item['dirichlet'].upper() != "FALSE":
             bc_body = f'\t\t\t\t<Plane Axis="X">\n\t\t\t\t\t<ConstantValue PlanePosition="Min" Value=' \
                       f'"{item["dirichlet_value"]}"/>\n\t\t\t\t\t<ConstantValue PlanePosition="Max" Value=' \
                       f'"{item["dirichlet_value"]}"/>\n\t\t\t\t\t<!-- Other options are (examples): -->\n\t\t\t\t\t' \
@@ -453,7 +453,7 @@ def make_diffusion_steady(diffusing_elements, flag_2d):
                   '\n\t\t\t\t<!-- CC3D ' \
                   'allows ' \
                   'for more control of boundary conditions, you may want to revisit the issue. -->\n'
-        if item['dirichlet']:
+        if item['dirichlet'].upper() != "FALSE":
             bc_body = f'\t\t\t\t<Plane Axis="X">\n\t\t\t\t\t<ConstantValue PlanePosition="Min" Value=' \
                       f'"{item["dirichlet_value"]}"/>\n\t\t\t\t\t<ConstantValue PlanePosition="Max" Value=' \
                       f'"{item["dirichlet_value"]}"/>\n\t\t\t\t\t<!-- Other options are (examples): -->\n\t\t\t\t\t' \
