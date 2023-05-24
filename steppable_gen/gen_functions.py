@@ -42,7 +42,7 @@ sys.path.extend(['{phenocell_dir}'])
 global pcp_imp
 pcp_imp = False
 try:
-\timport Phenotypes as pcp
+\timport PhenoCellPy as pcp
 \tpcp_imp = True
 except:
 \tpass\n\n
