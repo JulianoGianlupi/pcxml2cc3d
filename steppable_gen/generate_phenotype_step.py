@@ -23,7 +23,7 @@ def type_phenotype_step(ctype, this_type_dicts):
                     f"\t\t\t\t\tcell.dict['current_phenotype'].time_step_phenotype()\n"
             full += "\t\t\t\tif divides:\n\t\t\t\t\tcells_to_divide.append(cell)\n"
             full += f"\t\t\t\tcell.targetVolume = cell.dict['volume_conversion'] * \\ \n" \
-                    f"\t\t\t\t\tcell.dict['current_phenotype'].volume.total\n"
+                    f"\t\t\t\t\tcell.dict['current_phenotype'].current_phase.volume.total\n"
 
 
     if any_pheno:

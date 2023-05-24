@@ -46,7 +46,7 @@ def cell_type_constraint(ctype, this_type_dicts):
                 line += f"\t\t\t\tcell.dict['current_phenotype'] = cell.dict['{key}']" \
                         f"['{cell_dict['phenotypes_names'][0]}'].copy()\n"
                 line += f"\t\t\t\tcell.dict['volume_conversion'] = cell.targetVolume / \\\n" \
-                        f"\t\t\t\t\tcell.dict['current_phenotype'].volume.total\n"
+                        f"\t\t\t\t\tcell.dict['current_phenotype'].current_phase.volume.total\n"
             elif key == "custom_data":
                 line = f"\t\t\t# NOTE: you are responsible for finding how this data" \
                        f"is used in the original model\n\t\t\t# and re-implementing in CC3D" \
