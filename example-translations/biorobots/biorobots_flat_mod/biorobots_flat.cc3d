@@ -1,0 +1,7 @@
+
+<Simulation version="4.3.0">
+   <XMLScript Type="XMLScript">Simulation/biorobots_flat.xml</XMLScript>
+   <PythonScript Type="PythonScript">Simulation/biorobots_flat.py</PythonScript>
+   <Resource Type="Python">Simulation/biorobots_flatSteppables.py</Resource>
+   <Resource Type="Python">Simulation/extra_definitions.py</Resource> 
+</Simulation>
