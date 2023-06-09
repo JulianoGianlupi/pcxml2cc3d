@@ -138,7 +138,10 @@ def get_time(pcdict, time_convs=_time_convs):
         warnings.warn(message)
         autoconvert_time = False
 
-    mechdt = float(pcdict['overall']['dt_mechanics']['#text']) if "dt_mechanics" in pcdict['overall'].keys() else None
+    mechdt = float(pcdict['overall']['dt_mechanics']['#text']) if "dt_mechanics" in pcdict['overall'].keys() else 0.1
+
+    if autoconvert_time and time_unit != "min":
+        mechdt *= time_convs[time_unit]
 
     steps = round(mt / mechdt)
 
