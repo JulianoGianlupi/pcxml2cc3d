@@ -125,6 +125,21 @@ def make_cell_type_tags(pcdict):
     s = ''
     cell_types = []
     idx = 1
+
+    create_wall = get_boundary_wall(pcdict)
+
+    if create_wall:
+        s += f'\t<CellType Freeze="" TypeId="{idx}" TypeName="WALL"/>\n'
+        cell_types.append("WALL")
+        idx += 1
+
+    if 'cell_definitions' not in pcdict.keys():
+        name = "CELL"
+        cell_types.append(name)
+        ctt = f'\t<CellType TypeId="{idx}" TypeName="{name}"/>\n'
+        s += ctt
+        return s, create_wall, cell_types
+
     for child in pcdict['cell_definitions']['cell_definition']:
         # print(child.tag, child.attrib, child.text)
         name = child['@name'].replace(" ", "_")
@@ -133,12 +148,6 @@ def make_cell_type_tags(pcdict):
         s += ctt
 
         idx += 1
-
-    create_wall = get_boundary_wall(pcdict)
-
-    if create_wall:
-        s += f'\t<CellType Freeze="" TypeId="{idx}" TypeName="WALL"/>\n'
-        cell_types.append("WALL")
 
     return s, create_wall, cell_types
 

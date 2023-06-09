@@ -327,4 +327,4 @@ def main(path_to_xml, out_directory=None, minimum_volume=8, max_volume=150 ** 3)
 
 # main("example_pcxml/annotated_cancer_immune3D_flat.xml")
 # # main(r"C:\github\pcxml2cc3d\PhysiCell\sample_projects\biorobots\config\PhysiCell_settings.xml")
-main(r"example_pcxml/biorobots_flat.xml")
+main(r"D:\modeling\pcxml2cc3d\example_pcxml\trcycle-r8\data\PhysiCell_settings.xml")

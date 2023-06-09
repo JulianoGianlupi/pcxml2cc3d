@@ -707,6 +707,23 @@ def get_cell_constraints(pcdict, space_unit, minimum_volume=8):
     constraints = {}
     any_below = False
     volumes = []
+    if 'cell_definitions' not in pcdict.keys():
+        ctype = "CELL"
+        constraints[ctype] = {}
+        volume, unit = None, None
+        volumepx = None
+        below, minimum_volume = check_below_minimum_volume(volumepx, minimum=minimum_volume)
+        constraints[ctype]["volume"] = {f"volume ({unit})": volume,
+                                        "volume (pixels)": volumepx}
+        constraints[ctype]["mechanics"] = None
+
+        constraints[ctype]["custom_data"] = None
+        phenotypes = {_physicell_phenotype_codes["2"]: None}
+        constraints[ctype]["phenotypes"] = phenotypes
+        constraints[ctype]["phenotypes_names"] = list(phenotypes.keys())
+        return constraints, any_below, volumes, minimum_volume
+
+
     for child in pcdict['cell_definitions']['cell_definition']:
         ctype = child['@name'].replace(" ", "_")
         constraints[ctype] = {}
