@@ -95,30 +95,40 @@ def initialize_phenotypes(constraint_dict):
 
             pheno_str += f"\t\t\tdt = 1/self.mcs_to_time\n"
             pheno_str += f"\t\t\tself.phenotypes['{ctype}']" + "= {}\n"
-            for phenotype, data in cdict["phenotypes"].items():
+            for phenotype, _data in cdict["phenotypes"].items():
+                data = _data
+                if data is None:
+                    data = {}
                 time_unit = "None"
-                if "rate units" in data.keys():
-                    time_unit = data["rate units"].split("/")[-1]
+                if _data is not None and "rate units" in _data.keys():
+                    time_unit = _data["rate units"].split("/")[-1]
                 fixed = []
                 duration = []
-                for fix, dur in data["phase durations"]:
-                    duration.append(dur)
-                    if fix == "TRUE":
-                        ff = True
-                    else:
-                        ff = False
-                    fixed.append(ff)
+                if _data is not None:
+                    for fix, dur in _data["phase durations"]:
+                        duration.append(dur)
+                        if fix == "TRUE":
+                            ff = True
+                        else:
+                            ff = False
+                        fixed.append(ff)
+                else:
+                    fixed.append(False)
+                    duration.append(None)
                 nuclear_fluid = []
                 nuclear_solid = []
                 cyto_fluid = []
                 cyto_solid = []
                 cyto_to_nucl = []
-                if 'fluid fraction' not in data.keys():
-                    data['fluid fraction'] = [.75] * len(data["phase durations"])
+                if _data is None:
+                    data['fluid fraction'] = [.75]
+                elif 'fluid fraction' not in _data.keys():
+                    data['fluid fraction'] = [.75] * len(_data["phase durations"])
                 # if 'fluid fraction' not in data.keys():
                 #     data['fluid fraction'] = [.75]*len(data["phase durations"])
-                if 'fluid fraction' in data.keys() and 'nuclear volume' in data.keys() and 'total' in data.keys():
-                    for fluid, nucl, total in zip(data['fluid fraction'], data['nuclear volume'], data['total']):
+                if _data is not None and 'fluid fraction' in _data.keys() and 'nuclear volume' in _data.keys() and \
+                        'total' in _data.keys():
+                    for fluid, nucl, total in zip(_data['fluid fraction'], _data['nuclear volume'], _data['total']):
                         nfl = fluid * nucl
                         nuclear_fluid.append(nfl)
                         nuclear_solid.append(nucl - nfl)
@@ -129,24 +139,41 @@ def initialize_phenotypes(constraint_dict):
                         cyto_solid.append(cyts)
                         cyto_to_nucl.append(cytt / (1e-16 + nucl))
                 else:
-                    nuclear_fluid = [None] * len(data["phase durations"])
-                    nuclear_solid = [None] * len(data["phase durations"])
-                    cyto_fluid = [None] * len(data["phase durations"])
-                    cyto_solid = [None] * len(data["phase durations"])
-                    cyto_to_nucl = [None] * len(data["phase durations"])
-                if 'calcified fraction' not in data.keys():
-                    data['calcified fraction'] = [0] * len(data["phase durations"])
+                    if _data is not None:
+                        nuclear_fluid = [None] * len(_data["phase durations"])
+                        nuclear_solid = [None] * len(_data["phase durations"])
+                        cyto_fluid = [None] * len(_data["phase durations"])
+                        cyto_solid = [None] * len(_data["phase durations"])
+                        cyto_to_nucl = [None] * len(_data["phase durations"])
+                    else:
+                        nuclear_fluid = [None]
+                        nuclear_solid = [None]
+                        cyto_fluid = [None]
+                        cyto_solid = [None]
+                        cyto_to_nucl = [None]
+                if _data is None:
+                    data['calcified fraction'] = [0]
+                elif 'calcified fraction' not in _data.keys():
+                    data['calcified fraction'] = [0] * len(_data["phase durations"])
 
-                if 'cytoplasm biomass change rate' not in data.keys():
-                    data['cytoplasm biomass change rate'] = [None] * len(data["phase durations"])
-                if 'nuclear biomass change rate' not in data.keys():
-                    data['nuclear biomass change rate'] = [None] * len(data["phase durations"])
-                if 'calcification rate' not in data.keys():
-                    data['calcification rate'] = [None] * len(data["phase durations"])
-                if 'fluid change rate' not in data.keys():
-                    data['fluid change rate'] = [None] * len(data["phase durations"])
+                if _data is None:
+                    data['cytoplasm biomass change rate'] = [None]
+                elif 'cytoplasm biomass change rate' not in _data.keys():
+                    data['cytoplasm biomass change rate'] = [None] * len(_data["phase durations"])
 
+                if _data is None:
+                    data['nuclear biomass change rate'] = [None]
+                elif 'nuclear biomass change rate' not in _data.keys():
+                    data['nuclear biomass change rate'] = [None] * len(_data["phase durations"])
+                if _data is None:
+                    data['calcification rate'] = [None]
+                elif 'calcification rate' not in _data.keys():
+                    data['calcification rate'] = [None] * len(_data["phase durations"])
 
+                if _data is None:
+                    data['fluid change rate'] = [None]
+                elif 'fluid change rate' not in _data.keys():
+                    data['fluid change rate'] = [None] * len(_data["phase durations"])
 
                 pheno_str += f"\t\t\tphenotype = pcp.get_phenotype_by_name('{phenotype}')\n"
                 pheno_str += f"\t\t\tself.phenotypes['{ctype}']['{phenotype}'] = phenotype(dt=dt, \n\t\t\t\t" \
