@@ -822,6 +822,8 @@ def get_secretion_uptake(pcdict):
     """
 
     sec_up_data = {}
+    if 'cell_definitions' not in pcdict.keys():
+        return sec_up_data
     for child in pcdict['cell_definitions']['cell_definition']:
         if 'secretion' not in child['phenotype'].keys():
             continue
