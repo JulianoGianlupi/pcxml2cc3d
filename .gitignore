@@ -3,3 +3,5 @@ test/
 .idea/
 **/__pycache__/
 PhysiCell/
+*.sqlite
+

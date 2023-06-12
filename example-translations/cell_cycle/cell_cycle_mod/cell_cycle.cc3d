@@ -1,0 +1,7 @@
+
+<Simulation version="4.3.0">
+   <XMLScript Type="XMLScript">Simulation/cell_cycle.xml</XMLScript>
+   <PythonScript Type="PythonScript">Simulation/cell_cycle.py</PythonScript>
+   <Resource Type="Python">Simulation/cell_cycleSteppables.py</Resource>
+   <Resource Type="Python">Simulation/extra_definitions.py</Resource> 
+</Simulation>
