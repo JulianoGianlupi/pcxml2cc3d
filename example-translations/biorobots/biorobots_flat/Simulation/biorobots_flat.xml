@@ -1,0 +1,205 @@
+<CompuCell3D>
+<!--
+******************************************************************************************
+PLEASE READ BEFORE RUNNING:
+The translator program does a lot of the conversion process of a Physicell simulation into
+a CompuCell3D simulation. However, just as in CC3D, the user can define several custom modules
+functions, and initial conditions for their PhysiCell model. Translating custom c++ code is
+beyond what an automated program can do (AI-ML language models not withstanding). On top
+of that fact there are several PhysiCell concepts that do not exist in CC3D, and vice-versa.
+Therefore: 1. please read *all comments* the script has placed in the converted files.
+2. You are responsible for creating the initial conditions. Some are defined in csv files
+others are creating with c++.
+3. You are responsible for finding where <user_parameters> is used in the Physicell model,
+and using it in the CC3D model
+4. You are responsible for using chemical field data (e.g., chemotaxis)
+5. You are responsible for defining the use of custom_data for each cell type. Find where 
+it is used in PhysiCell and define its use in the CC3D simulation
+******************************************************************************************
+-->
+
+<Metadata>
+  <!-- Basic properties simulation -->
+  <NumberOfProcessors>1</NumberOfProcessors>
+  <DebugOutputFrequency>100</DebugOutputFrequency>
+  <!-- <NonParallelModule Name="Potts"/> -->
+</Metadata>
+ 
+<Potts>
+   <!-- Basic properties of CPM (GGH) algorithm -->
+   <Space_Units>1 pixel = 1.3 micron</Space_Units>
+   <Pixel_to_Space units="pixel/micron" id = "pixel_to_space">1.3</Pixel_to_Space>
+   <Dimensions x="1837" y="1837" z="1"/>
+   <Time_Units>1 MCS = 2.7 min</Time_Units>
+   <MCS_to_Time units="MCS/min" id = "mcs_to_time">2.7</MCS_to_Time>
+   <Steps>106666</Steps>
+   <!-- As the frameworks of CC3D and PhysiCell are very different -->
+   <!-- PC doesn't have some concepts that CC3D does. Temperature is one of -->
+   <!-- them, so the translation script leaves its tunning as an exercise-->
+   <!-- for the reader -->
+   <Temperature>10.0</Temperature>
+   <!-- Same deal for neighbor order as for temperature-->
+   <NeighborOrder>1</NeighborOrder>
+   <!-- <Boundary_x>Periodic</Boundary_x> -->
+   <!-- <Boundary_y>Periodic</Boundary_y> -->
+</Potts>
+
+<Plugin Name="CellType">
+	<CellType TypeId="0" TypeName="Medium"/>
+	<CellType TypeId="1" TypeName="default"/>
+	<CellType TypeId="2" TypeName="director_cell"/>
+	<CellType TypeId="3" TypeName="cargo_cell"/>
+	<CellType TypeId="4" TypeName="worker_cell"/>
+	<CellType Freeze="" TypeId="5" TypeName="WALL"/>
+</Plugin>
+<Plugin Name="Volume"/>
+
+<Plugin Name="Contact">
+	<!-- PhysiCell doesn't have an equivalent to this plugin. Its  -->
+	<!-- tunning and deciding on the neighbor order is left as an -->
+	<!-- exerise to the reader. -->
+	<!-- A better option (to be implemented) is to use the adhesion flex -->
+	<!-- Specification of adhesion energies -->
+	<Energy Type1="Medium" Type2="Medium">10.0</Energy>
+	<Energy Type1="Medium" Type2="default">5.0</Energy>
+	<Energy Type1="Medium" Type2="director_cell">5.0</Energy>
+	<Energy Type1="Medium" Type2="cargo_cell">5.0</Energy>
+	<Energy Type1="Medium" Type2="worker_cell">5.0</Energy>
+	<Energy Type1="Medium" Type2="WALL">5.0</Energy>
+	<Energy Type1="WALL" Type2="WALL">5.0</Energy>
+	<Energy Type1="worker_cell" Type2="worker_cell">5.0</Energy>
+	<Energy Type1="cargo_cell" Type2="cargo_cell">5.0</Energy>
+	<Energy Type1="director_cell" Type2="director_cell">5.0</Energy>
+	<Energy Type1="default" Type2="default">5.0</Energy>
+	<Energy Type1="worker_cell" Type2="WALL">5.0</Energy>
+	<Energy Type1="cargo_cell" Type2="WALL">5.0</Energy>
+	<Energy Type1="cargo_cell" Type2="worker_cell">5.0</Energy>
+	<Energy Type1="director_cell" Type2="WALL">5.0</Energy>
+	<Energy Type1="director_cell" Type2="worker_cell">5.0</Energy>
+	<Energy Type1="director_cell" Type2="cargo_cell">5.0</Energy>
+	<Energy Type1="default" Type2="WALL">5.0</Energy>
+	<Energy Type1="default" Type2="worker_cell">5.0</Energy>
+	<Energy Type1="default" Type2="cargo_cell">5.0</Energy>
+	<Energy Type1="default" Type2="director_cell">5.0</Energy>
+	<NeighborOrder>3</NeighborOrder>
+</Plugin>
+
+	<Steppable Type="DiffusionSolverFE">
+		<!-- The conversion uses DiffusionSolverFE and SteadyStateDiffusionSolver by default. You may wish to use another diffusion solver-->
+		<DiffusionField Name="director_signal">
+			<DiffusionData>
+				<FieldName>director_signal</FieldName>
+				<Concentration_units>dimensionless</Concentration_units>
+				<Original_diffusion_constant D="1000.0" units= "micron^2/min"/>
+				<GlobalDiffusionConstant>45.63</GlobalDiffusionConstant>
+				<Original_decay_constant gamma="0.1" units= " 1/min"/>
+				<GlobalDecayConstant>0.0027</GlobalDecayConstant>
+				<!-- CC3D allows for diffusing fields initial conditions, if one was detected it will -->
+				<!-- be used here. For several reasons it may not work, if something looks wrong with -->
+				<!-- your diffusing field at the start of the simulation this may be the reason. -->
+				<!-- CC3D also allows the diffusing field initial condition to be set by a file. Conversion of a -->
+				<!-- PhysiCell diffusing field initial condition file into a CC3D compliant one is left as -->
+				<!-- an exercise to the reader. -->
+				 <InitialConcentrationExpression>0</InitialConcentrationExpression>
+				<!-- <ConcentrationFileName>INITIAL CONCENTRATION FIELD - typically a file with path Simulation/NAME_OF_THE_FILE.txt</ConcentrationFileName> -->
+				<!-- CC3D allows the definition of D and gamma on a cell type basis: -->
+				<!--<DiffusionCoefficient CellType="default">45.63</DiffusionCoefficient>-->
+				<!--<DecayCoefficient CellType="default">0.0027</DecayCoefficient>-->
+				<!--<DiffusionCoefficient CellType="director_cell">45.63</DiffusionCoefficient>-->
+				<!--<DecayCoefficient CellType="director_cell">0.0027</DecayCoefficient>-->
+				<!--<DiffusionCoefficient CellType="cargo_cell">45.63</DiffusionCoefficient>-->
+				<!--<DecayCoefficient CellType="cargo_cell">0.0027</DecayCoefficient>-->
+				<!--<DiffusionCoefficient CellType="worker_cell">45.63</DiffusionCoefficient>-->
+				<!--<DecayCoefficient CellType="worker_cell">0.0027</DecayCoefficient>-->
+				<!--<DiffusionCoefficient CellType="WALL">45.63</DiffusionCoefficient>-->
+				<!--<DecayCoefficient CellType="WALL">0.0027</DecayCoefficient>-->
+			</DiffusionData>
+			<BoundaryConditions>
+				<!-- PhysiCell has either Dirichlet boundary conditions (i.e. constant value) -->
+				<!-- or "free floating" boundary conditions (i.e., constant flux = 0). -->
+				<!-- CC3D allows for more control of boundary conditions, you may want to revisit the issue. -->
+				<Plane Axis="X">
+					<ConstantDerivative PlanePosition="Min" Value="0"/>
+					<ConstantDerivative PlanePosition="Max" Value="0"/>
+					<!-- Other options are (examples): -->
+					<!--<ConstantValue PlanePosition="Min" Value="10.0"/> -->
+					<!--<ConstantValue PlanePosition="Max" Value="10.0"/> -->
+					<!--<Periodic/>-->				</Plane>
+				<Plane Axis="Y">
+					<ConstantDerivative PlanePosition="Min" Value="0"/>
+					<ConstantDerivative PlanePosition="Max" Value="0"/>
+					<!-- Other options are (examples): -->
+					<!--<ConstantValue PlanePosition="Min" Value="10.0"/> -->
+					<!--<ConstantValue PlanePosition="Max" Value="10.0"/> -->
+					<!--<Periodic/>-->				</Plane>
+</BoundaryConditions>
+</DiffusionField>
+		<DiffusionField Name="cargo_signal">
+			<DiffusionData>
+				<FieldName>cargo_signal</FieldName>
+				<Concentration_units>dimensionless</Concentration_units>
+				<Original_diffusion_constant D="1000.0" units= "micron^2/min"/>
+				<GlobalDiffusionConstant>45.63</GlobalDiffusionConstant>
+				<Original_decay_constant gamma="0.4" units= " 1/min"/>
+				<GlobalDecayConstant>0.0108</GlobalDecayConstant>
+				<!-- CC3D allows for diffusing fields initial conditions, if one was detected it will -->
+				<!-- be used here. For several reasons it may not work, if something looks wrong with -->
+				<!-- your diffusing field at the start of the simulation this may be the reason. -->
+				<!-- CC3D also allows the diffusing field initial condition to be set by a file. Conversion of a -->
+				<!-- PhysiCell diffusing field initial condition file into a CC3D compliant one is left as -->
+				<!-- an exercise to the reader. -->
+				 <InitialConcentrationExpression>0</InitialConcentrationExpression>
+				<!-- <ConcentrationFileName>INITIAL CONCENTRATION FIELD - typically a file with path Simulation/NAME_OF_THE_FILE.txt</ConcentrationFileName> -->
+				<!-- CC3D allows the definition of D and gamma on a cell type basis: -->
+				<!--<DiffusionCoefficient CellType="default">45.63</DiffusionCoefficient>-->
+				<!--<DecayCoefficient CellType="default">0.0108</DecayCoefficient>-->
+				<!--<DiffusionCoefficient CellType="director_cell">45.63</DiffusionCoefficient>-->
+				<!--<DecayCoefficient CellType="director_cell">0.0108</DecayCoefficient>-->
+				<!--<DiffusionCoefficient CellType="cargo_cell">45.63</DiffusionCoefficient>-->
+				<!--<DecayCoefficient CellType="cargo_cell">0.0108</DecayCoefficient>-->
+				<!--<DiffusionCoefficient CellType="worker_cell">45.63</DiffusionCoefficient>-->
+				<!--<DecayCoefficient CellType="worker_cell">0.0108</DecayCoefficient>-->
+				<!--<DiffusionCoefficient CellType="WALL">45.63</DiffusionCoefficient>-->
+				<!--<DecayCoefficient CellType="WALL">0.0108</DecayCoefficient>-->
+			</DiffusionData>
+			<BoundaryConditions>
+				<!-- PhysiCell has either Dirichlet boundary conditions (i.e. constant value) -->
+				<!-- or "free floating" boundary conditions (i.e., constant flux = 0). -->
+				<!-- CC3D allows for more control of boundary conditions, you may want to revisit the issue. -->
+				<Plane Axis="X">
+					<ConstantDerivative PlanePosition="Min" Value="0"/>
+					<ConstantDerivative PlanePosition="Max" Value="0"/>
+					<!-- Other options are (examples): -->
+					<!--<ConstantValue PlanePosition="Min" Value="10.0"/> -->
+					<!--<ConstantValue PlanePosition="Max" Value="10.0"/> -->
+					<!--<Periodic/>-->				</Plane>
+				<Plane Axis="Y">
+					<ConstantDerivative PlanePosition="Min" Value="0"/>
+					<ConstantDerivative PlanePosition="Max" Value="0"/>
+					<!-- Other options are (examples): -->
+					<!--<ConstantValue PlanePosition="Min" Value="10.0"/> -->
+					<!--<ConstantValue PlanePosition="Max" Value="10.0"/> -->
+					<!--<Periodic/>-->				</Plane>
+</BoundaryConditions>
+</DiffusionField>
+</Steppable>
+
+<Plugin Name="Secretion"/>
+
+<Steppable Type="UniformInitializer">
+	<!-- Initial layout of cells in the form of rectangular slab -->
+	<!-- PhysiCell has many complex ways of defining the initial arangement -->
+	<!-- of cells. By default the translator uses a simple configuration, -->
+	<!-- you are responsible for analysing the initialization of the original -->
+	<!-- model and reimplement it accordingly -->
+	<Region>
+		<BoxMin x="10" y="10" z="0"/>
+		<BoxMax x="1827" y="1827" z="1"/>
+		<Gap>0</Gap>
+		<Width>7</Width>
+		<Types>default,director_cell,cargo_cell,worker_cell</Types>
+	</Region>
+</Steppable>
+
+
+</CompuCell3D>
