@@ -142,7 +142,7 @@ def default_initial_cell_config(celltypes, xmax, ymax, zmax):
     return steppable_string
 
 
-def main(path_to_xml, out_directory=None, minimum_volume=8, max_volume=150 ** 3):
+def main(path_to_xml, out_directory=None, minimum_volume=8, max_volume=150 ** 3, name=None):
     """
     Converts a PhysiCell simulation XML into a CompuCell3D simulation folder
 
@@ -205,8 +205,9 @@ def main(path_to_xml, out_directory=None, minimum_volume=8, max_volume=150 ** 3)
         sim_dir.mkdir(parents=True)
 
     # getting simulation name
-    print("Finding simulation name")
-    name = path_to_xml.name.split(".")[0]
+    if name is None:
+        print("Finding simulation name")
+        name = path_to_xml.name.split(".")[0]
 
     print(f"Creating {out_directory}/{name}.cc3d")
 
