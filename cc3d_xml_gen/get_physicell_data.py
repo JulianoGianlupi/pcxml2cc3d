@@ -781,6 +781,25 @@ def get_space_time_from_diffusion(unit):
     return spaceunit, timeunit
 
 
+def get_chemotaxis(pcdict):
+    taxis_data = {}
+    if 'cell_definitions' not in pcdict.keys():
+        return taxis_data
+    for child in pcdict['cell_definitions']['cell_definition']:
+        if 'phenotype' not in child.keys():
+            continue
+        if 'motility' not in child['phenotype'].keys():
+            continue
+        mot_dict = child['phenotype']['motility']
+        if mot_dict['options']['enabled'].upper() == "FALSE" or 'chemotaxis' not in mot_dict['options'].keys():
+            continue
+        ctype = child['@name'].replace(" ", "_")
+        substrate_name = mot_dict['options']['chemotaxis']['substrate'].replace(" ", "_")
+        direction = int(mot_dict['options']['chemotaxis']['direction'])
+        taxis_data[ctype] = {"chemotaxis_dict": [], substrate_name: direction}
+    return taxis_data
+
+
 def get_secretion_uptake(pcdict):
     """
     Extracts secretion data from the input pcdict (PhysiCell XML parsed into a dictionary) and returns the extracted
@@ -825,6 +844,8 @@ def get_secretion_uptake(pcdict):
     if 'cell_definitions' not in pcdict.keys():
         return sec_up_data
     for child in pcdict['cell_definitions']['cell_definition']:
+        if 'phenotype' not in child.keys():
+            continue
         if 'secretion' not in child['phenotype'].keys():
             continue
         ctype = child['@name'].replace(" ", "_")
