@@ -17,10 +17,10 @@ import argparse
 
 from cc3d_xml_gen.gen import make_potts, make_metadata, make_cell_type_plugin, make_cc3d_file, \
     make_contact_plugin, make_diffusion_plug, reconvert_spatial_parameters_with_minimum_cell_volume, make_secretion, \
-    reconvert_cell_volume_constraints, decrease_domain, reconvert_time_parameter, make_volume
+    reconvert_cell_volume_constraints, decrease_domain, reconvert_time_parameter, make_volume, make_chemotaxis
 
 from cc3d_xml_gen.get_physicell_data import get_cell_constraints, get_secretion_uptake, get_microenvironment, \
-    get_dims, get_time
+    get_dims, get_time, get_chemotaxis
 from conversions.secretion import convert_secretion_uptake_data
 
 try:
@@ -157,6 +157,7 @@ def main(path_to_xml, out_directory=None, minimum_volume=8, max_volume=150 ** 3,
     :type minimum_volume:
     :param path_to_xml: string for the path to the PhysiCell XML simulation file
     :param out_directory: string path to the output folder
+    :param name:
     :return: None
     """
 
@@ -244,7 +245,6 @@ def main(path_to_xml, out_directory=None, minimum_volume=8, max_volume=150 ** 3,
 
     ccdims, was_above = decrease_domain(ccdims, max_volume=max_volume)
 
-
     print("parsing micro environment")
     d_elements = get_microenvironment(pcdict, ccdims[4], pcdims[3], cctime[2], pctime[1])
 
@@ -271,9 +271,14 @@ def main(path_to_xml, out_directory=None, minimum_volume=8, max_volume=150 ** 3,
 
     conv_sec = convert_secretion_uptake_data(secretion_uptake_dict, cctime[2], pctime[1])
 
+    print("Parsing chemotaxis data")
+    taxis_dict = get_chemotaxis(pcdict)
+
+    chemotaxis_plug = make_chemotaxis(taxis_dict)
+
     print("Generating constraint steppable")
     constraint_step = steppable_gen.generate_constraint_steppable(cell_types, [constraints,
-                                                                               conv_sec], wall,
+                                                                               conv_sec, taxis_dict], wall,
                                                                   user_data=pcdict["user_parameters"])
 
     print("Generating secretion steppable")
@@ -289,7 +294,7 @@ def main(path_to_xml, out_directory=None, minimum_volume=8, max_volume=150 ** 3,
     cc3dml = "<CompuCell3D>\n"
     cc3dml += "<!--\n" + read_before_run + "-->\n"
     cc3dml += metadata_str + potts_str + ct_str + make_volume() + contact_plug + diffusion_string + secretion_plug + \
-              '\n' + \
+              '\n' + chemotaxis_plug + '\n' + \
               intializer_step + "\n\n" + "\n</CompuCell3D>\n"
 
     print(f"Creating {out_directory}/Simulation/{xml_name}")
@@ -328,4 +333,6 @@ def main(path_to_xml, out_directory=None, minimum_volume=8, max_volume=150 ** 3,
 
 # main("example_pcxml/annotated_cancer_immune3D_flat.xml")
 # # main(r"C:\github\pcxml2cc3d\PhysiCell\sample_projects\biorobots\config\PhysiCell_settings.xml")
-main(r"D:\modeling\pcxml2cc3d\example_pcxml\trcycle-r8\data\PhysiCell_settings.xml")
+# main(r"D:\modeling\pcxml2cc3d\example_pcxml\trcycle-r8\data\PhysiCell_settings.xml")
+# main(r"C:\modeling\phd\pcxml2cc3d\example_pcxml\trcycle-r8\data\PhysiCell_settings.xml")
+main(r"C:\modeling\PhysiCell\sample_projects\biorobots\config\PhysiCell_settings.xml")

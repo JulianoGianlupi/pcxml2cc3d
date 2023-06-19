@@ -39,6 +39,17 @@ def cell_type_constraint(ctype, this_type_dicts):
     loop = f"\t\tfor cell in self.cell_list_by_type(self.{ctype.upper()}):\n"
     full = loop
     for cell_dict in this_type_dicts:
+        if "chemotaxis_dict" in cell_dict.keys():
+            line = ""
+            for key, value in cell_dict.items():
+                if key == "chemotaxis_dict":
+                    continue
+                field_name = key
+                line += f'\t\t\tcd = self.chemotaxisPlugin.addChemotaxisData(cell, "{field_name}")\n'
+                line += f'\t\t\tcd.setLambda({value}*100)\n'
+
+            full += line
+            continue
         for key, value in cell_dict.items():
             if key == "phenotypes" and bool(cell_dict["phenotypes"]):
                 line = "\t\t\tif pcp_imp:\n"
