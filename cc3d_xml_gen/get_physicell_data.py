@@ -795,7 +795,7 @@ def get_chemotaxis(pcdict):
             continue
         ctype = child['@name'].replace(" ", "_")
         substrate_name = mot_dict['options']['chemotaxis']['substrate'].replace(" ", "_")
-        direction = int(mot_dict['options']['chemotaxis']['direction'])
+        direction = float(mot_dict['options']['chemotaxis']['direction'])
         taxis_data[ctype] = {"chemotaxis_dict": [], substrate_name: direction}
     return taxis_data
 
