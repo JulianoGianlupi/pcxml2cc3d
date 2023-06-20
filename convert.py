@@ -335,4 +335,4 @@ def main(path_to_xml, out_directory=None, minimum_volume=8, max_volume=150 ** 3,
 # # main(r"C:\github\pcxml2cc3d\PhysiCell\sample_projects\biorobots\config\PhysiCell_settings.xml")
 # main(r"D:\modeling\pcxml2cc3d\example_pcxml\trcycle-r8\data\PhysiCell_settings.xml")
 # main(r"C:\modeling\phd\pcxml2cc3d\example_pcxml\trcycle-r8\data\PhysiCell_settings.xml")
-main(r"C:\modeling\PhysiCell\sample_projects\biorobots\config\PhysiCell_settings.xml")
+main(r"C:\modeling\PhysiCell\sample_projects\biorobots\config\PhysiCell_settings.xml", name = "biorobots", out_directory=r"C:\modeling\phd\pcxml2cc3d\example-translations\biorobots\biorobots")

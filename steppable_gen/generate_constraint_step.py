@@ -64,7 +64,10 @@ def cell_type_constraint(ctype, this_type_dicts):
                        f"\n\t\t\tcell.dict['{key}']={value}\n"
             elif type(value) == str:
                 line = f"\t\t\tcell.dict['{key}']='{value}'\n"
-            elif type(value) == dict:
+
+            elif type(value) == list:
+                line = f"\t\t\tcell.dict['{key}']={value}\n"
+            elif type(value) == dict and key != "phenotypes":
                 clean_value = value.copy()
                 to_pop = []
                 for subkey in value.keys():
@@ -73,8 +76,8 @@ def cell_type_constraint(ctype, this_type_dicts):
                         to_pop.append(subkey)
                 [clean_value.pop(p) for p in to_pop]
                 line = f"\t\t\tcell.dict['{key}']={clean_value}\n"
-            else:
-                line = f"\t\t\tcell.dict['{key}']={value}\n"
+            # else:
+            #     line = f"\t\t\tcell.dict['{key}']={value}\n"
             if key in ["volume", "surface"]:
                 line += apply_CC3D_constraint(key, value)
             full += line
@@ -207,14 +210,14 @@ def initialize_phenotypes(constraint_dict):
     return pheno_str
 
 
-def generate_constraint_steppable(cell_types, cell_dicts, wall, first=True, user_data=""):
+def generate_constraint_steppable(cell_types, cell_type_dicts, wall, first=True, user_data=""):
     already_imports = not first
-    loops = generate_constraint_loops(cell_types, cell_dicts)
+    loops = generate_constraint_loops(cell_types, cell_type_dicts)
     if not wall:
         wall_str = "\t\tself.shared_steppable_vars['constraints'] = self"
     else:
         wall_str = "\t\tself.build_wall(self.WALL)\n\t\tself.shared_steppable_vars['constraints'] = self"
-    pheno_init = initialize_phenotypes(cell_dicts[0])
+    pheno_init = initialize_phenotypes(cell_type_dicts[0])
     constraint_step = generate_steppable("Constraints", 1, False, minimal=True, already_imports=already_imports,
                                          additional_start=pheno_init + loops + wall_str, user_data=user_data)
     return constraint_step
