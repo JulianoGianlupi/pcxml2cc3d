@@ -27,8 +27,8 @@ import sys
 # has a similar implementation of phenotypes. You should install PhenoCellPy to translate the phenotypes from PhysiCell.
 # Then change the default path used below with your PhenoCellPy's
 # installation directory
-# sys.path.extend([r'C:\modeling\phd\PhenoCellPy'])
-sys.path.extend([r'D:\modeling\PhenoCellPy'])
+sys.path.extend([r'C:\modeling\phd\PhenoCellPy'])
+# sys.path.extend([r'D:\modeling\PhenoCellPy'])
 global pcp_imp
 pcp_imp = False
 try:
@@ -154,6 +154,7 @@ class ConstraintsSteppable(SteppableBasePy):
 
     def __init__(self, frequency=1):
         SteppableBasePy.__init__(self, frequency)
+        self.track_cell_level_scalar_attribute(field_name='phase_index_plus_1', attribute_name='phase_index_plus_1')
 
     def start(self):
         """
@@ -188,6 +189,7 @@ class ConstraintsSteppable(SteppableBasePy):
                 cell.dict['phenotypes'] = self.phenotypes['CELL']
                 cell.dict['current_phenotype'] = cell.dict['phenotypes']['Flow Cytometry Basic'].copy(
                 )
+                cell.dict["phase_index_plus_1"] = cell.dict["current_phenotype"].current_phase.index + 1
                 cell.dict['volume_conversion'] = cell.targetVolume / \
                                                  cell.dict['current_phenotype'].current_phase.volume.total
                 print(cell.dict['current_phenotype'].current_phase.volume.total)
@@ -227,6 +229,8 @@ class PhenotypeSteppable(MitosisSteppableBase):
                 changed_phase, should_be_removed, divides = \
                     cell.dict['current_phenotype'].time_step_phenotype()
                 # print(changed_phase, should_be_removed, divides)
+                if changed_phase:
+                    cell.dict["phase_index_plus_1"] = cell.dict["current_phenotype"].current_phase.index + 1
                 if divides:
                     cells_to_divide.append(cell)
 
@@ -256,7 +260,6 @@ class PhenotypeSteppable(MitosisSteppableBase):
         self.parent_cell.dict["current_phenotype"].current_phase.volume.target_cytoplasm = self.parent_cell.targetVolume
         self.parent_cell.dict["current_phenotype"].current_phase.volume.cytoplasm_fluid = self.parent_cell.targetVolume
         self.parent_cell.dict["phase_index_plus_1"] = self.parent_cell.dict["current_phenotype"].current_phase.index + 1
-
         self.child_cell.dict["current_phenotype"].current_phase.volume.target_cytoplasm = self.parent_cell.targetVolume
         self.child_cell.dict["current_phenotype"].current_phase.volume.cytoplasm_fluid = self.parent_cell.targetVolume
 

@@ -30,8 +30,8 @@ it is used in PhysiCell and define its use in the CC3D simulation
    <Space_Units>1 pixel = 0.05 micron</Space_Units>
    <Pixel_to_Space units="pixel/micron" id = "pixel_to_space">10</Pixel_to_Space>
    <Dimensions x="150" y="150" z="1"/>
-   <Time_Units>1 MCS = 10.0 min</Time_Units>
-   <MCS_to_Time units="MCS/min" id = "mcs_to_time">0.02</MCS_to_Time>
+   <Time_Units>1 MCS = 1.0 min</Time_Units>
+   <MCS_to_Time units="MCS/min" id = "mcs_to_time">1</MCS_to_Time>
    <Steps>14400</Steps>
    <!-- As the frameworks of CC3D and PhysiCell are very different -->
    <!-- PC doesn't have some concepts that CC3D does. Temperature is one of -->
