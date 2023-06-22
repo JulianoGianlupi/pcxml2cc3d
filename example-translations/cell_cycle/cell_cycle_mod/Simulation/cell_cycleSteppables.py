@@ -28,14 +28,15 @@ import sys
 # Then change the default path used below with your PhenoCellPy's
 # installation directory
 sys.path.extend([r'C:\modeling\phd\PhenoCellPy'])
+# sys.path.extend([r'D:\modeling\PhenoCellPy'])
 global pcp_imp
 pcp_imp = False
 try:
     import PhenoCellPy as pcp
+
     pcp_imp = True
 except BaseException:
     pass
-
 
 user_data = {
     'random_seed': {
@@ -58,7 +59,7 @@ user_data = {
         '@type': 'double',
         '@units': '1/min',
         '@description': 'transition rate between G0/G1 and S',
-                        '#text': '0.01666'},
+        '#text': '0.01666'},
     'r01_fixed_duration': {
         '@type': 'bool',
         '@units': '',
@@ -153,6 +154,7 @@ class ConstraintsSteppable(SteppableBasePy):
 
     def __init__(self, frequency=1):
         SteppableBasePy.__init__(self, frequency)
+        self.track_cell_level_scalar_attribute(field_name='phase_index_plus_1', attribute_name='phase_index_plus_1')
 
     def start(self):
         """
@@ -165,17 +167,16 @@ class ConstraintsSteppable(SteppableBasePy):
 
         if pcp_imp:
             self.phenotypes = {}
-            dt = 1/self.mcs_to_time
+            dt = 1 / self.mcs_to_time
             self.phenotypes['CELL'] = {}
             phenotype = pcp.get_phenotype_by_name('Flow Cytometry Basic')
             self.phenotypes['CELL']['Flow Cytometry Basic'] = phenotype(dt=dt)
 
-
         cell = self.new_cell(self.CELL)
-        self.cell_field[self.dim.x//2:self.dim.x//2+2, self.dim.y//2:self.dim.y//2+2,0] = cell
+        self.cell_field[self.dim.x // 2:self.dim.x // 2 + 2, self.dim.y // 2:self.dim.y // 2 + 2, 0] = cell
 
         for cell in self.cell_list_by_type(self.CELL):
-            cell.dict['volume'] = {'volume (None)': None, 'volume (pixels)':32}
+            cell.dict['volume'] = {'volume (None)': None, 'volume (pixels)': 32}
             cell.targetVolume = 32
             # NOTE: PC does not have an equivalent parameter, you have to
             # adjust it:
@@ -188,8 +189,9 @@ class ConstraintsSteppable(SteppableBasePy):
                 cell.dict['phenotypes'] = self.phenotypes['CELL']
                 cell.dict['current_phenotype'] = cell.dict['phenotypes']['Flow Cytometry Basic'].copy(
                 )
+                cell.dict["phase_index_plus_1"] = cell.dict["current_phenotype"].current_phase.index + 1
                 cell.dict['volume_conversion'] = cell.targetVolume / \
-                    cell.dict['current_phenotype'].current_phase.volume.total
+                                                 cell.dict['current_phenotype'].current_phase.volume.total
                 print(cell.dict['current_phenotype'].current_phase.volume.total)
             cell.dict['phenotypes_names'] = ['Flow Cytometry Basic']
 
@@ -227,20 +229,13 @@ class PhenotypeSteppable(MitosisSteppableBase):
                 changed_phase, should_be_removed, divides = \
                     cell.dict['current_phenotype'].time_step_phenotype()
                 # print(changed_phase, should_be_removed, divides)
+                if changed_phase:
+                    cell.dict["phase_index_plus_1"] = cell.dict["current_phenotype"].current_phase.index + 1
                 if divides:
                     cells_to_divide.append(cell)
-                if changed_phase and cell.dict['current_phenotype'].current_phase.name == "G0/G1":
-                    print(cell.id, cell.targetVolume, cell.dict['volume_conversion'] * \
-                            cell.dict['current_phenotype'].current_phase.volume.total,
-                          cell.dict['current_phenotype'].current_phase.volume.total)
 
                 cell.targetVolume = cell.dict['volume_conversion'] * \
-                    cell.dict['current_phenotype'].current_phase.volume.total
-                if changed_phase and cell.dict['current_phenotype'].current_phase.name == "G0/G1":
-                    print(cell.id, cell.targetVolume, cell.dict['volume_conversion'] * \
-                            cell.dict['current_phenotype'].current_phase.volume.total,
-                          cell.dict['current_phenotype'].current_phase.volume.total)
-
+                                    cell.dict['current_phenotype'].current_phase.volume.total
 
             for cell in cells_to_divide:
                 # WARNING: As cells in CC3D have shape, they can be divided
@@ -252,7 +247,6 @@ class PhenotypeSteppable(MitosisSteppableBase):
                 # self.divide_cell_along_minor_axis(cell)
 
     def update_attributes(self):
-
 
         # reducing parent target volume
         converted_volume = self.parent_cell.dict['volume_conversion'] * \
@@ -266,7 +260,6 @@ class PhenotypeSteppable(MitosisSteppableBase):
         self.parent_cell.dict["current_phenotype"].current_phase.volume.target_cytoplasm = self.parent_cell.targetVolume
         self.parent_cell.dict["current_phenotype"].current_phase.volume.cytoplasm_fluid = self.parent_cell.targetVolume
         self.parent_cell.dict["phase_index_plus_1"] = self.parent_cell.dict["current_phenotype"].current_phase.index + 1
-
         self.child_cell.dict["current_phenotype"].current_phase.volume.target_cytoplasm = self.parent_cell.targetVolume
         self.child_cell.dict["current_phenotype"].current_phase.volume.cytoplasm_fluid = self.parent_cell.targetVolume
 

@@ -40,7 +40,7 @@ except BaseException:
 
 number_directors = 15//2
 
-number_cargo_clusters = 100//4
+number_of_cargo_clusters = 100 // 4
 
 cluster_size = 7
 
@@ -468,7 +468,7 @@ class ConstraintsSteppable(SteppableBasePy):
 
         shifts = [(0, 0), (3, 0), (-3, 0), (3, 3), (3, -3), (-3, -3), (-3, 3)]
 
-        while len(self.cell_list_by_type(self.CARGO_CELL)) < cluster_size * number_cargo_clusters:
+        while len(self.cell_list_by_type(self.CARGO_CELL)) < cluster_size * number_of_cargo_clusters:
             space = False
             print("cells", len(self.cell_list_by_type(self.CARGO_CELL)))
             attempts = 0

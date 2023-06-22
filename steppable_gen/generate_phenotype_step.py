@@ -14,7 +14,7 @@ def type_phenotype_step(ctype, this_type_dicts):
     any_pheno = False
     full = f"\t\t\tfor cell in self.cell_list_by_type(self.{ctype.upper()}):\n"
     for cell_dict in this_type_dicts:
-        if "phenotypes" in cell_dict.keys():
+        if "phenotypes" in cell_dict.keys() and bool(cell_dict["phenotypes"]):
             any_pheno = True
             full += "\t\t\t\t# WARNING: currently you are responsible for implementing what should happen for each " \
                     "of\n" \

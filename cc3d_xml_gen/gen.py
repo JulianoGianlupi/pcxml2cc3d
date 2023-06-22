@@ -580,6 +580,23 @@ def make_diffusion_plug(diffusing_elements, celltypes, flag_2d):
 
     return FE_solver + steady_state_solver
 
+def get_chemotatic_fields(taxis_dict):
+    taxis_fields = []
+    for ctype, taxis_data in taxis_dict.items():
+        for key in taxis_data.keys():
+            taxis_fields.append(key)
+    return list(set(taxis_fields))
+def make_chemotaxis(taxis_dict):
+    if not bool(taxis_dict):
+        return ""
+    else:
+        taxis_fields = get_chemotatic_fields(taxis_dict)
+        plug = '<Plugin Name="Chemotaxis">\n'
+        for name in taxis_fields:
+            plug += f'<ChemicalField Name="{name}"/>\n'
+        plug += '</Plugin>'
+        return plug
+
 
 def make_secretion(secretion_dict):
     if bool(secretion_dict):
