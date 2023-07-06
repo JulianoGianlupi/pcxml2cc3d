@@ -319,20 +319,15 @@ def main(path_to_xml, out_directory=None, minimum_volume=8, max_volume=150 ** 3,
     return
 
 
-# parser = argparse.ArgumentParser(description="Converts a Physicell XML file into CompuCell3D .cc3d, .xml, main.py, and"
-#                                              "steppables.py simulation configuration files.")
-# parser.add_argument("input", type=str, help="Path to your input PhysiCell XML configuration file")
-# parser.add_argument("-c", "--cellvolume", type=int, help="(optional) minimum volume the converted cells are allowed to "
-#                                                          "have (in pixels)", default=None)
-# parser.add_argument("-v", "--simulationvolume", type=int, help="(optional) maximum volume the CC3D simulation can have",
-#                     default=None)
-# parser.add_argument("-o", "--output", help="(optional) output path for the converted files",
-#                     default=None)
-# args = parser.parse_args()
-# main(args.input, out_directory=args.output, minimum_volume=args.cellvolume, max_volume=args.simulationvolume)
+parser = argparse.ArgumentParser(description="Converts a Physicell XML file into CompuCell3D .cc3d, .xml, main.py, and"
+                                             "steppables.py simulation configuration files.")
+parser.add_argument("input", type=str, help="Path to your input PhysiCell XML configuration file")
+parser.add_argument("-c", "--cellvolume", type=int, help="(optional) minimum volume the converted cells are allowed to "
+                                                         "have (in pixels)", default=None)
+parser.add_argument("-v", "--simulationvolume", type=int, help="(optional) maximum volume the CC3D simulation can have",
+                    default=None)
+parser.add_argument("-o", "--output", help="(optional) output path for the converted files",
+                    default=None)
+args = parser.parse_args()
+main(args.input, out_directory=args.output, minimum_volume=args.cellvolume, max_volume=args.simulationvolume)
 
-# main("example_pcxml/annotated_cancer_immune3D_flat.xml")
-# # main(r"C:\github\pcxml2cc3d\PhysiCell\sample_projects\biorobots\config\PhysiCell_settings.xml")
-# main(r"D:\modeling\pcxml2cc3d\example_pcxml\trcycle-r8\data\PhysiCell_settings.xml")
-# main(r"C:\modeling\phd\pcxml2cc3d\example_pcxml\trcycle-r8\data\PhysiCell_settings.xml")
-main(r"C:\modeling\PhysiCell\sample_projects\biorobots\config\PhysiCell_settings.xml", name = "biorobots", out_directory=r"C:\modeling\phd\pcxml2cc3d\example-translations\biorobots\biorobots")
