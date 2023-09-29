@@ -19,10 +19,10 @@ def type_phenotype_step(ctype, this_type_dicts):
             full += "\t\t\t\t# WARNING: currently you are responsible for implementing what should happen for each " \
                     "of\n" \
                     "\t\t\t\t# the flags\n"
-            full += f"\t\t\t\tchanged_phase, should_be_removed, divides = \\ \n" \
+            full += f"\t\t\t\tchanged_phase, should_be_removed, divides = \\\n" \
                     f"\t\t\t\t\tcell.dict['current_phenotype'].time_step_phenotype()\n"
             full += "\t\t\t\tif divides:\n\t\t\t\t\tcells_to_divide.append(cell)\n"
-            full += f"\t\t\t\tcell.targetVolume = cell.dict['volume_conversion'] * \\ \n" \
+            full += f"\t\t\t\tcell.targetVolume = cell.dict['volume_conversion'] * \\\n" \
                     f"\t\t\t\t\tcell.dict['current_phenotype'].current_phase.volume.total\n"
 
 
