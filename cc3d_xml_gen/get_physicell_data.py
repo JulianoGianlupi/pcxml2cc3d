@@ -860,7 +860,7 @@ def get_secretion_uptake(pcdict):
                 sec_up_data[ctype][substrate]['secretion_unit'] = sec['secretion_rate'][
                     '@units'] if 'secretion_rate' in sec.keys() else "None"
                 sec_up_data[ctype][substrate]['secretion_target'] = float(
-                    sec['secretion_target']['#text']) if 'secretion_target' in sec.keys() else 0
+                    sec['secretion_target']['#text']) if 'secretion_target' in sec.keys() else 1e99
                 sec_up_data[ctype][substrate]['uptake_rate'] = float(
                     sec['uptake_rate']['#text']) if 'uptake_rate' in sec.keys() else 0
                 sec_up_data[ctype][substrate]['uptake_unit'] = sec['uptake_rate'][
