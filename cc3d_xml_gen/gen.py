@@ -580,12 +580,16 @@ def make_diffusion_plug(diffusing_elements, celltypes, flag_2d):
 
     return FE_solver + steady_state_solver
 
+
 def get_chemotatic_fields(taxis_dict):
     taxis_fields = []
     for ctype, taxis_data in taxis_dict.items():
         for key in taxis_data.keys():
-            taxis_fields.append(key)
+            if key != 'chemotaxis_dict':
+                taxis_fields.append(key)
     return list(set(taxis_fields))
+
+
 def make_chemotaxis(taxis_dict):
     if not bool(taxis_dict):
         return ""
